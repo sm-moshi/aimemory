@@ -26,18 +26,32 @@ export class MemoryBankMCPServer {
     this.memoryBank = new MemoryBankService(context);
 
     // Configure express app
-    this.app.use(cors());
-    this.app.use(express.json());
+    // this.app.use(
+    //   cors({
+    //     origin: "*",
+    //     methods: "*",
+    //     allowedHeaders: "*",
+    //   })
+    // );
+    // this.app.use(express.json());
 
     this.app.get("/test", (req, res) => {
       res.status(200).json({ message: "Test endpoint hit" });
     });
 
     // Create MCP server
-    this.server = new McpServer({
-      name: "AI Memory MCP Server",
-      version: "0.0.1",
-    });
+    this.server = new McpServer(
+      {
+        name: "AI Memory MCP Server",
+        version: "0.1.12",
+      },
+      {
+        capabilities: {
+          logging: {},
+          tools: {},
+        },
+      }
+    );
 
     this.setupRoutes();
     this.registerMCPResources();
@@ -55,55 +69,56 @@ export class MemoryBankMCPServer {
       res.status(200).json({ status: "ok ok" });
     });
 
-    // Setup SSE endpoint
-    this.app.get("/sse", async (req, res) => {
-      console.log("SSE endpoint hit");
+    // Status route for connection debugging
+    this.app.get("/status", (req, res) => {
+      res.status(200).json({
+        mcpServer: !!this.server,
+        transport: !!this.transport,
+        isRunning: this.isRunning,
+        port: this.port,
+      });
+    });
 
-      // const clientId = (req.query.clientId as string) || String(Date.now());
+    // Setup SSE endpoint with simplified implementation
+    this.app.get("/sse", async (req, res) => {
+      console.log("SSE endpoint hit - using simplified implementation");
+
+      // Basic SSE setup
       // res.setHeader("Content-Type", "text/event-stream");
       // res.setHeader("Cache-Control", "no-cache");
       // res.setHeader("Connection", "keep-alive");
+      // res.setHeader("Access-Control-Allow-Origin", "*");
+      // res.flushHeaders();
 
-      console.log("New SSE connection established");
-      this.transport = new SSEServerTransport(
-        "/messages",
-        res as unknown as ServerResponse<IncomingMessage>
-      );
+      // res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
+      console.log("SSE headers sent and connection established");
+
+      // Create transport without any extra error handling
+      this.transport = new SSEServerTransport("/messages", res);
+
+      // Connect in background to avoid blocking
       await this.server.connect(this.transport);
+      // .then(() => console.log("MCP server connected to transport"))
+      // .catch((err) => console.error("Connection error:", err));
 
-      // const transport = new SSEServerTransport("/messages", res);
-      // this.transport = transport;
-      // // this.transports.set(clientId, transport);
-
-      // try {
-      //   // Connect the MCP server to this transport
-      //   await this.server.connect(transport);
-
-      //   // When the connection closes, remove the transport
-      //   req.on("close", () => {
-      //     console.log("Closing SSE connection...");
-      //     // this.transports.delete(clientId);
-      //   });
-      // } catch (error) {
-      //   console.error("Error with SSE transport:", error);
-      //   // this.transports.delete(clientId);
-      //   res.end();
-      // }
+      req.on("close", () => {
+        console.log("SSE connection closed by client");
+      });
     });
 
-    // Handle incoming messages
     this.app.post("/messages", async (req, res) => {
-      const clientId = req.query.clientId as string;
+      console.log("Message received, transport:", !!this.transport);
 
-      // const transport = this.transports.get(clientId)!;
-      // console.log("ClientId", clientId, this.transports);
-      try {
-        console.log("Handling message", this.transport);
-        await this.transport!.handlePostMessage(req, res);
-      } catch (error) {
-        console.error("Error handling message:", error);
-        res.status(500).json({ error: "Failed to process message" });
+      if (!this.transport) {
+        console.error("No active transport found");
+        res.status(503).json({
+          error: "No active SSE connection",
+          message: "Please reconnect to the SSE endpoint first",
+        });
+        return;
       }
+
+      await this.transport!.handlePostMessage(req, res);
     });
   }
 
@@ -163,6 +178,14 @@ export class MemoryBankMCPServer {
   }
 
   private registerMCPTools(): void {
+    // this.server.tool("initialize-memory-bank", {}, async () => {
+    //   await this.memoryBank.initialize();
+
+    //   return {
+    //     content: [{ type: "text", text: "Memory bank initialized" }],
+    //   };
+    // });
+
     // Get memory bank file
     this.server.tool(
       "get-memory-bank-file",

@@ -9,15 +9,16 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:aimemory.startMCP"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "aimemory.startMCP",
-        "title": "AI Memory: Start MCP"
+        "title": "AI Memory: Start MCP Server"
+      },
+      {
+        "command": "aimemory.stopServer",
+        "title": "AI Memory: Stop MCP Server"
       }
     ]
   },
@@ -51,7 +52,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.7.0",
+    "@modelcontextprotocol/sdk": "^1.6.1",
     "cors": "^2.8.5",
     "express": "^4.18.3",
     "zod": "^3.22.4"

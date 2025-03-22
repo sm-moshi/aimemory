@@ -2,10 +2,16 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { MemoryBank, MemoryBankFile, MemoryBankFileType } from "./types";
+import { CursorRulesService } from "./lib/cursor-rules-service";
+import {
+  CURSOR_MEMORY_BANK_FILENAME,
+  CURSOR_MEMORY_BANK_RULES_FILE,
+} from "./lib/cursor-rules";
 
 export class MemoryBankService implements MemoryBank {
   private _memoryBankFolder: string;
   files: Map<MemoryBankFileType, MemoryBankFile> = new Map();
+  private cursorRulesService: CursorRulesService;
 
   constructor(private context: vscode.ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -16,6 +22,15 @@ export class MemoryBankService implements MemoryBank {
     this._memoryBankFolder = path.join(
       workspaceFolders[0].uri.fsPath,
       "memory-bank"
+    );
+
+    this.cursorRulesService = new CursorRulesService(this.context);
+  }
+
+  async createMemoryBankRulesIfNotExists(): Promise<void> {
+    await this.cursorRulesService.createRulesFile(
+      CURSOR_MEMORY_BANK_FILENAME,
+      CURSOR_MEMORY_BANK_RULES_FILE
     );
   }
 
@@ -87,6 +102,7 @@ export class MemoryBankService implements MemoryBank {
   }
 
   getFile(type: MemoryBankFileType): MemoryBankFile | undefined {
+    console.log("getFile", type, this.files.get(type));
     return this.files.get(type);
   }
 

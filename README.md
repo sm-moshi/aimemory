@@ -1,83 +1,69 @@
-# AI Memory Extension for VSCode/Cursor
+# AI Memory
 
-This extension allows Cursor users to easily manage context on their projects using a technique called memory bank, integrated through the Model Context Protocol (MCP).
+Easily manage AI context for your projects using the Memory Bank technique. Integrates with the Model Context Protocol (MCP) to provide structured AI interactions.
 
 ## Features
 
-- **Memory Bank Management**: Organize project context in a structured way
-- **MCP Integration**: Start a Model Context Protocol (MCP) server to handle AI memory bank operations
-- **Cursor Command Support**: Use `/memory` commands directly in Cursor AI chat
-- **Automatic File Creation**: Initializes template files for different aspects of your project
+- Manages a collection of memory bank files that help maintain context across AI interactions
+- Integrates with the Model Context Protocol for structured AI interaction
+- Provides a simple interface for accessing and updating memory bank files
+- Works with Cursor AI to enhance context management
 
-## Installation
+## Getting Started
 
-1. Install the extension from the VSCode/Cursor marketplace
-2. Activate it in your project workspace
+1. Install the extension
+2. Create a `memory-bank` folder in your workspace root
+3. Run the `AI Memory: Start MCP` command from the command palette to start the MCP server (default port: 1337)
+4. Connect Cursor to the MCP server
 
 ## Usage
 
-### Starting the MCP Server
+There are two ways to interact with the AI Memory extension:
 
-1. Open the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Search for `AI Memory: Start MCP`
-3. Click on the command to start the MCP server
+1. **Through Cursor's MCP integration**: Connect to the running MCP server at `http://localhost:1337` to access memory bank files through the structured MCP interface.
 
-This will start an MCP server on port 1337 (or 7331 if the primary port is unavailable).
+2. **Using `/memory` commands**: You can quickly check the status of the memory bank using commands like `/memory status`.
 
-### Using Memory Bank Commands
+The MCP server provides:
 
-You can interact with the AI Memory MCP server in two ways:
+- **Resources**: Access to memory bank files via URIs
+- **Tools**: Functions to manipulate memory bank files
+- **Prompts**: Structured context for AI interactions
 
-1. **Using Cursor's built-in MCP integration**:
-   Once the MCP server is running, you can connect to it through Cursor's MCP integration to access all memory bank files and functionality.
+## Memory Bank Files
 
-2. **Using `/memory` commands**:
-   For quick status checks, you can use direct commands in Cursor AI chat:
-   - `/memory help` - Show help information
-   - `/memory status` - Check if the MCP server is running
+The memory bank includes these file types:
 
-### MCP Capabilities
+- `projectbrief.md`: The foundation document defining core requirements and goals
+- `productContext.md`: Why this project exists, problems it solves, user experience goals
+- `activeContext.md`: Current work focus, recent changes, next steps
+- `systemPatterns.md`: System architecture, key technical decisions, design patterns
+- `techContext.md`: Technologies used, development setup, technical constraints
+- `progress.md`: What works, what's left to build, current status
 
-The AI Memory MCP server provides the following capabilities:
+## Troubleshooting MCP Connections
 
-#### Resources
+If you experience issues connecting to the MCP server from Cursor:
 
-- `memory-bank://` - List all memory bank files
-- `memory-bank://{fileType}` - Access a specific memory bank file
+1. **Check server status**: Ensure the server is running by visiting `http://localhost:1337/health` in your browser. You should see `{"status":"ok ok"}`.
 
-#### Tools
+2. **Port conflicts**: If port 1337 is in use, the extension will try port 7331. Check the extension output to see which port was actually used.
 
-- `initialize-memory-bank` - Initialize the memory bank with template files
-- `list-memory-bank-files` - List all memory bank files
-- `get-memory-bank-file` - Get the content of a specific memory bank file
-- `update-memory-bank-file` - Update the content of a specific memory bank file
+3. **Connection issues**: If you see "Client closed" errors:
+   - Make sure no firewalls are blocking localhost connections
+   - Try the simplified connection test in the Developer Console (see TROUBLESHOOTING.md)
+   - Check the extension's output panel for error messages
 
-#### Prompts
+4. **Refresh connection**: Sometimes simply restarting the MCP server can fix connection issues. Run "AI Memory: Start MCP" again.
 
-- `initialize-memory-bank` - Prompt for initializing the memory bank
-- `update-memory-bank-file` - Prompt for updating a memory bank file
-
-### Memory Bank File Types
-
-The memory bank consists of these core files:
-
-1. `projectbrief.md` - Foundation document that shapes all other files
-2. `productContext.md` - Why this project exists, problems it solves
-3. `activeContext.md` - Current work focus, recent changes
-4. `systemPatterns.md` - System architecture, key technical decisions
-5. `techContext.md` - Technologies used, development setup
-6. `progress.md` - What works, what's left to build
+For detailed troubleshooting steps, see TROUBLESHOOTING.md.
 
 ## Development
 
-- Extension is built using TypeScript
-- Uses the Model Context Protocol (MCP) SDK for structured AI interaction
-- Default MCP server port: 1337 (falls back to 7331 if occupied)
-
-## Requirements
-
-- VSCode or Cursor editor
-- Node.js environment for running the MCP server
+This extension uses:
+- TypeScript for type-safe code
+- MCP SDK for structured AI interaction instead of Express.js
+- VSCode Extension API for integration with the editor
 
 ## License
 

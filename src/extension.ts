@@ -70,11 +70,19 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const stopServerCommand = vscode.commands.registerCommand(
+    "aimemory.stopServer",
+    async () => {
+      await mcpServer.stop();
+    }
+  );
+
   // Register the Cursor AI command interceptor
   // This will intercept the commands sent to Cursor AI and process /memory commands
   const cursorApiCommands = vscode.commands.registerTextEditorCommand(
     "cursor.newChat",
     async (editor, edit, text) => {
+      console.log("cursor.newChat", text);
       if (typeof text === "string" && text.trim().startsWith("/memory")) {
         // Process the memory command
         const response = await commandHandler.processCommand(text);
@@ -95,6 +103,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Add our command to the extension's subscriptions
   context.subscriptions.push(startMCPCommand);
   context.subscriptions.push(cursorApiCommands);
+  context.subscriptions.push(stopServerCommand);
 
   // Register a disposal event to stop the server when the extension is deactivated
   context.subscriptions.push({
