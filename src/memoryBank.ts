@@ -34,6 +34,28 @@ export class MemoryBankService implements MemoryBank {
     );
   }
 
+  async getIsMemoryBankInitialized(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const isDirectoryExists = fs.existsSync(this._memoryBankFolder);
+
+      if (!isDirectoryExists) {
+        resolve(false);
+        return;
+      }
+
+      //Check if all files are present
+      for (const fileType of Object.values(MemoryBankFileType)) {
+        const filePath = path.join(this._memoryBankFolder, fileType);
+        if (!fs.existsSync(filePath)) {
+          resolve(false);
+          return;
+        }
+      }
+
+      resolve(true);
+    });
+  }
+
   async initialize(): Promise<void> {
     await this.ensureMemoryBankFolder();
     await this.loadFiles();

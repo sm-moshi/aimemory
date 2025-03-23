@@ -15,7 +15,6 @@ export class MemoryBankMCPServer {
   private app: express.Express;
   private httpServer: http.Server | null = null;
   private memoryBank: MemoryBankService;
-  private transports: Map<string, SSEServerTransport> = new Map();
   private isRunning = false;
   private port: number;
   private transport: SSEServerTransport | null = null;
@@ -186,25 +185,105 @@ export class MemoryBankMCPServer {
     //   };
     // });
 
+    this.server.tool(
+      "initialize-memory-bank",
+      "Initialize the memory bank and generate the project documentation",
+      {},
+      async (_, extra) => {
+        console.log("Initializing memory bank");
+
+        try {
+          await this.memoryBank.createMemoryBankRulesIfNotExists();
+
+          const isInitialized =
+            await this.memoryBank.getIsMemoryBankInitialized();
+
+          if (!isInitialized) {
+            console.log("Memory bank not initialized, sending prompt");
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `I need you to initialize the Memory Bank for this project. 
+
+STEPS:
+1. Read the Cursor rules at .cursor/rules/memory-bank.mdc to understand the Memory Bank structure
+2. Create all required Memory Bank files with appropriate initial content for this project
+3. Document the project goals, context, and technical details based on what you know
+4. Once you've created the Memory Bank files, call the load-memory-bank-files tool to complete initialization
+
+This is critical for maintaining project context between sessions. Please start immediately.`,
+                },
+              ],
+            };
+          }
+
+          await this.memoryBank.initialize();
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "Memory bank initialized, please refer to memory-`bank.mdc rules file for documentation",
+              },
+            ],
+          };
+        } catch (error) {
+          console.error("Error initializing memory bank:", error);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error initializing memory bank: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    this.server.tool(
+      "load-memory-bank-files",
+      "Load the memory bank files into the MCP",
+      {},
+      async (_, extra) => {
+        await this.memoryBank.initialize();
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: "Memory bank rules loaded. You can now use all the tools to interact with the memory bank.",
+            },
+          ],
+        };
+      }
+    );
+
     // Get memory bank file
     this.server.tool(
       "get-memory-bank-file",
       {
         fileType: z.string(),
       },
-      async ({ fileType }) => {
+      async ({ fileType }, extra) => {
         const type = fileType as MemoryBankFileType;
         const file = this.memoryBank.getFile(type);
 
         if (!file) {
           return {
-            content: [{ type: "text", text: `File ${type} not found` }],
+            content: [
+              { type: "text" as const, text: `File ${type} not found` },
+            ],
             isError: true,
           };
         }
 
         return {
-          content: [{ type: "text", text: file.content }],
+          content: [{ type: "text" as const, text: file.content }],
         };
       }
     );
@@ -216,20 +295,22 @@ export class MemoryBankMCPServer {
         fileType: z.string(),
         content: z.string(),
       },
-      async ({ fileType, content }) => {
+      async ({ fileType, content }, extra) => {
         try {
           const type = fileType as MemoryBankFileType;
           await this.memoryBank.updateFile(type, content);
 
           return {
-            content: [{ type: "text", text: `Updated ${type} successfully` }],
+            content: [
+              { type: "text" as const, text: `Updated ${type} successfully` },
+            ],
           };
         } catch (error) {
           console.error(`Failed to update ${fileType}:`, error);
           return {
             content: [
               {
-                type: "text",
+                type: "text" as const,
                 text: `Error updating ${fileType}: ${
                   error instanceof Error ? error.message : String(error)
                 }`,
@@ -242,13 +323,13 @@ export class MemoryBankMCPServer {
     );
 
     // List all memory bank files
-    this.server.tool("list-memory-bank-files", {}, async () => {
+    this.server.tool("list-memory-bank-files", {}, async (_, extra) => {
       const files = this.memoryBank.getAllFiles();
 
       return {
         content: [
           {
-            type: "text",
+            type: "text" as const,
             text: files
               .map(
                 (file) =>
@@ -263,6 +344,172 @@ export class MemoryBankMCPServer {
         ],
       };
     });
+
+    // Process memory commands sent by the user to the LLM
+    this.server.tool(
+      "process-memory-command",
+      {
+        command: z.string(),
+      },
+      async ({ command }, extra) => {
+        try {
+          console.log("Processing memory command:", command);
+
+          // Check if it's a memory command
+          if (!command.trim().startsWith("/memory")) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Not a memory command. Memory commands should start with '/memory'",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          // Parse the command
+          const parts = command.trim().split(" ");
+
+          // Remove the "/memory" part
+          parts.shift();
+
+          if (parts.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Please specify a memory command. Available commands: initialize, load, list, get, update",
+                },
+              ],
+            };
+          }
+
+          const action = parts[0];
+
+          switch (action) {
+            case "initialize":
+              // Handle initialize command
+              await this.memoryBank.createMemoryBankRulesIfNotExists();
+
+              const isInitialized =
+                await this.memoryBank.getIsMemoryBankInitialized();
+
+              if (!isInitialized) {
+                return {
+                  content: [
+                    {
+                      type: "text" as const,
+                      text: `I need you to initialize the Memory Bank for this project. 
+
+STEPS:
+1. Read the Cursor rules at .cursor/rules/memory-bank.mdc to understand the Memory Bank structure
+2. Create all required Memory Bank files with appropriate initial content for this project
+3. Document the project goals, context, and technical details based on what you know
+4. Once you've created the Memory Bank files, call the load-memory-bank-files tool to complete initialization
+
+This is critical for maintaining project context between sessions. Please start immediately.`,
+                    },
+                  ],
+                };
+              } else {
+                await this.memoryBank.initialize();
+                return {
+                  content: [
+                    {
+                      type: "text" as const,
+                      text: "Memory bank initialized, files are ready for use.",
+                    },
+                  ],
+                };
+              }
+
+            case "list":
+              // List all memory files
+              const files = this.memoryBank.getAllFiles();
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: files
+                      .map(
+                        (file) =>
+                          `${file.type}: Last updated ${
+                            file.lastUpdated
+                              ? new Date(file.lastUpdated).toLocaleString()
+                              : "never"
+                          }`
+                      )
+                      .join("\n"),
+                  },
+                ],
+              };
+
+            case "get":
+              // Get a specific file
+              if (parts.length < 2) {
+                return {
+                  content: [
+                    {
+                      type: "text" as const,
+                      text: "Please specify a file type to get. Example: /memory get projectbrief.md",
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+
+              const fileType = parts[1] as MemoryBankFileType;
+              const file = this.memoryBank.getFile(fileType);
+
+              if (!file) {
+                return {
+                  content: [
+                    {
+                      type: "text" as const,
+                      text: `File ${fileType} not found`,
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `Content of ${fileType}:\n\n${file.content}`,
+                  },
+                ],
+              };
+
+            default:
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `Unknown memory command: ${action}. Available commands: initialize, list, get`,
+                  },
+                ],
+                isError: true,
+              };
+          }
+        } catch (error) {
+          console.error("Error processing memory command:", error);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error processing memory command: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
   }
 
   private registerMCPPrompts(): void {
@@ -295,6 +542,29 @@ When interacting with the user, you should:
 3. Update the memory bank files as needed to reflect new information
 
 If the memory bank is missing information for a task, inform the user and suggest adding it.`,
+          },
+        },
+      ],
+    }));
+
+    // Prompt for command processing
+    this.server.prompt("memory-command-processor", () => ({
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `You are an AI assistant that can process special /memory commands.
+
+IMPORTANT: Always look for and process commands that begin with "/memory" in the user's messages.
+
+When you detect a /memory command, immediately use the process-memory-command tool to handle it.
+Example commands:
+- /memory initialize - Initialize the memory bank
+- /memory list - List all memory bank files
+- /memory get <filename> - Get content of a specific memory bank file
+
+If the message doesn't contain a /memory command, respond normally to the user's query.`,
           },
         },
       ],

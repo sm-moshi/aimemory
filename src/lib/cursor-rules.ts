@@ -161,9 +161,19 @@ The format is flexible - focus on capturing valuable insights that help me work 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
 `;
 
+/*
+
+name: Cursor Memory Bank Rules
+version: "1.0"
+description: Cursor Memory Bank Rules
+globs:
+  - 
+
+*/
+
 export const CURSOR_MEMORY_BANK_RULES_FILE = `
 ---
-description:
+description: Cursor Memory Bank Rules
 globs:
 alwaysApply: true
 ---
