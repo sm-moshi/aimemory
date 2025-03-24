@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
       console.log("cursor.newChat", text);
       if (typeof text === "string" && text.trim().startsWith("/memory")) {
         // Process the memory command
-        const response = await commandHandler.processCommand(text);
+        const response = await commandHandler.processMemoryCommand(text);
 
         if (response) {
           // Show the response in Cursor's chat UI or in an information message

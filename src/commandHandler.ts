@@ -8,7 +8,7 @@ export class CommandHandler {
    * Process a /memory command sent in the Cursor AI input
    * Format: /memory <command> [args...]
    */
-  async processCommand(text: string): Promise<string | undefined> {
+  async processMemoryCommand(text: string): Promise<string | undefined> {
     // Check if text starts with /memory
     if (!text.trim().startsWith("/memory")) {
       return undefined;
@@ -50,6 +50,16 @@ export class CommandHandler {
         error instanceof Error ? error.message : String(error)
       }`;
     }
+  }
+
+  //TODO: Think about if it's worth adding a /plan command or let that be handled by rules
+  async processModesCommand(text: string): Promise<string | undefined> {
+    // Check if text starts with /modes
+    if (!text.trim().startsWith("/plan")) {
+      return undefined;
+    }
+
+    return "";
   }
 
   /**

@@ -56,9 +56,8 @@ export class MemoryBankService implements MemoryBank {
     });
   }
 
-  async initialize(): Promise<void> {
+  async initializeFolders(): Promise<void> {
     await this.ensureMemoryBankFolder();
-    await this.loadFiles();
   }
 
   private async ensureMemoryBankFolder(): Promise<void> {
@@ -67,7 +66,7 @@ export class MemoryBankService implements MemoryBank {
     }
   }
 
-  private async loadFiles(): Promise<void> {
+  async loadFiles(): Promise<void> {
     this.files.clear();
 
     for (const fileType of Object.values(MemoryBankFileType)) {
@@ -141,5 +140,14 @@ export class MemoryBankService implements MemoryBank {
 
   getAllFiles(): MemoryBankFile[] {
     return Array.from(this.files.values());
+  }
+
+  getFilesWithFilenames(): string {
+    return Array.from(this.files.values())
+      .map(
+        (file) =>
+          `${file.type}:\nlast updated:${file.lastUpdated}\n\n${file.content}`
+      )
+      .join("\n\n");
   }
 }

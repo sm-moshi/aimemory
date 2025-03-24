@@ -19,10 +19,12 @@ export interface MemoryBankFile {
 
 export interface MemoryBank {
   files: Map<MemoryBankFileType, MemoryBankFile>;
-  initialize(): Promise<void>;
+  initializeFolders(): Promise<void>;
+  loadFiles(): Promise<void>;
   getFile(type: MemoryBankFileType): MemoryBankFile | undefined;
   updateFile(type: MemoryBankFileType, content: string): Promise<void>;
   getAllFiles(): MemoryBankFile[];
+  getFilesWithFilenames(): string;
 }
 
 export interface MCPHandler {
