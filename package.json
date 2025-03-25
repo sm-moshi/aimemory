@@ -19,6 +19,10 @@
       {
         "command": "aimemory.stopServer",
         "title": "AI Memory: Stop MCP Server"
+      },
+      {
+        "command": "aimemory.openWebview",
+        "title": "AI Memory: Open Dashboard"
       }
     ]
   },
@@ -34,7 +38,10 @@
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "webview:dev": "cd src/webview && pnpm run dev",
+    "webview:build": "cd src/webview && pnpm run build",
+    "build": "npm-run-all -s webview:build package"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
