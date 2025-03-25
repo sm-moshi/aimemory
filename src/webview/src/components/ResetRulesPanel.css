@@ -1,0 +1,57 @@
+.reset-panel {
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.reset-content {
+  padding: 1rem;
+}
+
+.reset-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: var(--vscode-foreground);
+}
+
+.reset-description {
+  margin-bottom: 1.5rem;
+  color: var(--vscode-descriptionForeground);
+}
+
+.warning {
+  color: var(--vscode-notificationsWarningIcon-foreground, #ddb100);
+  background-color: var(--vscode-notificationsWarningBackground, rgba(221, 177, 0, 0.1));
+  padding: 0.5rem;
+  border-radius: 3px;
+}
+
+.reset-result {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  border-radius: 3px;
+}
+
+.reset-result.success {
+  background-color: var(--vscode-notificationsInfoBackground, rgba(57, 188, 242, 0.1));
+  color: var(--vscode-notificationsInfoIcon-foreground, #39bcf2);
+}
+
+.reset-result.error {
+  background-color: var(--vscode-notificationsErrorBackground, rgba(241, 76, 76, 0.1));
+  color: var(--vscode-notificationsErrorIcon-foreground, #f14c4c);
+}
+
+.confirmation-dialog {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
+  border-radius: 3px;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+} 

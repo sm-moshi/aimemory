@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  font-family: var(--vscode-font-family);
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-background);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* VS Code UI specific overrides */
+a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: var(--vscode-font-size);
+}
+
+button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+input, textarea {
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 4px 8px;
+  font-family: var(--vscode-font-family);
+}
+
+code {
+  font-family: var(--vscode-editor-font-family);
+} 
