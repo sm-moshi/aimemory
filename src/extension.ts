@@ -3,6 +3,7 @@
 import * as vscode from "vscode";
 import { MemoryBankMCPServer } from "./mcpServer";
 import { CommandHandler } from "./commandHandler";
+import { WebviewManager } from "./webviewManager";
 
 // Default MCP server options
 const DEFAULT_MCP_PORT = 7331;
@@ -20,6 +21,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Create command handler
   const commandHandler = new CommandHandler(mcpServer);
+
+  // Create webview manager
+  const webviewManager = new WebviewManager(context);
 
   // Register a command that starts the MCP server
   const startMCPCommand = vscode.commands.registerCommand(
@@ -77,6 +81,14 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register command to open the webview
+  const openWebviewCommand = vscode.commands.registerCommand(
+    "aimemory.openWebview",
+    () => {
+      webviewManager.openWebview();
+    }
+  );
+
   // Register the Cursor AI command interceptor
   // This will intercept the commands sent to Cursor AI and process /memory commands
   const cursorApiCommands = vscode.commands.registerTextEditorCommand(
@@ -104,6 +116,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(startMCPCommand);
   context.subscriptions.push(cursorApiCommands);
   context.subscriptions.push(stopServerCommand);
+  context.subscriptions.push(openWebviewCommand);
 
   // Register a disposal event to stop the server when the extension is deactivated
   context.subscriptions.push({
