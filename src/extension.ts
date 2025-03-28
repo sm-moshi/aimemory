@@ -12,6 +12,17 @@ const ALTERNATIVE_MCP_PORT = 7332;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  console.log("Registering open webview command");
+
+  // Register command to open the webview
+  const openWebviewCommand = vscode.commands.registerCommand(
+    "aimemory.openWebview",
+    () => {
+      console.log("Opening webview");
+      webviewManager.openWebview();
+    }
+  );
+
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log("AI Memory extension is now active!");
@@ -78,14 +89,6 @@ export function activate(context: vscode.ExtensionContext) {
     "aimemory.stopServer",
     async () => {
       await mcpServer.stop();
-    }
-  );
-
-  // Register command to open the webview
-  const openWebviewCommand = vscode.commands.registerCommand(
-    "aimemory.openWebview",
-    () => {
-      webviewManager.openWebview();
     }
   );
 

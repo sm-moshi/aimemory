@@ -1,67 +1,12 @@
 import { useEffect, useState } from "react";
 import "@vscode-elements/elements";
-// import RuleStatusPanel from "./components/RuleStatusPanel.js";
-// import ResetRulesPanel from "./components/ResetRulesPanel.js";
-
-// Declare vscode API globally is now in main.tsx
-
-// Get VS Code API reference
-const vscode = window.vscodeApi;
-
-// const vscode = acquireVsCodeApi();
+import { Status } from "./components/status";
 
 function App() {
-  const [rulesInitialized, setRulesInitialized] = useState<boolean | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [resetSuccess, setResetSuccess] = useState<boolean | null>(null);
   const [apiAvailable, setApiAvailable] = useState(!!window.vscodeApi);
 
   // Log VSCode API to debug
   console.log("VSCODE API in App:", window.vscodeApi);
-
-  // Create a safe postMessage function
-  const postMessage = (message: any) => {
-    if (window.vscodeApi) {
-      window.vscodeApi.postMessage(message);
-      console.log("Message sent:", message);
-    } else {
-      console.warn("VSCode API not available, can't send message:", message);
-      setApiAvailable(false);
-    }
-  };
-
-  useEffect(() => {
-    // Setup message listener
-    const handleMessage = (event: MessageEvent) => {
-      const message = event.data;
-      console.log("Received message:", message);
-
-      switch (message.type) {
-        case "rulesStatus":
-          setRulesInitialized(message.initialized);
-          setIsLoading(false);
-          break;
-        case "resetRulesResult":
-          setResetSuccess(message.success);
-          // Refresh rules status after reset
-          if (message.success) {
-            requestRulesStatus();
-          }
-          break;
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    // Request initial rules status
-    requestRulesStatus();
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
 
   // Re-check for API if it wasn't available initially
   useEffect(() => {
@@ -70,23 +15,13 @@ function App() {
         if (window.vscodeApi) {
           setApiAvailable(true);
           clearInterval(checkInterval);
-          requestRulesStatus();
+          // requestRulesStatus();
         }
       }, 500);
 
       return () => clearInterval(checkInterval);
     }
   }, [apiAvailable]);
-
-  const requestRulesStatus = () => {
-    setIsLoading(true);
-    postMessage({ type: "getRulesStatus" });
-  };
-
-  const handleResetRules = () => {
-    setResetSuccess(null);
-    postMessage({ type: "resetRules" });
-  };
 
   if (!apiAvailable) {
     return (
@@ -104,52 +39,17 @@ function App() {
   }
 
   return (
-    <div className="w-full">
-      <header className="mb-8 border-b border-[var(--vscode-panel-border)] pb-4">
+    <div className="flex flex-col w-full gap-3">
+      <header className="border-b border-[var(--vscode-panel-border)] pb-1">
         <h1 className="mb-2 text-[var(--vscode-foreground)] text-2xl font-bold">
-          AIMemory Extension
+          AI Memory
         </h1>
         <p className="mt-0 text-[var(--vscode-descriptionForeground)]">
-          Manage your AI context memory bank
+          Add memory superpowers to LLMs
         </p>
       </header>
-
-      <main className="flex flex-col gap-8 md:flex-row md:items-start">
-        <div className="flex-1 rounded bg-[var(--vscode-editor-background)] p-4 shadow-sm">
-          <h2 className="mb-4 text-xl font-medium">Memory Bank Status</h2>
-          {isLoading ? (
-            <p className="text-[var(--vscode-descriptionForeground)]">
-              Loading status...
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p>
-                Status:{" "}
-                <span className="font-medium">
-                  {rulesInitialized ? "Initialized" : "Not Initialized"}
-                </span>
-              </p>
-              <button className="mt-2 w-fit" onClick={requestRulesStatus}>
-                Refresh Status
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 rounded bg-[var(--vscode-editor-background)] p-4 shadow-sm">
-          <h2 className="mb-4 text-xl font-medium">Reset Memory Bank</h2>
-          <p className="mb-4 text-[var(--vscode-descriptionForeground)]">
-            Reset the memory bank rules file to the default template.
-          </p>
-          {resetSuccess !== null && (
-            <p className={resetSuccess ? "text-green-500" : "text-red-500"}>
-              {resetSuccess ? "Reset successful!" : "Reset failed."}
-            </p>
-          )}
-          <button className="mt-2" onClick={handleResetRules}>
-            Reset Rules
-          </button>
-        </div>
+      <main>
+        <Status />
       </main>
     </div>
   );

@@ -45,16 +45,22 @@ export class WebviewManager {
     // Set the webview's HTML content
     this.panel.webview.html = this.getWebviewContent(this.panel.webview);
 
+    console.log("Handlig message");
+
     // Handle messages from the webview
     this.panel.webview.onDidReceiveMessage(
       async (message) => {
         console.log("Received message in extension:", message);
-        switch (message.type) {
+        switch (message.command) {
           case "getRulesStatus":
             await this.getRulesStatus();
             break;
           case "resetRules":
             await this.resetRules();
+            break;
+          case "requestMemoryBankStatus":
+            console.log("Requesting...");
+            await this.getMemoryBankStatus();
             break;
         }
       },
@@ -112,6 +118,23 @@ export class WebviewManager {
     this.panel.webview.postMessage({
       type: "rulesStatus",
       initialized,
+    });
+  }
+
+  private async getMemoryBankStatus() {
+    console.log("Here1");
+    if (!this.panel) {
+      return;
+    }
+
+    const isInitialized =
+      await this.memoryBankService.getIsMemoryBankInitialized();
+
+    console.log("Sending memory bank status:", isInitialized);
+
+    this.panel.webview.postMessage({
+      type: "memoryBankStatus",
+      initialized: isInitialized,
     });
   }
 

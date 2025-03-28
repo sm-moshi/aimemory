@@ -7,6 +7,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
+    watch: {
+      skipWrite: false,
+    },
     outDir: "../../dist/webview",
     emptyOutDir: true,
     sourcemap: true,
