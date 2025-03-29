@@ -33,6 +33,53 @@ const excludeWebviewPlugin = {
 /**
  * @type {import('esbuild').Plugin}
  */
+const markdownCopyPlugin = {
+  name: "markdown-copy",
+  setup(build) {
+    // Intercept all .md file imports and handle them
+    build.onResolve({ filter: /\.md$/ }, (args) => {
+      // Get the full path of the markdown file
+      const resolvedPath = path.resolve(args.resolveDir, args.path);
+
+      // Calculate where it should go in the output directory
+      const srcDir = path.resolve(__dirname, "src");
+      const relativePath = path.relative(srcDir, resolvedPath);
+      const outputPath = path.join(outdir, relativePath);
+
+      // Create directory structure if it doesn't exist
+      const outputDir = path.dirname(outputPath);
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      // Copy the file
+      fs.copyFileSync(resolvedPath, outputPath);
+      console.log(`Copied ${relativePath} to output directory`);
+
+      // Get the content for bundling
+      const content = fs.readFileSync(resolvedPath, "utf-8");
+
+      return {
+        // Return the contents and mark as resolved
+        path: args.path,
+        namespace: "markdown-ns",
+        pluginData: { content, outputPath },
+      };
+    });
+
+    // Provide the file contents when esbuild asks for them
+    build.onLoad({ filter: /.*/, namespace: "markdown-ns" }, (args) => {
+      return {
+        contents: args.pluginData.content,
+        loader: "text",
+      };
+    });
+  },
+};
+
+/**
+ * @type {import('esbuild').Plugin}
+ */
 const esbuildProblemMatcherPlugin = {
   name: "esbuild-problem-matcher",
 
@@ -68,8 +115,9 @@ const sharedOptions = {
   ],
   loader: {
     ".ts": "ts",
+    ".md": "text", // Add loader for .md files
   },
-  plugins: [excludeWebviewPlugin],
+  plugins: [excludeWebviewPlugin, markdownCopyPlugin],
   tsconfig: path.resolve(__dirname, "tsconfig.json"),
   mainFields: ["module", "main"],
   logLevel: "info",
@@ -82,7 +130,11 @@ const extensionBuild = async () => {
     ...sharedOptions,
     entryPoints: ["./src/extension.ts"],
     outfile: path.resolve(outdir, "extension.js"),
-    plugins: [excludeWebviewPlugin, esbuildProblemMatcherPlugin],
+    plugins: [
+      excludeWebviewPlugin,
+      markdownCopyPlugin,
+      esbuildProblemMatcherPlugin,
+    ],
   };
 
   if (watch) {
