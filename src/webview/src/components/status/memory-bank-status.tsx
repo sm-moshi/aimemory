@@ -62,7 +62,8 @@ export function MemoryBankStatus() {
         )}
       </div>
       <span className="text-xs text-gray-500">
-        Tip: Type "Initialize memory bank" in cursor to start the process.
+        Tip: Type "Initialize memory bank" in cursor to start the initialization
+        process.
       </span>
     </div>
   );
