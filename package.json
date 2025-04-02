@@ -1,11 +1,16 @@
 {
   "name": "aimemory",
   "displayName": "AI Memory",
+  "publisher": "CoderOne",
+  "repository": {
+    "url": "https://github.com/Ipenywis/aimemory"
+  },
   "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.96.2"
   },
+  "icon": "dist/assets/icon.png",
   "categories": [
     "Other"
   ],
@@ -33,6 +38,7 @@
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
+    "package:vsce": "pnpm vsce package --no-dependencies",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
@@ -47,12 +53,14 @@
     "@types/express": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "~20.17.25",
-    "@types/vscode": "^1.98.0",
+    "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.3.1",
     "esbuild": "^0.25.0",
+    "esbuild-plugin-copy": "^2.1.1",
     "eslint": "^9.21.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.7.3"

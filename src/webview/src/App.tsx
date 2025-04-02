@@ -42,9 +42,7 @@ function App() {
   return (
     <div className="flex flex-col w-full gap-6">
       <header className="flex flex-col gap-1 border-b border-[var(--vscode-panel-border)]">
-        <h1 className="text-[var(--vscode-foreground)] text-2xl font-bold">
-          AI Memory
-        </h1>
+        <h1 className="text-2xl font-bold">AI Memory</h1>
         <p className="mt-0 text-[var(--vscode-descriptionForeground)]">
           Add memory superpowers to LLMs
         </p>

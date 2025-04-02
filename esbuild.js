@@ -18,6 +18,43 @@ if (!fs.existsSync(outdir)) {
 /**
  * @type {import('esbuild').Plugin}
  */
+const assetsCopyPlugin = {
+  name: "assets-copy",
+  setup(build) {
+    build.onEnd(() => {
+      // Source assets directory
+      const srcAssetsDir = path.resolve(__dirname, "src/assets");
+      // Destination assets directory
+      const destAssetsDir = path.resolve(outdir, "assets");
+
+      // Create destination directory if it doesn't exist
+      if (!fs.existsSync(destAssetsDir)) {
+        fs.mkdirSync(destAssetsDir, { recursive: true });
+      }
+
+      // Copy all files from src/assets to dist/assets
+      if (fs.existsSync(srcAssetsDir)) {
+        const files = fs.readdirSync(srcAssetsDir);
+        files.forEach((file) => {
+          const srcFile = path.join(srcAssetsDir, file);
+          const destFile = path.join(destAssetsDir, file);
+
+          // Only copy files, not directories
+          if (fs.statSync(srcFile).isFile()) {
+            fs.copyFileSync(srcFile, destFile);
+            console.log(`Copied asset: ${file} to ${destAssetsDir}`);
+          }
+        });
+      } else {
+        console.warn("Source assets directory does not exist:", srcAssetsDir);
+      }
+    });
+  },
+};
+
+/**
+ * @type {import('esbuild').Plugin}
+ */
 const excludeWebviewPlugin = {
   name: "exclude-webview",
   setup(build) {
@@ -117,7 +154,7 @@ const sharedOptions = {
     ".ts": "ts",
     ".md": "text", // Add loader for .md files
   },
-  plugins: [excludeWebviewPlugin, markdownCopyPlugin],
+  plugins: [assetsCopyPlugin, excludeWebviewPlugin, markdownCopyPlugin],
   tsconfig: path.resolve(__dirname, "tsconfig.json"),
   mainFields: ["module", "main"],
   logLevel: "info",
@@ -131,6 +168,7 @@ const extensionBuild = async () => {
     entryPoints: ["./src/extension.ts"],
     outfile: path.resolve(outdir, "extension.js"),
     plugins: [
+      assetsCopyPlugin,
       excludeWebviewPlugin,
       markdownCopyPlugin,
       esbuildProblemMatcherPlugin,

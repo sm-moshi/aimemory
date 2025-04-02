@@ -177,17 +177,16 @@ export class WebviewManager {
     const distPath = path.join(this.extensionUri.fsPath, "dist", "webview");
 
     // Check if dist folder exists (production build)
-    if (fs.existsSync(distPath)) {
-      // Get paths to JS & CSS files
-      const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
-      const stylePathOnDisk = path.join(distPath, "assets", "index.css");
+    // Get paths to JS & CSS files
+    const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
+    const stylePathOnDisk = path.join(distPath, "assets", "index.css");
 
-      // Convert paths to webview URIs
-      const scriptUri = webview.asWebviewUri(vscode.Uri.file(scriptPathOnDisk));
-      const styleUri = webview.asWebviewUri(vscode.Uri.file(stylePathOnDisk));
+    // Convert paths to webview URIs
+    const scriptUri = webview.asWebviewUri(vscode.Uri.file(scriptPathOnDisk));
+    const styleUri = webview.asWebviewUri(vscode.Uri.file(stylePathOnDisk));
 
-      // Create HTML with production assets
-      return `<!DOCTYPE html>
+    // Create HTML with production assets
+    return `<!DOCTYPE html>
         <html lang="en">
         <head>
           <meta charset="UTF-8">
@@ -200,60 +199,5 @@ export class WebviewManager {
           <script type="module" src="${scriptUri}"></script>
         </body>
         </html>`;
-    } else {
-      // For development, using direct access to localhost is problematic due to CORS restrictions
-      // We'll use a fully standalone development UI with a mock VSCode API
-      return `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>AI Memory</title>
-          <style>
-            body, html {
-              margin: 0;
-              padding: 0;
-              height: 100%;
-              overflow: hidden;
-            }
-            .dev-container {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              font-family: system-ui, sans-serif;
-              color: #333;
-              background-color: #f5f5f5;
-            }
-            .button {
-              background-color: #0078d4;
-              color: white;
-              border: none;
-              padding: 10px 20px;
-              border-radius: 4px;
-              cursor: pointer;
-              font-size: 16px;
-              margin-top: 20px;
-            }
-            .button:hover {
-              background-color: #005a9e;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="dev-container">
-            <h1>AI Memory Extension Development Mode</h1>
-            <p>Please use the Vite development server:</p>
-            <a class="button" href="http://localhost:5173" target="_blank">Open Dev Server</a>
-            <p style="margin-top: 20px;">
-              Run this command to start the dev server:
-              <br>
-              <code>cd src/webview && pnpm run dev</code>
-            </p>
-          </div>
-        </body>
-        </html>`;
-    }
   }
 }
