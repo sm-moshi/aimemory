@@ -26,7 +26,6 @@ export function MCPServerManager() {
 
   const handleMessage = useCallback((event: MessageEvent) => {
     const message = event.data;
-    console.log("Received message 22:", message);
     switch (message.type) {
       case "MCPServerStatus":
         setIsMCPRunning(message.status === "started");
@@ -97,8 +96,10 @@ export function MCPServerManager() {
       </div>
       {port && isMCPRunning && (
         <span className="text-xs text-gray-500">
-          Server running on <b>http://localhost:{port}/sse</b> - Make sure you
-          add this to Cursor MCP settings
+          Server running on <b>http://localhost:{port}/sse</b>
+          <br />
+          Your Cursor MCP config has been automatically updated (Please check
+          Cursor MCP settings to ensure it is correct).
         </span>
       )}
     </div>

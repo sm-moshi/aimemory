@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { MemoryBankMCPServer } from "./mcpServer";
 import { CommandHandler } from "./commandHandler";
 import { WebviewManager } from "./webviewManager";
+import { updateCursorMCPConfig } from "./utils/cursor-config";
 
 // Default MCP server options
 const DEFAULT_MCP_PORT = 7331;
@@ -20,6 +21,25 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       console.log("Opening webview");
       webviewManager.openWebview();
+    }
+  );
+
+  // Register a command to manually update Cursor MCP config
+  const updateMCPConfigCommand = vscode.commands.registerCommand(
+    "aimemory.updateMCPConfig",
+    async () => {
+      try {
+        await updateCursorMCPConfig(mcpServer.getPort());
+        vscode.window.showInformationMessage(
+          `Cursor MCP config has been updated to use AI Memory server on port ${mcpServer.getPort()}`
+        );
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to update Cursor MCP config: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
     }
   );
 
@@ -121,6 +141,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(cursorApiCommands);
   context.subscriptions.push(stopServerCommand);
   context.subscriptions.push(openWebviewCommand);
+  context.subscriptions.push(updateMCPConfigCommand);
 
   // Register a disposal event to stop the server when the extension is deactivated
   context.subscriptions.push({

@@ -8,19 +8,20 @@ Easily manage AI context for your projects using the Memory Bank technique. Inte
 - Integrates with the Model Context Protocol for structured AI interaction
 - Provides a simple interface for accessing and updating memory bank files
 - Works with Cursor AI to enhance context management
+- Automatically configures Cursor's MCP integration settings for seamless connection
 
 ## Getting Started
 
 1. Install the extension
 2. Create a `memory-bank` folder in your workspace root
 3. Run the `AI Memory: Start MCP` command from the command palette to start the MCP server (default port: 1337)
-4. Connect Cursor to the MCP server
+4. The extension will automatically update your Cursor MCP configuration to connect to the server
 
 ## Usage
 
 There are two ways to interact with the AI Memory extension:
 
-1. **Through Cursor's MCP integration**: Connect to the running MCP server at `http://localhost:1337` to access memory bank files through the structured MCP interface.
+1. **Through Cursor's MCP integration**: The extension automatically configures Cursor to connect to the running MCP server, so you can start using it immediately.
 
 2. **Using `/memory` commands**: You can quickly check the status of the memory bank using commands like `/memory status`.
 
@@ -49,12 +50,14 @@ If you experience issues connecting to the MCP server from Cursor:
 
 2. **Port conflicts**: If port 1337 is in use, the extension will try port 7331. Check the extension output to see which port was actually used.
 
-3. **Connection issues**: If you see "Client closed" errors:
+3. **Manual config update**: Run the `AI Memory: Update Cursor MCP Config` command to manually update the Cursor configuration.
+
+4. **Connection issues**: If you see "Client closed" errors:
    - Make sure no firewalls are blocking localhost connections
    - Try the simplified connection test in the Developer Console (see TROUBLESHOOTING.md)
    - Check the extension's output panel for error messages
 
-4. **Refresh connection**: Sometimes simply restarting the MCP server can fix connection issues. Run "AI Memory: Start MCP" again.
+5. **Refresh connection**: Sometimes simply restarting the MCP server can fix connection issues. Run "AI Memory: Start MCP" again.
 
 For detailed troubleshooting steps, see TROUBLESHOOTING.md.
 

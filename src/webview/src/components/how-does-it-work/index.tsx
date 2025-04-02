@@ -5,7 +5,7 @@ export function HowDoesItWork() {
         <h2 className="text-xl font-bold">How does it work?</h2>
         <p>
           The AI Memory extension allows you to activate various memory
-          techniques for Cursor & LLMs to better contextual understandings of
+          techniques for Cursor & LLMs for better contextual understandings of
           your codebase & project. Currently, it only supports the memory bank
           technique.
         </p>

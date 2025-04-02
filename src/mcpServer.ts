@@ -13,6 +13,7 @@ import {
 } from "./lib/mcp-prompts";
 import { CommandHandler } from "./commandHandler";
 import { WebviewManager } from "./webviewManager";
+import { updateCursorMCPConfig } from "./utils/cursor-config";
 
 export class MemoryBankMCPServer {
   private server: McpServer;
@@ -397,10 +398,14 @@ If the message doesn't contain a /memory command, respond normally to the user's
 
     try {
       return new Promise<void>((resolve, reject) => {
-        this.httpServer = this.app.listen(this.port, () => {
+        this.httpServer = this.app.listen(this.port, async () => {
           this.isRunning = true;
+
+          // Update Cursor MCP config to point to our server
+          await updateCursorMCPConfig(this.port);
+
           vscode.window.showInformationMessage(
-            `AI Memory MCP server started on port ${this.port}`
+            `AI Memory MCP server started on port ${this.port} and Cursor MCP config updated`
           );
           console.log(`AI Memory MCP server started on port ${this.port}`);
           resolve();

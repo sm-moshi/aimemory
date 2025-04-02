@@ -28,6 +28,10 @@
       {
         "command": "aimemory.openWebview",
         "title": "AI Memory: Open Dashboard"
+      },
+      {
+        "command": "aimemory.updateMCPConfig",
+        "title": "AI Memory: Update Cursor MCP Config"
       }
     ]
   },
