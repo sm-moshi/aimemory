@@ -27,14 +27,15 @@ export function activate(context: vscode.ExtensionContext) {
   // This line of code will only be executed once when your extension is activated
   console.log("AI Memory extension is now active!");
 
+  // Create webview manager
+
   // Create MCP server instance
   const mcpServer = new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
 
+  const webviewManager = new WebviewManager(context, mcpServer);
+
   // Create command handler
   const commandHandler = new CommandHandler(mcpServer);
-
-  // Create webview manager
-  const webviewManager = new WebviewManager(context);
 
   // Register a command that starts the MCP server
   const startMCPCommand = vscode.commands.registerCommand(

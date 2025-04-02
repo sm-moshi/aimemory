@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "@vscode-elements/elements";
 import { Status } from "./components/status";
 import { HowDoesItWork } from "./components/how-does-it-work";
+import { MCPServerManager } from "./components/mcp-server-manager";
 
 function App() {
   const [apiAvailable, setApiAvailable] = useState(!!window.vscodeApi);
@@ -48,6 +49,7 @@ function App() {
         </p>
       </header>
       <main className="flex flex-col gap-8">
+        <MCPServerManager />
         <Status />
         <HowDoesItWork />
       </main>

@@ -4,6 +4,7 @@ import * as fs from "fs";
 import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules";
 import { CursorRulesService } from "./lib/cursor-rules-service";
 import { MemoryBankService } from "./memoryBank";
+import { MemoryBankMCPServer } from "./mcpServer";
 
 export class WebviewManager {
   private panel: vscode.WebviewPanel | undefined;
@@ -11,7 +12,10 @@ export class WebviewManager {
   private memoryBankService: MemoryBankService;
   private cursorRulesService: CursorRulesService;
 
-  constructor(private context: vscode.ExtensionContext) {
+  constructor(
+    private context: vscode.ExtensionContext,
+    private mcpServer: MemoryBankMCPServer
+  ) {
     this.extensionUri = context.extensionUri;
     this.memoryBankService = new MemoryBankService(context);
     this.cursorRulesService = new CursorRulesService(context);
@@ -61,6 +65,21 @@ export class WebviewManager {
           case "requestMemoryBankStatus":
             console.log("Requesting...");
             await this.getMemoryBankStatus();
+            break;
+          case "startMCPServer":
+            await this.mcpServer.start();
+            this.panel?.webview.postMessage({
+              type: "MCPServerStatus",
+              status: "started",
+              port: this.mcpServer.getPort(),
+            });
+            break;
+          case "stopMCPServer":
+            await this.mcpServer.stop();
+            this.panel?.webview.postMessage({
+              type: "MCPServerStatus",
+              status: "stopped",
+            });
             break;
         }
       },
@@ -199,5 +218,9 @@ export class WebviewManager {
           <script type="module" src="${scriptUri}"></script>
         </body>
         </html>`;
+  }
+
+  public getWebviewPanel(): vscode.WebviewPanel | undefined {
+    return this.panel;
   }
 }

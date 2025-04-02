@@ -12,6 +12,7 @@ import {
   MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
 } from "./lib/mcp-prompts";
 import { CommandHandler } from "./commandHandler";
+import { WebviewManager } from "./webviewManager";
 
 export class MemoryBankMCPServer {
   private server: McpServer;
@@ -49,6 +50,11 @@ export class MemoryBankMCPServer {
     this.registerMCPResources();
     this.registerMCPTools();
     this.registerMCPPrompts();
+    // this.registerServerManager();
+  }
+
+  public getPort(): number {
+    return this.port;
   }
 
   private setupRoutes(): void {
@@ -436,4 +442,30 @@ If the message doesn't contain a /memory command, respond normally to the user's
     // This method is for backward compatibility with the command handler
     return Promise.resolve("Please use the MCP server directly.");
   }
+
+  // private async registerServerManager(): Promise<void> {
+  //   this.webviewManager.getWebviewPanel()?.webview.onDidReceiveMessage(
+  //     async (message) => {
+  //       console.log("Received message in extension 4:", message);
+  //       switch (message.command) {
+  //         case "startMCPServer":
+  //           await this.start();
+  //           this.webviewManager.getWebviewPanel()?.webview.postMessage({
+  //             type: "MCPServerStatus",
+  //             status: "started",
+  //           });
+  //           break;
+  //         case "stopMCPServer":
+  //           await this.stop();
+  //           this.webviewManager.getWebviewPanel()?.webview.postMessage({
+  //             type: "MCPServerStatus",
+  //             status: "stopped",
+  //           });
+  //           break;
+  //       }
+  //     },
+  //     undefined,
+  //     this.context.subscriptions
+  //   );
+  // }
 }
