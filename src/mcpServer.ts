@@ -51,11 +51,26 @@ export class MemoryBankMCPServer {
     this.registerMCPResources();
     this.registerMCPTools();
     this.registerMCPPrompts();
-    // this.registerServerManager();
   }
 
   public getPort(): number {
     return this.port;
+  }
+
+  // Set the server as already running (detected externally)
+  public setExternalServerRunning(port: number): void {
+    console.log(`Setting external server as running on port ${port}`);
+    this.port = port;
+    this.isRunning = true;
+
+    // Also update Cursor MCP config to point to this server
+    updateCursorMCPConfig(port).catch((error) => {
+      vscode.window.showErrorMessage(
+        `Failed to update Cursor MCP config for external server: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    });
   }
 
   private setupRoutes(): void {
@@ -447,30 +462,4 @@ If the message doesn't contain a /memory command, respond normally to the user's
     // This method is for backward compatibility with the command handler
     return Promise.resolve("Please use the MCP server directly.");
   }
-
-  // private async registerServerManager(): Promise<void> {
-  //   this.webviewManager.getWebviewPanel()?.webview.onDidReceiveMessage(
-  //     async (message) => {
-  //       console.log("Received message in extension 4:", message);
-  //       switch (message.command) {
-  //         case "startMCPServer":
-  //           await this.start();
-  //           this.webviewManager.getWebviewPanel()?.webview.postMessage({
-  //             type: "MCPServerStatus",
-  //             status: "started",
-  //           });
-  //           break;
-  //         case "stopMCPServer":
-  //           await this.stop();
-  //           this.webviewManager.getWebviewPanel()?.webview.postMessage({
-  //             type: "MCPServerStatus",
-  //             status: "stopped",
-  //           });
-  //           break;
-  //       }
-  //     },
-  //     undefined,
-  //     this.context.subscriptions
-  //   );
-  // }
 }

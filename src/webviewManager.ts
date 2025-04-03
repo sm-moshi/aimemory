@@ -5,6 +5,7 @@ import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules";
 import { CursorRulesService } from "./lib/cursor-rules-service";
 import { MemoryBankService } from "./memoryBank";
 import { MemoryBankMCPServer } from "./mcpServer";
+import * as http from "http";
 
 export class WebviewManager {
   private panel: vscode.WebviewPanel | undefined;
@@ -21,7 +22,82 @@ export class WebviewManager {
     this.cursorRulesService = new CursorRulesService(context);
   }
 
-  public openWebview() {
+  // Checks if an MCP server is already running on a specific port
+  private async checkServerHealth(port: number): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      const request = http.get(`http://localhost:${port}/health`, (res) => {
+        let data = "";
+
+        // A chunk of data has been received
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        // The whole response has been received
+        res.on("end", () => {
+          try {
+            if (res.statusCode === 200) {
+              const parsedData = JSON.parse(data);
+              if (parsedData.status === "ok ok") {
+                console.log(`Server found running on port ${port}`);
+                resolve(true);
+                return;
+              }
+            }
+            resolve(false);
+          } catch (e) {
+            console.error("Error parsing JSON:", e);
+            resolve(false);
+          }
+        });
+      });
+
+      request.on("error", (error) => {
+        console.log(`No server running on port ${port}: ${error.message}`);
+        resolve(false);
+      });
+
+      // Set timeout to avoid hanging
+      request.setTimeout(1000, () => {
+        console.log(`Request to port ${port} timed out`);
+        request.destroy();
+        resolve(false);
+      });
+    });
+  }
+
+  // Check standard ports for already running MCP servers
+  private async checkForRunningServers() {
+    const portsToCheck = [7331, 7332]; // Same as DEFAULT_MCP_PORT and ALTERNATIVE_MCP_PORT
+
+    for (const port of portsToCheck) {
+      const isRunning = await this.checkServerHealth(port);
+      if (isRunning) {
+        // Update the server state
+        this.mcpServer.setExternalServerRunning(port);
+
+        // Update the webview if it's open
+        setTimeout(() => {
+          if (this.panel) {
+            this.panel.webview.postMessage({
+              type: "MCPServerStatus",
+              status: "started",
+              port,
+            });
+          }
+        }, 300);
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public async openWebview() {
+    // Check for running servers first
+    await this.checkForRunningServers();
+
     // If we already have a panel, show it
     if (this.panel) {
       this.panel.reveal(vscode.ViewColumn.One);
@@ -65,6 +141,16 @@ export class WebviewManager {
           case "requestMemoryBankStatus":
             console.log("Requesting...");
             await this.getMemoryBankStatus();
+            break;
+          case "serverAlreadyRunning":
+            // Update our internal tracking that a server is already running
+            console.log(`Server already running on port ${message.port}`);
+            this.mcpServer.setExternalServerRunning(message.port);
+            this.panel?.webview.postMessage({
+              type: "MCPServerStatus",
+              status: "started",
+              port: message.port,
+            });
             break;
           case "startMCPServer":
             await this.mcpServer.start();

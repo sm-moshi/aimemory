@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import * as http from "http";
 import { MemoryBankMCPServer } from "./mcpServer";
 import { CommandHandler } from "./commandHandler";
 import { WebviewManager } from "./webviewManager";
@@ -9,6 +10,46 @@ import { updateCursorMCPConfig } from "./utils/cursor-config";
 // Default MCP server options
 const DEFAULT_MCP_PORT = 7331;
 const ALTERNATIVE_MCP_PORT = 7332;
+
+// Helper function to check if a server is running on the given port
+async function isServerRunning(port: number): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const request = http.get(`http://localhost:${port}/health`, (res) => {
+      let data = "";
+
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      res.on("end", () => {
+        try {
+          if (res.statusCode === 200) {
+            const parsedData = JSON.parse(data);
+            if (parsedData.status === "ok ok") {
+              console.log(`Server found running on port ${port}`);
+              resolve(true);
+              return;
+            }
+          }
+          resolve(false);
+        } catch (e) {
+          console.error("Error parsing JSON:", e);
+          resolve(false);
+        }
+      });
+    });
+
+    request.on("error", () => {
+      resolve(false);
+    });
+
+    // Set timeout to avoid hanging
+    request.setTimeout(1000, () => {
+      request.destroy();
+      resolve(false);
+    });
+  });
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -62,6 +103,29 @@ export function activate(context: vscode.ExtensionContext) {
     "aimemory.startMCP",
     async () => {
       try {
+        // First check if there's already a server running on the default port
+        const defaultServerRunning = await isServerRunning(DEFAULT_MCP_PORT);
+        if (defaultServerRunning) {
+          mcpServer.setExternalServerRunning(DEFAULT_MCP_PORT);
+          vscode.window.showInformationMessage(
+            `AI Memory MCP server already running on port ${DEFAULT_MCP_PORT}. Connecting to existing server.`
+          );
+          return;
+        }
+
+        // Check alternative port too
+        const alternativeServerRunning = await isServerRunning(
+          ALTERNATIVE_MCP_PORT
+        );
+        if (alternativeServerRunning) {
+          mcpServer.setExternalServerRunning(ALTERNATIVE_MCP_PORT);
+          vscode.window.showInformationMessage(
+            `AI Memory MCP server already running on port ${ALTERNATIVE_MCP_PORT}. Connecting to existing server.`
+          );
+          return;
+        }
+
+        // No existing server found, try to start a new one
         // Try to start the server with the default port
         await mcpServer.start();
 
