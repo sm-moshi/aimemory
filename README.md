@@ -1,76 +1,144 @@
 # AI Memory
 
-Easily manage AI context for your projects using the Memory Bank technique. Integrates with the Model Context Protocol (MCP) to provide structured AI interactions.
+Easily manage AI context for your projects using the Memory Bank technique. This extension integrates with the Model Context Protocol (MCP) to provide structured AI interactions with Cursor.
+
+> **Note:** This extension is designed to work exclusively with Cursor IDE, not with VS Code. (Maybe will add support for VSCode in the future)
 
 ## Features
 
-- Manages a collection of memory bank files that help maintain context across AI interactions
-- Integrates with the Model Context Protocol for structured AI interaction
+- Creates and manages a collection of Memory Bank files to maintain context across AI interactions
+- Seamlessly integrates with Cursor AI through the Model Context Protocol (MCP)
 - Provides a simple interface for accessing and updating memory bank files
-- Works with Cursor AI to enhance context management
-- Automatically configures Cursor's MCP integration settings for seamless connection
+- Automatically configures Cursor's MCP integration settings for easy connection
+- Helps maintain and access project context across different sessions
 
-## Getting Started
+## Installation
 
-1. Install the extension
-2. Create a `memory-bank` folder in your workspace root
-3. Run the `AI Memory: Start MCP` command from the command palette to start the MCP server (default port: 1337)
-4. The extension will automatically update your Cursor MCP configuration to connect to the server
+### From Cursor Extension Panel (Recommended)
 
-## Usage
+1. Open Cursor
+2. Go to Extensions view (Ctrl+Shift+X / Cmd+Shift+X)
+3. Search for "AI Memory" 
+4. Click "Install"
 
-There are two ways to interact with the AI Memory extension:
+### From VSIX File
 
-1. **Through Cursor's MCP integration**: The extension automatically configures Cursor to connect to the running MCP server, so you can start using it immediately.
+1. Download the latest `.vsix` file from [GitHub releases](https://github.com/Ipenywis/aimemory/releases)
+2. In Cursor, open the Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
+3. Run "Extensions: Install from VSIX..." and select the downloaded file
 
-2. **Using `/memory` commands**: You can quickly check the status of the memory bank using commands like `/memory status`.
+## Setup and Usage
 
-The MCP server provides:
+### Initial Setup
 
-- **Resources**: Access to memory bank files via URIs
-- **Tools**: Functions to manipulate memory bank files
-- **Prompts**: Structured context for AI interactions
+1. Install the extension (see above)
+2. Create a workspace folder for your project (if you haven't already)
+3. Run the `AI Memory: Start MCP` command from the Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
+4. The extension will:
+   - Create a `memory-bank` folder in your workspace root if it doesn't exist
+   - Start the MCP server (default port: 7331, fallback: 7332)
+   - Automatically update your Cursor MCP configuration to connect to the server
 
-## Memory Bank Files
+### Memory Bank Structure
 
-The memory bank includes these file types:
+The extension creates and manages these core files in the `memory-bank` folder:
 
-- `projectbrief.md`: The foundation document defining core requirements and goals
+- `projectbrief.md`: Foundation document that shapes all other files
 - `productContext.md`: Why this project exists, problems it solves, user experience goals
 - `activeContext.md`: Current work focus, recent changes, next steps
 - `systemPatterns.md`: System architecture, key technical decisions, design patterns
 - `techContext.md`: Technologies used, development setup, technical constraints
-- `progress.md`: What works, what's left to build, current status
+- `progress.md`: What works, what's left to build, current status, known issues
+
+### Using with Cursor AI
+
+Once the MCP server is running, you can use AI Memory with Cursor in two ways:
+
+1. **Direct interaction with Cursor AI**: Cursor will automatically access the memory bank context when you chat with it.
+
+2. **Using `/memory` commands**: Type commands like `/memory status` in the Cursor chat to interact with your memory bank.
+
+   Available commands:
+   - `/memory status`: Check the status of the memory bank
+   - `/memory list`: List all memory bank files
+   - `/memory read <filename>`: Read a specific memory bank file
+
+## Dashboard
+
+Run the `AI Memory: Open Dashboard` command to open a dashboard interface for viewing and managing your memory bank files.
 
 ## Troubleshooting MCP Connections
 
 If you experience issues connecting to the MCP server from Cursor:
 
-1. **Check server status**: Ensure the server is running by visiting `http://localhost:1337/health` in your browser. You should see `{"status":"ok ok"}`.
+1. **Check server status**: Ensure the server is running by visiting `http://localhost:7331/health` in your browser. You should see `{"status":"ok ok"}`.
 
-2. **Port conflicts**: If port 1337 is in use, the extension will try port 7331. Check the extension output to see which port was actually used.
+2. **Port conflicts**: If port 7331 is in use, the extension will try port 7332. Check the extension output to see which port was actually used.
 
 3. **Manual config update**: Run the `AI Memory: Update Cursor MCP Config` command to manually update the Cursor configuration.
 
 4. **Connection issues**: If you see "Client closed" errors:
    - Make sure no firewalls are blocking localhost connections
-   - Try the simplified connection test in the Developer Console (see TROUBLESHOOTING.md)
+   - Try restarting the MCP server with `AI Memory: Start MCP` again
    - Check the extension's output panel for error messages
 
-5. **Refresh connection**: Sometimes simply restarting the MCP server can fix connection issues. Run "AI Memory: Start MCP" again.
+For detailed troubleshooting steps, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-For detailed troubleshooting steps, see TROUBLESHOOTING.md.
+## Local Development
 
-## Development
+### Prerequisites
 
-This extension uses:
-- TypeScript for type-safe code
-- MCP SDK for structured AI interaction instead of Express.js
-- VSCode Extension API for integration with the editor
+- [Node.js](https://nodejs.org/) (v16 or later)
+- [pnpm](https://pnpm.io/) (v8 or later)
+- Cursor IDE for testing
+
+### Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Ipenywis/aimemory.git
+   cd aimemory
+   ```
+
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+3. Build the extension:
+   ```bash
+   pnpm run compile
+   ```
+
+### Development Workflow
+
+1. Start the watch process for automatic rebuilding:
+   ```bash
+   pnpm run watch
+   ```
+
+2. Launch the extension in debug mode:
+   - Press F5 in Cursor
+   - Or run the "Run Extension" launch configuration
+
+3. Test the extension:
+   - Run commands from the Command Palette
+   - Use `/memory` commands in Cursor AI
+
+### Building VSIX Package
+
+To package the extension for distribution:
+
+```bash
+pnpm run package
+pnpm run package:vsce
+```
+
+The VSIX file will be created in the project root directory.
 
 ## License
 
-MIT
+Apache 2.0
 
 ## Extension Settings
 
