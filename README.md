@@ -84,6 +84,54 @@ If you experience issues connecting to the MCP server from Cursor:
 
 For detailed troubleshooting steps, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
+## Contributing
+
+Contributions to AI Memory are welcome! This project uses automated versioning and release processes.
+
+### Commit Message Format
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) standard for commit messages:
+
+- `feat:` - A new feature (triggers a minor version bump)
+- `fix:` - A bug fix (triggers a patch version bump)
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting, etc.)
+- `refactor:` - Code changes that neither fix bugs nor add features
+- `perf:` - Performance improvements
+- `test:` - Adding or modifying tests
+- `chore:` - Changes to the build process or auxiliary tools
+- `BREAKING CHANGE:` - Changes that break backward compatibility (triggers a major version bump)
+
+### Automated Releases
+
+When you push to the `main` branch, the following happens automatically:
+
+1. A GitHub Action analyzes your commit messages
+2. The version in `package.json` is bumped based on the commit types
+3. A new tag is created and pushed
+4. A GitHub release is created with the packaged VSIX file
+5. The extension is published to VS Code Marketplace and Open VSX Registry (if tokens are configured)
+
+### Repository Secrets for Publishing
+
+To enable automated publishing to the extension marketplaces, set up these repository secrets in your GitHub repository:
+
+1. `GH_TOKEN`: Personal Access Token with 'repo' scope (used for pushing version changes)
+2. `VSCE_PAT`: Personal Access Token for VSCode Marketplace publishing
+   - Create this token at https://dev.azure.com/
+   - Instructions: https://code.visualstudio.com/api/working-with-extensions/publishing-extension#get-a-personal-access-token
+3. `OVSX_PAT`: Personal Access Token for Open VSX Registry publishing
+   - Create this token at https://open-vsx.org/
+   - Instructions: https://github.com/eclipse/openvsx/wiki/Publishing-Extensions#how-to-publish-an-extension
+
+### Pull Request Process
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes using the conventional format (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
 ## Local Development
 
 ### Prerequisites
@@ -139,57 +187,5 @@ The VSIX file will be created in the project root directory.
 ## License
 
 Apache 2.0
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
 **Enjoy!**
