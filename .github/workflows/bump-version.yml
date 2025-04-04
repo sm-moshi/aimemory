@@ -9,18 +9,24 @@ on:
       - '.gitignore'
       - '.vscode/**'
 
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+
 jobs:
   bump-version:
     name: Bump Version on main
     runs-on: ubuntu-latest
     if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
     
+    permissions:
+      contents: write  # Gives permission to push to the repository
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ env.GH_TOKEN }}
           
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -96,7 +102,10 @@ jobs:
           git tag v${{ steps.version_bump.outputs.new_version }}
           git push
           git push --tags
+        env:
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           
       - name: Log version bump
         run: |
           echo "Bumped version from ${{ steps.prev_version.outputs.version }} to ${{ steps.version_bump.outputs.new_version }}" 
+      env: 

@@ -5,10 +5,18 @@ on:
     tags:
       - 'v*.*.*'
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  VSCE_PAT: ${{ secrets.VSCE_PAT }}
+  OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
 jobs:
   build:
     name: Build and Publish
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Gives permission to create releases
     
     steps:
       - name: Checkout code
@@ -43,8 +51,6 @@ jobs:
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
@@ -66,20 +72,16 @@ jobs:
             This version will be available in the Cursor Extension Panel soon.
       
       - name: Publish to VSCode Marketplace
-        if: success() && secrets.VSCE_PAT != ''
+        if: env.VSCE_PAT != ''
         run: |
           npm install -g @vscode/vsce
-          vsce publish -p ${{ secrets.VSCE_PAT }}
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          vsce publish -p "$VSCE_PAT"
       
       - name: Publish to Open VSX Registry
-        if: success() && secrets.OVSX_PAT != ''
+        if: env.OVSX_PAT != ''
         run: |
           npm install -g ovsx
-          ovsx publish -p ${{ secrets.OVSX_PAT }}
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          ovsx publish -p "$OVSX_PAT"
           
       - name: Log release URL
         run: echo "Released at ${{ steps.create_release.outputs.url }}" 

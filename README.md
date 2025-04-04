@@ -116,13 +116,23 @@ When you push to the `main` branch, the following happens automatically:
 
 To enable automated publishing to the extension marketplaces, set up these repository secrets in your GitHub repository:
 
-1. `GH_TOKEN`: Personal Access Token with 'repo' scope (used for pushing version changes)
-2. `VSCE_PAT`: Personal Access Token for VSCode Marketplace publishing
+1. `GH_TOKEN` (optional): Personal Access Token with 'repo' scope (used for pushing version changes)
+   - If not provided, the workflow will use the default `GITHUB_TOKEN` with write permissions
+   - Create this token at https://github.com/settings/tokens
+
+2. `VSCE_PAT` (optional): Personal Access Token for VSCode Marketplace publishing
    - Create this token at https://dev.azure.com/
    - Instructions: https://code.visualstudio.com/api/working-with-extensions/publishing-extension#get-a-personal-access-token
-3. `OVSX_PAT`: Personal Access Token for Open VSX Registry publishing
+
+3. `OVSX_PAT` (optional): Personal Access Token for Open VSX Registry publishing
    - Create this token at https://open-vsx.org/
    - Instructions: https://github.com/eclipse/openvsx/wiki/Publishing-Extensions#how-to-publish-an-extension
+
+To add these secrets:
+1. Go to your repository on GitHub
+2. Navigate to Settings > Secrets and variables > Actions
+3. Click "New repository secret" 
+4. Add each token with its corresponding name
 
 ### Pull Request Process
 
