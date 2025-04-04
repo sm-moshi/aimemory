@@ -107,5 +107,4 @@ jobs:
           
       - name: Log version bump
         run: |
-          echo "Bumped version from ${{ steps.prev_version.outputs.version }} to ${{ steps.version_bump.outputs.new_version }}" 
-      env: 
+          echo "Bumped version from ${{ steps.prev_version.outputs.version }} to ${{ steps.version_bump.outputs.new_version }}"
