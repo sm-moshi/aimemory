@@ -1,3 +1,7 @@
+## [0.0.7](https://github.com/Ipenywis/aimemory/compare/v0.0.6...v0.0.7) (2025-04-04)
+
+
+
 ## 0.0.6 (2025-04-04)
 
 
