@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (without v prefix)'
+        required: true
+        default: '0.0.1'
+        type: string
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -19,6 +26,14 @@ jobs:
       contents: write  # Gives permission to create releases
     
     steps:
+      - name: Debug Workflow Information
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref name: ${{ github.ref_name }}"
+          echo "Ref type: ${{ github.ref_type }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Workflow inputs: ${{ toJSON(github.event.inputs) }}"
+          
       - name: Checkout code
         uses: actions/checkout@v3
         
@@ -52,14 +67,14 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
+          name: Release ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
           draft: false
           prerelease: false
           files: |
             ${{ steps.package.outputs.name }}-${{ steps.package.outputs.version }}.vsix
           body: |
-            Release ${{ github.ref_name }} of the AI Memory extension.
+            Release ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }} of the AI Memory extension.
             
             ## How to install
             
