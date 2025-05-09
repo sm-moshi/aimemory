@@ -3,6 +3,7 @@
 out/**
 node_modules/**
 src/**
+!src/webview/dist/**
 .gitignore
 .yarnrc
 esbuild.js
@@ -18,3 +19,9 @@ agents/
 .repomix/
 .github/
 .cursorignore
+
+# Don't ignore the webview assets that are needed
+!dist/webview/
+!dist/webview/assets/
+!dist/assets/
+!dist/lib/rules/

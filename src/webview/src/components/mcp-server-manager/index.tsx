@@ -54,7 +54,7 @@ export function MCPServerManager() {
     const checkAllPorts = async () => {
       for (const portToCheck of defaultPorts) {
         // If we already found a running server, stop checking
-        if (isMCPRunning) break;
+        if (isMCPRunning) {break;}
         await checkServerRunning(portToCheck);
       }
     };
@@ -141,9 +141,9 @@ export function MCPServerManager() {
   const handleUpdateMemoryBank = useCallback(async () => {
     // Simple prompt for file type and content (can be improved to a modal or form)
     const fileType = window.prompt("Enter memory bank file type (e.g. projectbrief.md):");
-    if (!fileType) return;
+    if (!fileType) {return;}
     const content = window.prompt("Enter new content for the file:");
-    if (content === null) return;
+    if (content === null) {return;}
     setUpdateLoading(true);
     setFeedback(null);
     await callMCPTool("update-memory-bank-file", { fileType, content });

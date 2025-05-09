@@ -56,6 +56,12 @@ async function isServerRunning(port: number): Promise<boolean> {
 export function activate(context: vscode.ExtensionContext) {
   console.log("Registering open webview command");
 
+  // Create MCP server instance first
+  const mcpServer = new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
+
+  // Create webview manager
+  const webviewManager = new WebviewManager(context, mcpServer);
+
   // Register command to open the webview
   const openWebviewCommand = vscode.commands.registerCommand(
     "aimemory.openWebview",
@@ -87,13 +93,6 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log("AI Memory extension is now active!");
-
-  // Create webview manager
-
-  // Create MCP server instance
-  const mcpServer = new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
-
-  const webviewManager = new WebviewManager(context, mcpServer);
 
   // Create command handler
   const commandHandler = new CommandHandler(mcpServer);

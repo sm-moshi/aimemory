@@ -1,9 +1,9 @@
 {
   "name": "aimemory",
   "displayName": "AI Memory",
-  "publisher": "CoderOne",
+  "publisher": "sm-moshi",
   "repository": {
-    "url": "https://github.com/Ipenywis/aimemory"
+    "url": "https://github.com/sm-moshi/aimemory"
   },
   "description": "Easily manage AI context for your projects using memory bank technique",
   "version": "0.1.0",
