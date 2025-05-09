@@ -1,3 +1,16 @@
+## [0.1.1](https://github.com/sm-moshi/aimemory/compare/v0.1.0...v0.1.1) (2025-05-09)
+
+### Experimental & In-Progress 🐹
+
+- Added a dedicated Output Channel for AI Memory extension logs to improve diagnostics and user feedback.
+- Updated TODO and ROADMAP with a robust, Cursor-first action plan for startup, error handling, and MCP tool reliability.
+- Planned and prepared for retry/backoff logic, JSON validation, and deferred activation for MCP server connection.
+- Improved project documentation to clarify modular memory bank structure and workflows.
+- Minor cleanups and preparation for further refactoring (Express removal, command queuing, etc.).
+- This version is running in the Extension Development Host, but is not yet fully stable for production use.
+
+---
+
 ## [0.1.0](https://github.com/sm-moshi/aimemory/compare/v0.0.7...v0.1.0) (2025-05-09)
 
 ### Major Changes & Features 🐹
@@ -17,8 +30,6 @@
 - Ensured all MCP tools and webview actions fail gracefully if memory bank is not ready
 - Improved error handling and logging throughout the extension
 - Cleaned up and optimised build scripts
-
----
 
 ## [0.0.7](https://github.com/Ipenywis/aimemory/compare/v0.0.6...v0.0.7) (2025-04-04)
 
@@ -63,3 +74,15 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [Unreleased]
 
 - Initial release
+
+## [0.1.2] - 2025-05-09
+
+### Packaging & Workflow Improvements 🐹
+
+- Fixed VSIX packaging to strictly exclude `.cursor/`, `memory-bank/`, `docs/`, and `test/` folders using hard excludes in `.vscodeignore`.
+- Ensured only `README.md`, `LICENSE.md`, `CHANGELOG.md`, and built extension assets are included in the VSIX.
+- Updated `Justfile` with a robust `ship` function: now runs `pnpm install` and `npm install --omit=dev` before packaging, and verifies VSIX contents with `vsce ls --tree`.
+- Confirmed extension runs in Extension Development Host Mode for safe testing and development.
+- Improved documentation and workflow for privacy and reproducibility in packaging.
+
+---

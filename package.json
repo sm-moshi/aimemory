@@ -6,7 +6,7 @@
     "url": "https://github.com/sm-moshi/aimemory"
   },
   "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "engines": {
     "vscode": "^1.96.2"
   },
@@ -50,6 +50,7 @@
     "lint": "eslint src",
     "test": "vscode-test",
     "webview:dev": "cd src/webview && pnpm run dev",
+    "webview:build": "cd src/webview && pnpm run build",
     "build": "npm-run-all -s webview:build package"
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.3.2",
+    "chai": "^5.2.0",
     "esbuild": "^0.25.4",
     "esbuild-plugin-copy": "^2.1.1",
     "eslint": "^9.26.0",

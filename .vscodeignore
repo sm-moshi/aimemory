@@ -1,9 +1,11 @@
+# Exclude all development, documentation, and private context folders
 .vscode/**
 .vscode-test/**
 out/**
 node_modules/**
 src/**
-!src/webview/dist/**
+docs/**        # Exclude all documentation
+memory-bank/** # Exclude all memory bank files (private context/docs)
 .gitignore
 .yarnrc
 esbuild.js
@@ -15,13 +17,36 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 pnpm-lock.yaml
 .env*
-agents/
 .repomix/
 .github/
 .cursorignore
+Justfile
+logs/*
+.DS_Store
+Thumbs.db
 
-# Don't ignore the webview assets that are needed
-!dist/webview/
-!dist/webview/assets/
-!dist/assets/
-!dist/lib/rules/
+test/**          # Exclude test files
+.cursor/rules/** # Exclude all Cursor rules (generated at runtime)
+.cursor/         # Exclude all Cursor private data
+
+# Only include the built extension and assets
+!dist/extension.js
+!dist/assets/**
+!dist/lib/rules/**
+!dist/webview/**
+
+# Only include these root files for marketplace/metadata
+!README.md
+!CHANGELOG.md
+!LICENSE.md
+!package.json
+
+# --- HARD EXCLUDES: Do not package these folders, ever ---
+.cursor/
+.cursor/**
+docs/
+docs/**
+memory-bank/
+memory-bank/**
+test/
+test/**

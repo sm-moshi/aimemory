@@ -145,7 +145,7 @@ const sharedOptions = {
   platform: "node",
   external: [
     "vscode",
-    "express",
+    // "express", - for now it has to be bundled
     // These are imported by the @modelcontextprotocol/sdk package but are not required at runtime
     "node:test",
     "node:worker_threads",

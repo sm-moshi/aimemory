@@ -4,5 +4,6 @@ node_modules
 .vscode-test/
 *.vsix
 .repomix/
-agents/
-.cursor/rules/
+.cursor/
+memory-bank/
+logs/

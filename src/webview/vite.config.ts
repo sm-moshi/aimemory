@@ -1,15 +1,13 @@
+/// <reference types="node" />
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
+import * as path from "node:path";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    watch: {
-      skipWrite: false,
-    },
     outDir: "../../dist/webview",
     emptyOutDir: true,
     sourcemap: true,

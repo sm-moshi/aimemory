@@ -1,11 +1,11 @@
 # Justfile for AI Memory Extension (Cursor-Only)
-# 🚀 Setup
+# Setup
 
 install:
     pnpm install
     cd src/webview && pnpm install
 
-# 🧠 Build backend (with esbuild)
+# Build backend (with esbuild)
 
 backend:
     node esbuild.js --production
@@ -13,7 +13,7 @@ backend:
 backend-watch:
     node esbuild.js --watch
 
-# 🌐 Webview (React + Vite)
+# Webview (React + Vite)
 
 webview-dev:
     cd src/webview && pnpm run dev
@@ -21,12 +21,12 @@ webview-dev:
 webview-build:
     cd src/webview && pnpm run build
 
-# 👀 Dev Mode (backend watch + webview dev)
+#ä Dev Mode (backend watch + webview dev)
 
 dev:
     just backend-watch & just webview-dev
 
-# 🧹 Quality Checks
+# Quality Checks
 
 lint:
     pnpm run lint
@@ -34,15 +34,12 @@ lint:
 typecheck:
     pnpm run check-types
 
-# ✅ Test
+# Test
 
 test:
     pnpm run test
 
-# 📦 Packaging
-
-build:
-    pnpm run build
+# Packaging
 
 package:
     pnpm run package
@@ -50,8 +47,29 @@ package:
 vsix:
     pnpm run package:vsce
 
-# 🧼 Clean
+ship: install lint typecheck backend webview-build test package vsix
+    pnpm install
+    npm install --omit=dev
+    vsce ls --tree
+
+# Clean
 
 clean:
     rm -rf dist node_modules .turbo .next out coverage
     cd src/webview && rm -rf dist node_modules
+
+# Full Rebuild
+
+rebuild: clean ship
+
+# VSIX packaging with npm (for vsce compatibility)
+vsix-npm:
+    rm -rf node_modules
+    npm install --omit=dev
+    pnpm run package:vsce
+
+# Restore pnpm environment after packaging
+restore-pnpm:
+    rm -rf node_modules
+    pnpm install
+    cd src/webview && pnpm install
