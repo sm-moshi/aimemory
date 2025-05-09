@@ -1,3 +1,25 @@
+## [0.1.0](https://github.com/sm-moshi/aimemory/compare/v0.0.7...v0.1.0) (2025-05-09)
+
+### Major Changes & Features 🐹
+
+- Refactored memory bank to a modular, async, and robust structure with readiness checks and error handling
+- Hardened MCP server: automatic port failover, robust error handling, and readiness checks for all endpoints
+- Modernised webview UI: added "Initialise Memory Bank" and "Update Memory Bank" buttons, clear feedback, and error handling
+- Reduced bundle size by marking large dependencies as external in the build config
+- Improved developer experience: clearer feedback, robust error messages, and up-to-date documentation
+- Updated documentation: `README.md`, `IMPLEMENTATION.md`, `TROUBLESHOOTING.md`, and this changelog
+- All code and docs now use British English and follow project rules (emoji, GitFlow, etc.)
+- All linter and type errors resolved; tests pass successfully
+
+### Fixes & Improvements
+
+- Fixed asset and markdown copying in build process
+- Ensured all MCP tools and webview actions fail gracefully if memory bank is not ready
+- Improved error handling and logging throughout the extension
+- Cleaned up and optimised build scripts
+
+---
+
 ## [0.0.7](https://github.com/Ipenywis/aimemory/compare/v0.0.6...v0.0.7) (2025-04-04)
 
 

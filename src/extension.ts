@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import * as http from "http";
+import * as http from "node:http";
 import { MemoryBankMCPServer } from "./mcpServer";
 import { CommandHandler } from "./commandHandler";
 import { WebviewManager } from "./webviewManager";
@@ -131,8 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Show information about how to connect to the MCP server
         vscode.window.showInformationMessage(
-          `AI Memory MCP server started on port ${DEFAULT_MCP_PORT}. ` +
-            `You can connect to it through Cursor's MCP integration.`
+          `AI Memory MCP server started on port ${DEFAULT_MCP_PORT}. You can connect to it through Cursor's MCP integration.`
         );
       } catch (error) {
         // If the default port is in use, try the alternative port
@@ -147,8 +146,8 @@ export function activate(context: vscode.ExtensionContext) {
 
             // Show information about how to connect to the MCP server
             vscode.window.showInformationMessage(
-              `AI Memory MCP server started on port ${ALTERNATIVE_MCP_PORT}. ` +
-                `You can connect to it through Cursor's MCP integration.`
+              `AI Memory MCP server started on port ${ALTERNATIVE_MCP_PORT}.
+                You can connect to it through Cursor's MCP integration.`
             );
           } catch (innerError) {
             vscode.window.showErrorMessage(

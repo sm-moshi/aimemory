@@ -6,7 +6,7 @@
     "url": "https://github.com/Ipenywis/aimemory"
   },
   "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.96.2"
   },
@@ -53,27 +53,39 @@
     "build": "npm-run-all -s webview:build package"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",
     "@types/mocha": "^10.0.10",
-    "@types/node": "~20.17.25",
-    "@types/vscode": "^1.95.0",
-    "@typescript-eslint/eslint-plugin": "^8.25.0",
-    "@typescript-eslint/parser": "^8.25.0",
+    "@types/node": "~20.17.46",
+    "@types/vscode": "^1.96.2",
+    "@typescript-eslint/eslint-plugin": "^8.32.0",
+    "@typescript-eslint/parser": "^8.32.0",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.3.1",
-    "esbuild": "^0.25.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.4",
     "esbuild-plugin-copy": "^2.1.1",
-    "eslint": "^9.21.0",
+    "eslint": "^9.26.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@modelcontextprotocol/sdk": "^1.11.1",
     "cors": "^2.8.5",
-    "express": "^4.18.3",
-    "zod": "^3.22.4"
+    "express": "^4.21.2",
+    "zod": "^3.24.4"
   },
-  "packageManager": "pnpm@10.7.0+sha512.6b865ad4b62a1d9842b61d674a393903b871d9244954f652b8842c2b553c72176b278f64c463e52d40fff8aba385c235c8c9ecf5cc7de4fd78b8bb6d49633ab6"
+  "packageManager": "pnpm@10.7.0+sha512.6b865ad4b62a1d9842b61d674a393903b871d9244954f652b8842c2b553c72176b278f64c463e52d40fff8aba385c235c8c9ecf5cc7de4fd78b8bb6d49633ab6",
+  "pnpm": {
+    "overrides": {
+      "jwa": "^2.0.0"
+    },
+    "ignoredBuiltDependencies": [
+      "keytar"
+    ],
+    "onlyBuiltDependencies": [
+      "@vscode/vsce-sign",
+      "esbuild"
+    ]
+  }
 }

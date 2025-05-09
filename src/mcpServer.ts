@@ -6,7 +6,7 @@ import { MemoryBankFileType } from "./types";
 import { MemoryBankService } from "./memoryBank";
 import { z } from "zod";
 import express from "express";
-import http from "http";
+import http from "node:http";
 import {
   INITIALIZE_MEMORY_BANK_PROMPT,
   MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
@@ -79,7 +79,7 @@ export class MemoryBankMCPServer {
     // but has type errors with TypeScript's strict checking.
 
     // Health check route
-    this.app.get("/health", function (req, res) {
+    this.app.get("/health", (req, res) => {
       res.status(200).json({ status: "ok ok" });
     });
 
@@ -95,28 +95,70 @@ export class MemoryBankMCPServer {
 
     // Setup SSE endpoint with simplified implementation
     this.app.get("/sse", async (req, res) => {
-      console.log("SSE endpoint hit - using simplified implementation");
+      console.log("SSE endpoint hit - setting up keep-alive");
 
-      // Basic SSE setup
-      // res.setHeader("Content-Type", "text/event-stream");
-      // res.setHeader("Cache-Control", "no-cache");
-      // res.setHeader("Connection", "keep-alive");
-      // res.setHeader("Access-Control-Allow-Origin", "*");
-      // res.flushHeaders();
+      // --- SSE Keep-Alive Implementation ---
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("Access-Control-Allow-Origin", "*"); // Consider restricting in production
 
-      // res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
-      console.log("SSE headers sent and connection established");
+      // Keep-alive mechanism
+      const keepAliveInterval = setInterval(() => {
+        try {
+          // Send a comment line as a ping
+          res.write(": ping\n\n");
+        } catch (e) {
+          console.error("Error sending SSE keep-alive ping:", e);
+          clearInterval(keepAliveInterval);
+          // Optionally close the connection if writing fails
+          if (!res.writableEnded) {
+            res.end();
+          }
+        }
+      }, 15000); // Send ping every 15 seconds
 
-      // Create transport without any extra error handling
+      console.log("SSE custom headers set, proceeding to transport creation and connection");
+
+      try {
+        // Create transport
       this.transport = new SSEServerTransport("/messages", res);
 
-      // Connect in background to avoid blocking
+        // Connect MCP server to transport
+        console.log("Attempting to connect MCP server to transport...");
       await this.server.connect(this.transport);
-      // .then(() => console.log("MCP server connected to transport"))
-      // .catch((err) => console.error("Connection error:", err));
+        console.log("MCP server connected to transport successfully.");
 
+        // Now that connection is successful, explicitly send our initial connected message
+        // This ensures it's sent after the transport has potentially set its own headers.
+        if (!res.headersSent) {
+            // If transport didn't send headers, flush ours
+            res.flushHeaders();
+        }
+        res.write(": connected\n\n");
+
+      } catch (connectionError) {
+        console.error("Failed to connect MCP server to transport:", connectionError);
+        clearInterval(keepAliveInterval);
+        // Send an error event to the client if possible
+        try {
+          res.write(`event: error\ndata: ${JSON.stringify({ message: "MCP connection failed" })}\n\n`);
+        } catch (writeError) {
+          console.error("Failed to send SSE error event:", writeError);
+        }
+        if (!res.writableEnded) {
+          res.end(); // Close the connection on error
+        }
+        return; // Stop further execution for this request
+      }
+
+      // Clean up interval on client disconnect
       req.on("close", () => {
-        console.log("SSE connection closed by client");
+        console.log("SSE connection closed by client, clearing keep-alive interval.");
+        clearInterval(keepAliveInterval);
+        // Optionally handle server-side cleanup if needed when client disconnects
+        // e.g., this.server.disconnect(this.transport) if the SDK supports it
+        this.transport = null; // Clear transport reference
       });
     });
 
@@ -132,7 +174,15 @@ export class MemoryBankMCPServer {
         return;
       }
 
-      await this.transport!.handlePostMessage(req, res);
+      // Safely handle potential null transport
+      if (this.transport) {
+        await this.transport.handlePostMessage(req, res);
+      } else {
+        console.error("Attempted to handle message, but transport is null");
+        if (!res.headersSent) {
+          res.status(503).json({ error: "Server transport not available" });
+        }
+      }
     });
   }
 
@@ -151,6 +201,18 @@ export class MemoryBankMCPServer {
         }),
       }),
       async (uri, { fileType }) => {
+        // Memory bank readiness check
+        if (!this.memoryBank.isReady()) {
+          try {
+            await this.memoryBank.loadFiles();
+          } catch (err) {
+            console.error("Memory bank not ready and failed to load:", err);
+            throw new Error("Memory bank is not ready. Please initialise it first.");
+          }
+          if (!this.memoryBank.isReady()) {
+            throw new Error("Memory bank is not ready. Please initialise it first.");
+          }
+        }
         const type = fileType as MemoryBankFileType;
         const file = this.memoryBank.getFile(type);
 
@@ -171,6 +233,18 @@ export class MemoryBankMCPServer {
 
     // Root resource to list all memory bank files
     this.server.resource("memory-bank-root", "memory-bank://", async () => {
+      // Memory bank readiness check
+      if (!this.memoryBank.isReady()) {
+        try {
+          await this.memoryBank.loadFiles();
+        } catch (err) {
+          console.error("Memory bank not ready and failed to load:", err);
+          throw new Error("Memory bank is not ready. Please initialise it first.");
+        }
+        if (!this.memoryBank.isReady()) {
+          throw new Error("Memory bank is not ready. Please initialise it first.");
+        }
+      }
       const files = this.memoryBank.getAllFiles();
 
       return {
@@ -250,17 +324,62 @@ export class MemoryBankMCPServer {
 
     this.server.tool("read-memory-bank-files", {}, async (_, extra) => {
       console.log("Reading memory bank files");
-      await this.memoryBank.loadFiles();
-      const files = this.memoryBank.getFilesWithFilenames();
-      console.log("Files:", files);
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Here are the files in the memory bank: \n\n${files}`,
-          },
-        ],
-      };
+      try {
+        // Memory bank readiness check
+        if (!this.memoryBank.isReady()) {
+          try {
+            await this.memoryBank.loadFiles();
+          } catch (err) {
+            console.error("Memory bank not ready and failed to load:", err);
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (!this.memoryBank.isReady()) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+        // Ensure files are loaded (or reloaded) before getting content
+        await this.memoryBank.loadFiles();
+        const files = this.memoryBank.getFilesWithFilenames();
+        console.log("Memory Bank Files Read Successfully.");
+        return {
+          content: [
+            {
+              type: "text" as const,
+              // Ensure a fallback if files is empty or nullish
+              text: files ? `Here are the files in the memory bank: \n\n${files}` : "Memory bank is empty or could not be read.",
+            },
+          ],
+        };
+      } catch (error) {
+        console.error("Error reading memory bank files:", error);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Error reading memory bank files: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
     });
 
     // Get memory bank file
@@ -289,60 +408,135 @@ export class MemoryBankMCPServer {
     // );
 
     // Update memory bank file
-    // this.server.tool(
-    //   "update-memory-bank-file",
-    //   {
-    //     fileType: z.string(),
-    //     content: z.string(),
-    //   },
-    //   async ({ fileType, content }, extra) => {
-    //     try {
-    //       const type = fileType as MemoryBankFileType;
-    //       await this.memoryBank.updateFile(type, content);
+    this.server.tool(
+      "update-memory-bank-file",
+      {
+        fileType: z.string(),
+        content: z.string(),
+      },
+      async ({ fileType, content }, extra) => {
+        // Memory bank readiness check
+        if (!this.memoryBank.isReady()) {
+          try {
+            await this.memoryBank.loadFiles();
+          } catch (err) {
+            console.error("Memory bank not ready and failed to load:", err);
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (!this.memoryBank.isReady()) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+        try {
+          const type = fileType as MemoryBankFileType;
+          await this.memoryBank.updateFile(type, content);
 
-    //       return {
-    //         content: [
-    //           { type: "text" as const, text: `Updated ${type} successfully` },
-    //         ],
-    //       };
-    //     } catch (error) {
-    //       console.error(`Failed to update ${fileType}:`, error);
-    //       return {
-    //         content: [
-    //           {
-    //             type: "text" as const,
-    //             text: `Error updating ${fileType}: ${
-    //               error instanceof Error ? error.message : String(error)
-    //             }`,
-    //           },
-    //         ],
-    //         isError: true,
-    //       };
-    //     }
-    //   }
-    // );
+          return {
+            content: [
+              { type: "text" as const, text: `Updated ${type} successfully` },
+            ],
+          };
+        } catch (error) {
+          console.error(`Failed to update ${fileType}:`, error);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error updating ${fileType}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
 
     // List all memory bank files
     this.server.tool("list-memory-bank-files", {}, async (_, extra) => {
-      const files = this.memoryBank.getAllFiles();
+      console.log("Listing memory bank files");
+      try {
+        // Memory bank readiness check
+        if (!this.memoryBank.isReady()) {
+          try {
+            await this.memoryBank.loadFiles();
+          } catch (err) {
+            console.error("Memory bank not ready and failed to load:", err);
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (!this.memoryBank.isReady()) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+        const files = this.memoryBank.getAllFiles();
+        const fileListText = files
+          .map(
+            (file) =>
+              `${file.type}: Last updated ${
+                file.lastUpdated
+                  ? new Date(file.lastUpdated).toLocaleString()
+                  : "never"
+              }`
+          )
+          .join("\n");
 
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: files
-              .map(
-                (file) =>
-                  `${file.type}: Last updated ${
-                    file.lastUpdated
-                      ? new Date(file.lastUpdated).toLocaleString()
-                      : "never"
-                  }`
-              )
-              .join("\n"),
-          },
-        ],
-      };
+        console.log("Memory Bank Files Listed Successfully.");
+        return {
+          content: [
+            {
+              type: "text" as const,
+              // Handle case where there are no files
+              text: fileListText || "No memory bank files found.",
+            },
+          ],
+        };
+      } catch (error) {
+        console.error("Error listing memory bank files:", error);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Error listing memory bank files: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
     });
   }
 
@@ -411,10 +605,15 @@ If the message doesn't contain a /memory command, respond normally to the user's
       return;
     }
 
-    try {
+    // Helper to actually start the server on a given port
+    const tryStartServer = (portToTry: number): Promise<void> => {
       return new Promise<void>((resolve, reject) => {
-        this.httpServer = this.app.listen(this.port, async () => {
+        this.httpServer = this.app.listen(portToTry, async () => {
           this.isRunning = true;
+          this.port = portToTry;
+
+          // Set keep-alive timeout (30s)
+          this.httpServer?.setTimeout(30000);
 
           // Update Cursor MCP config to point to our server
           await updateCursorMCPConfig(this.port);
@@ -426,10 +625,21 @@ If the message doesn't contain a /memory command, respond normally to the user's
           resolve();
         });
 
+        // Robust error handling
         this.httpServer.on("error", (err: NodeJS.ErrnoException) => {
           if (err.code === "EADDRINUSE") {
+            // If first port fails, try alternative (7332)
+            if (portToTry === 7331) {
+              vscode.window.showWarningMessage(
+                'Port 7331 is in use, trying port 7332...'
+              );
+              // Try alternative port
+              tryStartServer(7332).then(resolve).catch(reject);
+              return;
+            }
+            // If we get here, 7332 is also in use
             vscode.window.showErrorMessage(
-              `Port ${this.port} is already in use. Please try a different port.`
+              'Port 7332 is also in use. Please free a port and try again.'
             );
           } else {
             vscode.window.showErrorMessage(
@@ -438,7 +648,17 @@ If the message doesn't contain a /memory command, respond normally to the user's
           }
           reject(err);
         });
+
+        // Log connection resets, socket hangups, etc.
+        this.httpServer.on("clientError", (err, socket) => {
+          console.error("Client connection error:", err.message);
+          socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
+        });
       });
+    };
+
+    try {
+      await tryStartServer(this.port);
     } catch (error) {
       vscode.window.showErrorMessage(
         `Failed to initialize memory bank: ${

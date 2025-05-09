@@ -1,7 +1,7 @@
 // @ts-check
 const esbuild = require("esbuild");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 
 const args = process.argv.slice(2);
 const watch = args.includes("--watch");
@@ -145,6 +145,7 @@ const sharedOptions = {
   platform: "node",
   external: [
     "vscode",
+    "express",
     // These are imported by the @modelcontextprotocol/sdk package but are not required at runtime
     "node:test",
     "node:worker_threads",
@@ -158,6 +159,7 @@ const sharedOptions = {
   tsconfig: path.resolve(__dirname, "tsconfig.json"),
   mainFields: ["module", "main"],
   logLevel: "info",
+  metafile: true,
 };
 
 // Build the extension

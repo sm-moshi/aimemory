@@ -12,6 +12,9 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-.cursor/**
 pnpm-lock.yaml
 .env*
+agents/
+.repomix/
+.github/
+.cursorignore

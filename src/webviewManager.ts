@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
-import * as path from "path";
-import * as fs from "fs";
+import * as path from "node:path";
+import * as fs from "node:fs";
 import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules";
 import { CursorRulesService } from "./lib/cursor-rules-service";
 import { MemoryBankService } from "./memoryBank";
-import { MemoryBankMCPServer } from "./mcpServer";
-import * as http from "http";
+import type { MemoryBankMCPServer } from "./mcpServer";
+import * as http from "node:http";
+import * as crypto from "node:crypto";
 
 export class WebviewManager {
   private panel: vscode.WebviewPanel | undefined;
@@ -112,10 +113,11 @@ export class WebviewManager {
       {
         // Enable scripts in the webview
         enableScripts: true,
-        // Restrict the webview to only load resources from the extension's directory
+        // Restrict the webview to only load resources from the extension's directory and Vite dev server
         localResourceRoots: [
-          this.extensionUri,
-          vscode.Uri.parse("http://localhost:5173"),
+          vscode.Uri.joinPath(this.extensionUri, 'dist'), // Allow access to the main dist folder
+          vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'), // Explicitly allow webview assets
+          vscode.Uri.parse("http://localhost:5173"), // Allow Vite dev server (HMR)
         ],
         // Retain the webview when it becomes hidden
         retainContextWhenHidden: true,
@@ -277,11 +279,21 @@ export class WebviewManager {
     }
   }
 
+  /**
+   * Generates the HTML content for the webview, ensuring CSP compliance and secure asset loading.
+   * - Uses a strong nonce for scripts.
+   * - Loads all assets via webview.asWebviewUri.
+   * - CSP allows only required sources (scripts, styles, connect to MCP, images, fonts).
+   * - No unsafe-inline for scripts; only for styles if absolutely necessary.
+   * - All asset URIs are resolved at runtime for VSCode compatibility.
+   */
   private getWebviewContent(webview: vscode.Webview): string {
+    // Generate a nonce for CSP
+    const nonce = crypto.randomBytes(16).toString('base64');
+
     // Get path to dist folder for webview assets
     const distPath = path.join(this.extensionUri.fsPath, "dist", "webview");
 
-    // Check if dist folder exists (production build)
     // Get paths to JS & CSS files
     const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
     const stylePathOnDisk = path.join(distPath, "assets", "index.css");
@@ -290,20 +302,34 @@ export class WebviewManager {
     const scriptUri = webview.asWebviewUri(vscode.Uri.file(scriptPathOnDisk));
     const styleUri = webview.asWebviewUri(vscode.Uri.file(stylePathOnDisk));
 
-    // Create HTML with production assets
+    // Define Content Security Policy
+    // Allows scripts with the correct nonce, styles from webview, and connections to localhost for the MCP server.
+    // No unsafe-inline for scripts. Only allow inline styles if absolutely necessary (here, only for Tailwind JIT, otherwise remove).
+    const mcpPort = this.mcpServer.getPort(); // Get the current MCP port
+    const csp = [
+      "default-src 'none'", // Block all by default
+      `style-src ${webview.cspSource} 'unsafe-inline'`, // Allow styles from webview and inline (Tailwind JIT needs this)
+      `script-src 'nonce-${nonce}'`, // Only allow scripts with this nonce
+      `connect-src http://localhost:${mcpPort}`, // Only allow connecting to MCP server
+      `img-src ${webview.cspSource} data:`, // Allow images from webview and data URIs
+      `font-src ${webview.cspSource}` // Allow fonts from webview
+    ].join('; ');
+
+    // Return HTML with strict CSP and correct asset URIs
     return `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link href="${styleUri}" rel="stylesheet">
-          <title>AI Memory</title>
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="module" src="${scriptUri}"></script>
-        </body>
-        </html>`;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="${csp}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="${styleUri}" rel="stylesheet">
+  <title>AI Memory</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="${scriptUri}" nonce="${nonce}"></script>
+</body>
+</html>`;
   }
 
   public getWebviewPanel(): vscode.WebviewPanel | undefined {
