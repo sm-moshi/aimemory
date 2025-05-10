@@ -3,12 +3,35 @@ export interface MCPOptions {
 }
 
 export enum MemoryBankFileType {
-  ProjectBrief = "projectbrief.md",
-  ProductContext = "productContext.md",
-  ActiveContext = "activeContext.md",
-  SystemPatterns = "systemPatterns.md",
-  TechContext = "techContext.md",
-  Progress = "progress.md",
+  // Core
+  ProjectBrief = "core/projectbrief.md",
+  ProductContext = "core/productContext.md",
+  ActiveContext = "core/activeContext.md",
+
+  // System Patterns
+  SystemPatternsIndex = "systemPatterns/index.md",
+  SystemPatternsArchitecture = "systemPatterns/architecture.md",
+  SystemPatternsPatterns = "systemPatterns/patterns.md",
+  SystemPatternsScanning = "systemPatterns/scanning.md",
+
+  // Tech Context
+  TechContextIndex = "techContext/index.md",
+  TechContextStack = "techContext/stack.md",
+  TechContextDependencies = "techContext/dependencies.md",
+  TechContextEnvironment = "techContext/environment.md",
+
+  // Progress
+  ProgressIndex = "progress/index.md",
+  ProgressCurrent = "progress/current.md",
+  ProgressHistory = "progress/history.md",
+
+  // Legacy flat files (for migration/compatibility)
+  ProjectBriefFlat = "projectbrief.md",
+  ProductContextFlat = "productContext.md",
+  ActiveContextFlat = "activeContext.md",
+  SystemPatternsFlat = "systemPatterns.md",
+  TechContextFlat = "techContext.md",
+  ProgressFlat = "progress.md",
 }
 
 export interface MemoryBankFile {
@@ -20,7 +43,7 @@ export interface MemoryBankFile {
 export interface MemoryBank {
   files: Map<MemoryBankFileType, MemoryBankFile>;
   initializeFolders(): Promise<void>;
-  loadFiles(): Promise<void>;
+  loadFiles(): Promise<MemoryBankFileType[]>;
   getFile(type: MemoryBankFileType): MemoryBankFile | undefined;
   updateFile(type: MemoryBankFileType, content: string): Promise<void>;
   getAllFiles(): MemoryBankFile[];

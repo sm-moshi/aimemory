@@ -204,7 +204,7 @@ export class MemoryBankMCPServer {
         // Memory bank readiness check
         if (!this.memoryBank.isReady()) {
           try {
-            await this.memoryBank.loadFiles();
+            await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
           } catch (err) {
             console.error("Memory bank not ready and failed to load:", err);
             throw new Error("Memory bank is not ready. Please initialise it first.");
@@ -236,7 +236,7 @@ export class MemoryBankMCPServer {
       // Memory bank readiness check
       if (!this.memoryBank.isReady()) {
         try {
-          await this.memoryBank.loadFiles();
+          await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
         } catch (err) {
           console.error("Memory bank not ready and failed to load:", err);
           throw new Error("Memory bank is not ready. Please initialise it first.");
@@ -295,7 +295,7 @@ export class MemoryBankMCPServer {
           }
 
           //Load memory bank files into memory
-          await this.memoryBank.loadFiles();
+          await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
 
           return {
             content: [
@@ -328,7 +328,7 @@ export class MemoryBankMCPServer {
         // Memory bank readiness check
         if (!this.memoryBank.isReady()) {
           try {
-            await this.memoryBank.loadFiles();
+            await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
           } catch (err) {
             console.error("Memory bank not ready and failed to load:", err);
             return {
@@ -354,7 +354,7 @@ export class MemoryBankMCPServer {
           }
         }
         // Ensure files are loaded (or reloaded) before getting content
-        await this.memoryBank.loadFiles();
+        await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
         const files = this.memoryBank.getFilesWithFilenames();
         console.log("Memory Bank Files Read Successfully.");
         return {
@@ -418,7 +418,7 @@ export class MemoryBankMCPServer {
         // Memory bank readiness check
         if (!this.memoryBank.isReady()) {
           try {
-            await this.memoryBank.loadFiles();
+            await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
           } catch (err) {
             console.error("Memory bank not ready and failed to load:", err);
             return {
@@ -476,7 +476,7 @@ export class MemoryBankMCPServer {
         // Memory bank readiness check
         if (!this.memoryBank.isReady()) {
           try {
-            await this.memoryBank.loadFiles();
+            await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
           } catch (err) {
             console.error("Memory bank not ready and failed to load:", err);
             return {
@@ -681,5 +681,22 @@ If the message doesn't contain a /memory command, respond normally to the user's
   handleCommand(command: string, args: string[]): Promise<string> {
     // This method is for backward compatibility with the command handler
     return Promise.resolve("Please use the MCP server directly.");
+  }
+
+  /**
+   * Get the memory bank service instance
+   */
+  getMemoryBank(): MemoryBankService {
+    return this.memoryBank;
+  }
+
+  /**
+   * Update a memory bank file
+   */
+  async updateMemoryBankFile(fileType: string, content: string): Promise<void> {
+    if (!this.memoryBank.isReady()) {
+      await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
+    }
+    await this.memoryBank.updateFile(fileType as MemoryBankFileType, content);
   }
 }

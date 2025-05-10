@@ -1,0 +1,31 @@
+# Exclude version control and editor config
+.git/
+.vscode/
+
+# Exclude AI and memory bank data
+.cursor/
+memory-bank/
+
+# Exclude tests and docs
+*.test.*
+test/
+docs/
+
+# Exclude build artifacts and dependencies
+node_modules/
+dist/
+
+# Exclude environment and log files
+.env
+*.log
+*.DS_Store
+
+# Exclude repomix and other local metadata
+.repomix/
+
+# Exclude any markdown rulesets (if not needed in npm)
+*.mdc
+
+# Exclude other common junk
+Thumbs.db
+npm-debug.log

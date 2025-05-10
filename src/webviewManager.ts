@@ -7,6 +7,41 @@ import { MemoryBankService } from "./memoryBank";
 import type { MemoryBankMCPServer } from "./mcpServer";
 import * as http from "node:http";
 import * as crypto from "node:crypto";
+import * as fsPromises from 'node:fs/promises';
+
+// Utility to extract MCP server ports from .cursor/mcp.json
+async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
+  try {
+    const configPath = path.join(workspaceRoot, '.cursor', 'mcp.json');
+    const configRaw = await fsPromises.readFile(configPath, 'utf-8');
+    const config = JSON.parse(configRaw);
+    const ports: number[] = [];
+    if (!config || !config.mcpServers) {return ports;}
+    for (const key of Object.keys(config.mcpServers)) {
+      const server = config.mcpServers[key];
+      if (server && typeof server.url === 'string') {
+        // Try to extract port from URL (e.g., http://localhost:PORT/sse)
+        const match = server.url.match(/:(\d+)(?:\/|$)/);
+        if (match && match[1]) {
+          ports.push(Number(match[1]));
+        }
+      } else if (server && Array.isArray(server.args)) {
+        // Heuristic: look for a numeric arg that could be a port
+        for (let i = 0; i < server.args.length; i++) {
+          const arg = server.args[i];
+          const port = Number(arg);
+          if (!Number.isNaN(port) && port > 1024 && port < 65536) {
+            ports.push(port);
+          }
+        }
+      }
+    }
+    return ports;
+  } catch {
+    // If config not found or parse error, fallback
+    return [];
+  }
+}
 
 export class WebviewManager {
   private panel: vscode.WebviewPanel | undefined;
@@ -69,7 +104,13 @@ export class WebviewManager {
 
   // Check standard ports for already running MCP servers
   private async checkForRunningServers() {
-    const portsToCheck = [7331, 7332]; // Same as DEFAULT_MCP_PORT and ALTERNATIVE_MCP_PORT
+    // Try to get ports from .cursor/mcp.json, fallback to defaults
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+    let portsToCheck = await getMCPPortsFromConfig(workspaceRoot);
+    if (!portsToCheck.length) {
+      // Fallback to default ports if config not found or empty
+      portsToCheck = [7331, 7332]; // Same as DEFAULT_MCP_PORT and ALTERNATIVE_MCP_PORT
+    }
 
     for (const port of portsToCheck) {
       const isRunning = await this.checkServerHealth(port);

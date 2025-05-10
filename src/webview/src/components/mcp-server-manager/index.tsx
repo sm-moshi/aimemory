@@ -54,7 +54,7 @@ export function MCPServerManager() {
     const checkAllPorts = async () => {
       for (const portToCheck of defaultPorts) {
         // If we already found a running server, stop checking
-        if (isMCPRunning) {break;}
+        if (isMCPRunning) { break; }
         await checkServerRunning(portToCheck);
       }
     };
@@ -141,17 +141,26 @@ export function MCPServerManager() {
   const handleUpdateMemoryBank = useCallback(async () => {
     // Simple prompt for file type and content (can be improved to a modal or form)
     const fileType = window.prompt("Enter memory bank file type (e.g. projectbrief.md):");
-    if (!fileType) {return;}
+    if (!fileType) { return; }
     const content = window.prompt("Enter new content for the file:");
-    if (content === null) {return;}
+    if (content === null) { return; }
     setUpdateLoading(true);
     setFeedback(null);
     await callMCPTool("update-memory-bank-file", { fileType, content });
     setUpdateLoading(false);
   }, [callMCPTool]);
 
+  // Handler for Repair Memory Bank
+  const handleRepairMemoryBank = useCallback(async () => {
+    setFeedback(null);
+    setUpdateLoading(true);
+    await callMCPTool("read-memory-bank-files");
+    setUpdateLoading(false);
+  }, [callMCPTool]);
+
   return (
     <div className="flex flex-col gap-3">
+      {/* MCP Server Controls */}
       <div className="flex flex-col gap-1">
         <span className="text-xl font-bold">MCP Server</span>
         <span className="text-xs text-gray-500">
@@ -202,25 +211,35 @@ export function MCPServerManager() {
           </button>
         )}
       </div>
-      {/* New Memory Bank Controls */}
+      {/* Memory Bank Controls */}
       {isMCPRunning && (
-        <div className="flex gap-4 mt-2">
-          <button
-            type="button"
-            className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            onClick={handleInitializeMemoryBank}
-            disabled={initLoading}
-          >
-            {initLoading ? "Initializing..." : "Initialize Memory Bank"}
-          </button>
-          <button
-            type="button"
-            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-            onClick={handleUpdateMemoryBank}
-            disabled={updateLoading}
-          >
-            {updateLoading ? "Updating..." : "Update Memory Bank"}
-          </button>
+        <div className="flex flex-col gap-2 mt-4">
+          <div className="flex gap-4">
+            <button
+              type="button"
+              className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleInitializeMemoryBank}
+              disabled={initLoading}
+            >
+              {initLoading ? "Initializing..." : "Initialize Memory Bank"}
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              onClick={handleUpdateMemoryBank}
+              disabled={updateLoading}
+            >
+              {updateLoading ? "Updating..." : "Update Memory Bank"}
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
+              onClick={handleRepairMemoryBank}
+              disabled={updateLoading}
+            >
+              {updateLoading ? "Repairing..." : "Repair Memory Bank"}
+            </button>
+          </div>
         </div>
       )}
       {/* Feedback message */}

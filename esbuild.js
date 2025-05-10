@@ -2,6 +2,7 @@
 const esbuild = require("esbuild");
 const path = require("node:path");
 const fs = require("node:fs");
+const { analyzeMetafile } = require("esbuild");
 
 const args = process.argv.slice(2);
 const watch = args.includes("--watch");
@@ -35,7 +36,7 @@ const assetsCopyPlugin = {
       // Copy all files from src/assets to dist/assets
       if (fs.existsSync(srcAssetsDir)) {
         const files = fs.readdirSync(srcAssetsDir);
-        files.forEach((file) => {
+        for (const file of files) {
           const srcFile = path.join(srcAssetsDir, file);
           const destFile = path.join(destAssetsDir, file);
 
@@ -44,7 +45,7 @@ const assetsCopyPlugin = {
             fs.copyFileSync(srcFile, destFile);
             console.log(`Copied asset: ${file} to ${destAssetsDir}`);
           }
-        });
+        }
       } else {
         console.warn("Source assets directory does not exist:", srcAssetsDir);
       }
@@ -125,12 +126,12 @@ const esbuildProblemMatcherPlugin = {
       console.log("[watch] build started");
     });
     build.onEnd((result) => {
-      result.errors.forEach(({ text, location }) => {
+      for (const { text, location } of result.errors) {
         console.error(`✘ [ERROR] ${text}`);
         console.error(
           `    ${location?.file}:${location?.line}:${location?.column}:`
         );
-      });
+      }
       console.log("[watch] build finished");
     });
   },
@@ -141,7 +142,7 @@ const sharedOptions = {
   bundle: true,
   sourcemap: !production,
   minify: production,
-  target: ["es2020"],
+  target: ["es2022"],
   platform: "node",
   external: [
     "vscode",
@@ -159,7 +160,6 @@ const sharedOptions = {
   tsconfig: path.resolve(__dirname, "tsconfig.json"),
   mainFields: ["module", "main"],
   logLevel: "info",
-  metafile: true,
 };
 
 // Build the extension
@@ -175,6 +175,7 @@ const extensionBuild = async () => {
       markdownCopyPlugin,
       esbuildProblemMatcherPlugin,
     ],
+    metafile: true,
   };
 
   if (watch) {

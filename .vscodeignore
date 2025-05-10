@@ -1,52 +1,47 @@
-# Exclude all development, documentation, and private context folders
-.vscode/**
-.vscode-test/**
-out/**
-node_modules/**
-src/**
-docs/**        # Exclude all documentation
-memory-bank/** # Exclude all memory bank files (private context/docs)
-.gitignore
-.yarnrc
-esbuild.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
-**/*.map
-**/*.ts
-**/.vscode-test.*
-pnpm-lock.yaml
-.env*
+# Exclude everything except the extension code and allowed docs
+
+# Exclude all source, build, and dev files
+src/
+out/
+test/
+memory-bank/
+.cursor/
 .repomix/
+node_modules/
+dist/
+.vscode/
+.git/
 .github/
-.cursorignore
-Justfile
-logs/*
-.DS_Store
+.vscode-test/
+*.test.*
+*.mdc
+*.log
+*.DS_Store
+*.env
 Thumbs.db
+npm-debug.log
+bak.vscodeignore copy
+repomix-output.txt
+pnpm-lock.yaml
+tsconfig.json
+esbuild.js
+eslint.config.mjs
+.vscode-test.mjs
+Justfile
 
-test/**          # Exclude test files
-.cursor/rules/** # Exclude all Cursor rules (generated at runtime)
-.cursor/         # Exclude all Cursor private data
+# Exclude all docs except the allowed ones
+docs/*
+!docs/QUICKSTART.md
+!docs/TROUBLESHOOTING.md
+!docs/ROADMAP.md
+docs/experimental/
 
-# Only include the built extension and assets
-!dist/extension.js
-!dist/assets/**
-!dist/lib/rules/**
-!dist/webview/**
-
-# Only include these root files for marketplace/metadata
+# Exclude all markdown except the main docs
+*.md
 !README.md
 !CHANGELOG.md
 !LICENSE.md
-!package.json
 
-# --- HARD EXCLUDES: Do not package these folders, ever ---
-.cursor/
-.cursor/**
-docs/
-docs/**
-memory-bank/
-memory-bank/**
-test/
-test/**
+# Allow dist/extension.js and dist/assets for runtime
+!dist/extension.js
+!dist/assets/**

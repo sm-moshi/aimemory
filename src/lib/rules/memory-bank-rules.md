@@ -71,7 +71,7 @@ flowchart TD
 -   Never write to any `index.md` file
 -   Always prompt before modifying `progress/current.md`
 -   Chunk read >30KB files
--   NEVER DELETE ANY FILES IN THE MEMORY BANK
+-   NEVER DELETE ANY FILES IN THE MEMORY BANK WITHOUT ASKING THE USER FIRST
 
 ## 🛠 Required MCP Tools
 
