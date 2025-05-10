@@ -17,6 +17,8 @@
 
 ## UI/UX
 - [x] Webview: Initialise/Update Memory Bank buttons
+- [ ] Fix "Initialise Memory Bank" button
+- [ ] Memory Bank: always red "missing"
 - [ ] Webview: File preview and diff viewer
 - [ ] Webview: Visualise memory bank relationships
 - [ ] Webview: Advanced error and status feedback

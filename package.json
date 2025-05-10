@@ -6,7 +6,7 @@
     "url": "https://github.com/sm-moshi/aimemory"
   },
   "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "engines": {
     "vscode": "^1.96.2"
   },
@@ -32,6 +32,10 @@
       {
         "command": "aimemory.updateMCPConfig",
         "title": "AI Memory: Update Cursor MCP Config"
+      },
+      {
+        "command": "aimemory.showOutput",
+        "title": "AI Memory: Show Output Channel"
       }
     ]
   },

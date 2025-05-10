@@ -31,9 +31,9 @@ This guide helps you diagnose and resolve common issues with the AI Memory exten
   - Reload the webview or restart Cursor/VS Code.
 
 ### 3. Memory Bank Migration
-- **Migration prompt not appearing:**
+<!-- - **Migration prompt not appearing:**
   - Ensure you have a flat memory bank structure (`memory-bank/*.md`) and no modular folders.
-  - Restart the extension to trigger migration detection.
+  - Restart the extension to trigger migration detection. -->
 - **Files not migrated:**
   - Check file permissions in your workspace.
   - Review logs for errors during migration.

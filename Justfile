@@ -21,7 +21,7 @@ webview-dev:
 webview-build:
     cd src/webview && pnpm run build
 
-#ä Dev Mode (backend watch + webview dev)
+# Dev Mode (backend watch + webview dev)
 
 dev:
     just backend-watch & just webview-dev

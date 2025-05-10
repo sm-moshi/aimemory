@@ -11,6 +11,8 @@ import { updateCursorMCPConfig } from "./utils/cursor-config";
 const DEFAULT_MCP_PORT = 7331;
 const ALTERNATIVE_MCP_PORT = 7332;
 
+let outputChannel: vscode.OutputChannel;
+
 // Helper function to check if a server is running on the given port
 async function isServerRunning(port: number): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
@@ -54,6 +56,9 @@ async function isServerRunning(port: number): Promise<boolean> {
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  outputChannel = vscode.window.createOutputChannel('AI Memory');
+  outputChannel.appendLine('AI Memory extension activated! 🐹');
+
   console.log("Registering open webview command");
 
   // Create MCP server instance first
@@ -211,6 +216,16 @@ export function activate(context: vscode.ExtensionContext) {
       mcpServer.stop();
     },
   });
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('aimemory.showOutput', () => {
+      outputChannel.show();
+    })
+  );
+}
+
+export function getOutputChannel(): vscode.OutputChannel {
+  return outputChannel;
 }
 
 // This method is called when your extension is deactivated

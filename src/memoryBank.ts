@@ -9,6 +9,7 @@ import {
   CURSOR_MEMORY_BANK_FILENAME,
   CURSOR_MEMORY_BANK_RULES_FILE,
 } from "./lib/cursor-rules";
+import { getOutputChannel } from './extension';
 
 export class MemoryBankService implements MemoryBank {
   private _memoryBankFolder: string;
@@ -91,9 +92,11 @@ export class MemoryBankService implements MemoryBank {
         });
       }
       this.ready = true;
+      getOutputChannel().appendLine('Memory bank initialised successfully.');
     } catch (err) {
       this.ready = false;
       console.error("Error loading memory bank files:", err);
+      getOutputChannel().appendLine(`Error during memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`);
       throw err;
     }
   }
