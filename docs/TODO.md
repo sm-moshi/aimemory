@@ -18,11 +18,13 @@
 -   [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
 -   [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
 -   [ ] Replace `Initialize Memory Bank` with `/memory init` command
+-   [ ] Add command: 'AI Memory: Create Memory Bank Rule' to create/restore memory-bank.mdc from template or rules source
+    -   [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
 
 ## UI/UX
 
 -   [x] Webview: Initialise/Update Memory Bank buttons
-    -   [ ] Fix "Initialise Memory Bank" button
+-   [ ] Fix "Initialise Memory Bank" button
     -   [ ] Text: Replace "Initialize Memory Bank"
 -   [ ] Webview: Memory Bank: always red "missing"
 -   [ ] Webview: Keep "MCP Server: Running/Stopped" status indicator in sync

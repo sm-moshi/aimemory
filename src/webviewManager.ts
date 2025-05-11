@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules";
-import { CursorRulesService } from "./lib/cursor-rules-service";
-import { MemoryBankService } from "./memoryBank";
-import type { MemoryBankMCPServer } from "./mcpServer";
+import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules.js";
+import { CursorRulesService } from "./lib/cursor-rules-service.js";
+import { MemoryBankService } from "./memoryBank.js";
+import type { MemoryBankMCPServer } from "./mcpServer.js";
 import * as http from "node:http";
 import * as crypto from "node:crypto";
 import * as fsPromises from 'node:fs/promises';
-import { Logger, LogLevel } from './utils/log';
+import { Logger, LogLevel } from './utils/log.js';
 
 // Utility to extract MCP server ports from .cursor/mcp.json
 async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {

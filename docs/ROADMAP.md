@@ -25,6 +25,8 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [ ] More granular permissions and user roles
 - [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
 - [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
+- [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source
+- [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
 
 ### v1.0.0 (Stable)
 - [ ] Full test coverage and CI/CD for all features

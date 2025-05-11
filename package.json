@@ -6,7 +6,7 @@
     "url": "https://github.com/sm-moshi/aimemory"
   },
   "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.96.2"
   },
@@ -14,7 +14,7 @@
   "categories": [
     "Other"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/extension.cjs",
   "activationEvents": [
     "onCommand:aimemory.startMCP",
     "onCommand:aimemory.stopServer",
@@ -53,7 +53,14 @@
       "properties": {
         "aimemory.logLevel": {
           "type": "string",
-          "enum": [ "trace", "debug", "info", "warning", "error", "off" ],
+          "enum": [
+            "trace",
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "off"
+          ],
           "default": "info",
           "description": "Controls the verbosity of the AI Memory Output Channel."
         }
@@ -76,7 +83,8 @@
     "test": "vscode-test",
     "webview:dev": "cd src/webview && pnpm run dev",
     "webview:build": "cd src/webview && pnpm run build",
-    "build": "npm-run-all -s webview:build package"
+    "build": "npm-run-all -s webview:build package",
+    "build:cli": "tsc --project tsconfig.json --outDir dist"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",
@@ -94,7 +102,8 @@
     "esbuild-plugin-copy": "^2.1.1",
     "eslint": "^9.26.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "undici-types": "7.9.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.1",
@@ -114,5 +123,6 @@
       "@vscode/vsce-sign",
       "esbuild"
     ]
-  }
+  },
+  "type": "module"
 }

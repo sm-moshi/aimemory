@@ -14,7 +14,7 @@ docs/
 # Exclude build artifacts and dependencies
 node_modules/
 dist/
-!dist/extension.js
+!dist/extension.cjs
 !dist/assets/**
 !dist/lib/rules/**
 !dist/webview/**
@@ -33,3 +33,6 @@ dist/
 # Exclude other common junk
 Thumbs.db
 npm-debug.log
+
+# Allow esbuild.js for npm scripts
+!esbuild.js
