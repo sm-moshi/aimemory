@@ -1,17 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
 import { cn } from "../../utils/cn";
+import { sendLog } from '../../utils/message';
 
 export function MemoryBankStatus() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMemoryBankInitialized, setIsMemoryBankInitialized] = useState(false);
 
+  const requestMemoryBankStatus = useCallback(() => {
+    setIsLoading(true);
+    sendLog('Requesting memory bank status', 'info', { action: 'requestMemoryBankStatus' });
+    window.vscodeApi?.postMessage({
+      command: "requestMemoryBankStatus",
+    });
+  }, []);
+
   useEffect(() => {
     // Setup message listener
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
-      console.log("Received message 2:", message);
-
+      sendLog(`Received message in memory-bank-status: ${message.type}`, 'info', { action: 'handleMessage', messageType: message.type });
       switch (message.type) {
         case "memoryBankStatus":
           setIsMemoryBankInitialized(message.initialized);
@@ -22,20 +30,13 @@ export function MemoryBankStatus() {
 
     window.addEventListener("message", handleMessage);
 
-    // Request initial rules status
+    // Request initial memory bank status
     requestMemoryBankStatus();
 
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
-
-  const requestMemoryBankStatus = useCallback(() => {
-    setIsLoading(true);
-    window.vscodeApi?.postMessage({
-      command: "requestMemoryBankStatus",
-    });
-  }, []);
+  }, [requestMemoryBankStatus]);
 
   return (
     <div className="flex flex-col gap-1">

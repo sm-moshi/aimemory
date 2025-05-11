@@ -8,6 +8,7 @@ import type { MemoryBankMCPServer } from "./mcpServer";
 import * as http from "node:http";
 import * as crypto from "node:crypto";
 import * as fsPromises from 'node:fs/promises';
+import { Logger, LogLevel } from './utils/log';
 
 // Utility to extract MCP server ports from .cursor/mcp.json
 async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
@@ -22,7 +23,7 @@ async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
       if (server && typeof server.url === 'string') {
         // Try to extract port from URL (e.g., http://localhost:PORT/sse)
         const match = server.url.match(/:(\d+)(?:\/|$)/);
-        if (match && match[1]) {
+        if (match?.[1]) {
           ports.push(Number(match[1]));
         }
       } else if (server && Array.isArray(server.args)) {
@@ -210,6 +211,12 @@ export class WebviewManager {
               status: "stopped",
             });
             break;
+          case "logMessage": {
+            // Route webview log messages to the Output Channel via Logger
+            const level = message.level === "error" ? LogLevel.Error : LogLevel.Info;
+            Logger.getInstance().log(level, message.text, message.meta);
+            break;
+          }
         }
       },
       undefined,

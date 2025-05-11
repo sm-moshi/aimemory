@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
 import { cn } from "../../utils/cn";
+import { sendLog } from '../../utils/message';
 
 export function RulesStatus() {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,6 +11,7 @@ export function RulesStatus() {
 
   const requestRulesStatus = useCallback(() => {
     setIsLoading(true);
+    sendLog('Requesting rules status', 'info', { action: 'requestRulesStatus' });
     window.vscodeApi?.postMessage({
       command: "getRulesStatus",
     });
@@ -19,8 +21,7 @@ export function RulesStatus() {
     // Setup message listener
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
-      console.log("Received message rules-status:", message);
-
+      sendLog(`Received message in rules-status: ${message.type}`, 'info', { action: 'handleMessage', messageType: message.type });
       switch (message.type) {
         case "rulesStatus":
           setRulesInitialized(message.initialized);
@@ -44,9 +45,10 @@ export function RulesStatus() {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [requestRulesStatus]);
 
   const resetRules = useCallback(() => {
+    sendLog('User clicked Reset Rules button', 'info', { action: 'resetRules' });
     window.vscodeApi?.postMessage({
       command: "resetRules",
     });
@@ -74,7 +76,7 @@ export function RulesStatus() {
           </span>
         )}
       </div>
-      <button className="text-sm text-gray-500 w-fit" onClick={resetRules}>
+      <button className="text-sm text-gray-500 w-fit" type="button" onClick={resetRules}>
         Reset rules
       </button>
     </div>
