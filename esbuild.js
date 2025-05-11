@@ -160,6 +160,7 @@ const sharedOptions = {
   tsconfig: path.resolve(__dirname, "tsconfig.json"),
   mainFields: ["module", "main"],
   logLevel: "info",
+  metafile: true,
 };
 
 // Build the extension

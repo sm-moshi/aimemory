@@ -14,7 +14,6 @@ dist/
 .github/
 .vscode-test/
 *.test.*
-*.mdc
 *.log
 *.DS_Store
 *.env
@@ -45,3 +44,5 @@ docs/experimental/
 # Allow dist/extension.js and dist/assets for runtime
 !dist/extension.js
 !dist/assets/**
+!dist/lib/rules/**
+!dist/webview/**

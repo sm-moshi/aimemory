@@ -6,7 +6,7 @@
     "url": "https://github.com/sm-moshi/aimemory"
   },
   "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "engines": {
     "vscode": "^1.96.2"
   },
@@ -15,6 +15,13 @@
     "Other"
   ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:aimemory.startMCP",
+    "onCommand:aimemory.stopServer",
+    "onCommand:aimemory.openWebview",
+    "onCommand:aimemory.updateMCPConfig",
+    "onCommand:aimemory.showOutput"
+  ],
   "contributes": {
     "commands": [
       {

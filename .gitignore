@@ -7,3 +7,5 @@ node_modules
 .cursor/
 memory-bank/
 logs/
+docs/experimental/
+.vscode/settings.json

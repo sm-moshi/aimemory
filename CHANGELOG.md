@@ -106,3 +106,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ---
 
+## [0.1.5] - 2025-05-11
+
+### Packaging & Ignore Rules Fixes 🐹
+- Reviewed and optimised `.npmignore`, `.vscodeignore`, and `.cursorignore` to ensure only necessary files are included in VSIX and npm packages.
+- Fixed previous issues where packaging or ignore rules caused the extension to break or exclude required files.
+- Successfully built and packaged version 0.1.5; the VSIX is now clean, minimal, and includes only runtime essentials.
+- 0.1.5 is now the new stable baseline for further development and release.

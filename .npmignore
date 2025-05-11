@@ -14,6 +14,10 @@ docs/
 # Exclude build artifacts and dependencies
 node_modules/
 dist/
+!dist/extension.js
+!dist/assets/**
+!dist/lib/rules/**
+!dist/webview/**
 
 # Exclude environment and log files
 .env
@@ -24,7 +28,7 @@ dist/
 .repomix/
 
 # Exclude any markdown rulesets (if not needed in npm)
-*.mdc
+# *.mdc
 
 # Exclude other common junk
 Thumbs.db

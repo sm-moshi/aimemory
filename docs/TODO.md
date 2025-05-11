@@ -12,7 +12,7 @@
 -   [ ] Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
 -   [~] Add a dedicated Output Channel for AI Memory extension logs using the Cursor/VS Code API. (in progress: basic output visible, needs verbose logging and interactivity)
 -   [ ] Review and analyse MCP and Developer Tools logs in `logs/` (especially `2025-05-09 15:19:50.log` and matching `vscode-app-*.log` files) for startup, error, and runtime issues.
--   [ ] Rebuild and repackage the extension after refactoring.
+-   [x] Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
 -   [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
 -   [ ] Document findings and next steps in `docs/ROADMAP.md`.
 
@@ -55,4 +55,4 @@
 
 For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md).
 
-_Last updated: 2025-05-09_
+_Last updated: 2025-05-11 🐹_

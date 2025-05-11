@@ -59,7 +59,6 @@ clean:
     cd src/webview && rm -rf dist node_modules
 
 # Full Rebuild
-
 rebuild: clean ship
 
 # VSIX packaging with npm (for vsce compatibility)

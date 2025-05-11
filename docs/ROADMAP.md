@@ -15,6 +15,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [x] Migration logic for flat → modular memory bank
 - [x] Public documentation in `docs/`, private memory in `memory-bank/`
 - [x] Cursor 0.49+ and VS Code compatibility
+- [x] Ignore files reviewed and fixed; packaging issues resolved; 0.1.5 is new stable baseline (May 2025)
 
 ### v0.2.x (Planned)
 - [ ] Version control integration for memory bank files
@@ -47,11 +48,11 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
 - Add a dedicated Output Channel for AI Memory extension logs using the Cursor/VS Code API.
 - Review and analyse MCP and Developer Tools logs in `logs/` (especially `2025-05-10 15:19:50.log` and matching `vscode-app-*.log` files) for startup, error, and runtime issues.
-- Rebuild and repackage the extension after refactoring.
+- Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
 - Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
 - Document findings and next steps in this ROADMAP.
 
-_Last updated: 2025-05-10_
+_Last updated: 2025-05-11 🐹_
 
 ---
 
