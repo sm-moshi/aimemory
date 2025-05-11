@@ -17,12 +17,14 @@
 -   [ ] Document findings and next steps in `docs/ROADMAP.md`.
 -   [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
 -   [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
+-   [ ] Replace `Initialize Memory Bank` with `/memory init` command
 
 ## UI/UX
 
 -   [x] Webview: Initialise/Update Memory Bank buttons
--   [ ] Fix "Initialise Memory Bank" button
--   [ ] Memory Bank: always red "missing"
+    -   [ ] Fix "Initialise Memory Bank" button
+    -   [ ] Text: Replace "Initialize Memory Bank"
+-   [ ] Webview: Memory Bank: always red "missing"
 -   [ ] Webview: Keep "MCP Server: Running/Stopped" status indicator in sync
 -   [ ] Webview: Add a "refresh" button to the memory bank view
 -   [ ] Webview: File preview and diff viewer

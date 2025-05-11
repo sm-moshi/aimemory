@@ -20,7 +20,6 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 ### v0.2.x (Planned)
 - [ ] Version control integration for memory bank files
 - [ ] Enhanced webview: file previews, diffs, and history
-- [ ] Remote/Cloud memory bank support
 - [ ] Visualisation tools for memory relationships (webview)
 - [~] Improved AI context reset and "active context" workflows (in progress)
 - [ ] More granular permissions and user roles
@@ -41,6 +40,8 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - Integration with other LLMs and agent frameworks
 - Multi-project and workspace memory management
 - Plugin system for custom memory bank modules
+- Remote/Cloud memory bank support
+
 
 ---
 

@@ -9,7 +9,7 @@ import {
   CURSOR_MEMORY_BANK_FILENAME,
   CURSOR_MEMORY_BANK_RULES_FILE,
 } from "./lib/cursor-rules";
-import { getOutputChannel } from './extension';
+import { Logger, LogLevel } from './utils/log';
 
 export class MemoryBankService implements MemoryBank {
   private _memoryBankFolder: string;
@@ -38,12 +38,12 @@ export class MemoryBankService implements MemoryBank {
 
   async getIsMemoryBankInitialized(): Promise<boolean> {
     try {
-      getOutputChannel().appendLine('Checking if memory bank is initialised...');
+      Logger.getInstance().info('Checking if memory bank is initialised...');
 
       // Check if root memory bank folder exists
       const isDirectoryExists = await fs.stat(this._memoryBankFolder).then(stat => stat.isDirectory()).catch(() => false);
       if (!isDirectoryExists) {
-        getOutputChannel().appendLine('Memory bank folder does not exist.');
+        Logger.getInstance().info('Memory bank folder does not exist.');
         return false;
       }
 
@@ -53,17 +53,17 @@ export class MemoryBankService implements MemoryBank {
         if (fileType.includes('/')) {  // Only check modular files
           const filePath = path.join(this._memoryBankFolder, fileType);
           const exists = await fs.stat(filePath).then(stat => stat.isFile()).catch(() => false);
-          getOutputChannel().appendLine(`Checked file: ${fileType} - Exists: ${exists}`);
+          Logger.getInstance().info(`Checked file: ${fileType} - Exists: ${exists}`);
           if (!exists) {
             return false;
           }
         }
       }
 
-      getOutputChannel().appendLine('Memory bank is initialised.');
+      Logger.getInstance().info('Memory bank is initialised.');
       return true;
     } catch (err) {
-      getOutputChannel().appendLine(`Error checking memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`);
+      Logger.getInstance().info(`Error checking memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
   }
@@ -90,7 +90,7 @@ export class MemoryBankService implements MemoryBank {
    */
   async loadFiles(): Promise<MemoryBankFileType[]> {
     this.files.clear();
-    getOutputChannel().appendLine('Loading all memory bank files...');
+    Logger.getInstance().info('Loading all memory bank files...');
     const createdFiles: MemoryBankFileType[] = [];
     try {
       for (const fileType of Object.values(MemoryBankFileType)) {
@@ -103,14 +103,14 @@ export class MemoryBankService implements MemoryBank {
         try {
           content = await fs.readFile(filePath, "utf-8");
           stats = await fs.stat(filePath);
-          getOutputChannel().appendLine(`Loaded file: ${fileType}`);
+          Logger.getInstance().info(`Loaded file: ${fileType}`);
         } catch {
           // File missing: create from template
           content = MemoryBankService.getTemplateForFileType(fileType as MemoryBankFileType);
           await fs.writeFile(filePath, content);
           stats = await fs.stat(filePath);
           createdFiles.push(fileType as MemoryBankFileType);
-          getOutputChannel().appendLine(`Created missing file from template: ${fileType}`);
+          Logger.getInstance().info(`Created missing file from template: ${fileType}`);
         }
         this.files.set(fileType as MemoryBankFileType, {
           type: fileType as MemoryBankFileType,
@@ -121,14 +121,14 @@ export class MemoryBankService implements MemoryBank {
       this.ready = true;
       if (createdFiles.length > 0) {
         const msg = `Self-healing: Created missing files: ${createdFiles.join(", ")}`;
-        getOutputChannel().appendLine(msg);
+        Logger.getInstance().info(msg);
         vscode.window.showInformationMessage(`Memory Bank repaired: ${createdFiles.length} file(s) created.`, { modal: false });
       }
-      getOutputChannel().appendLine('Memory bank initialised successfully.');
+      Logger.getInstance().info('Memory bank initialised successfully.');
       return createdFiles;
     } catch (err) {
       this.ready = false;
-      getOutputChannel().appendLine(`Error loading memory bank files: ${err instanceof Error ? err.message : String(err)}`);
+      Logger.getInstance().info(`Error loading memory bank files: ${err instanceof Error ? err.message : String(err)}`);
       throw err;
     }
   }
@@ -197,34 +197,34 @@ export class MemoryBankService implements MemoryBank {
   }
 
   getFile(type: MemoryBankFileType): MemoryBankFile | undefined {
-    getOutputChannel().appendLine(`getFile called for: ${type}`);
+    Logger.getInstance().info(`getFile called for: ${type}`);
     return this.files.get(type);
   }
 
   async updateFile(type: MemoryBankFileType, content: string): Promise<void> {
     const filePath = path.join(this._memoryBankFolder, type);
     try {
-      getOutputChannel().appendLine(`Updating file: ${type}`);
+      Logger.getInstance().info(`Updating file: ${type}`);
       await fs.writeFile(filePath, content);
       this.files.set(type, {
         type,
         content,
         lastUpdated: new Date(),
       });
-      getOutputChannel().appendLine(`File updated: ${type}`);
+      Logger.getInstance().info(`File updated: ${type}`);
     } catch (err) {
-      getOutputChannel().appendLine(`Error updating memory bank file ${type}: ${err instanceof Error ? err.message : String(err)}`);
+      Logger.getInstance().info(`Error updating memory bank file ${type}: ${err instanceof Error ? err.message : String(err)}`);
       throw err;
     }
   }
 
   getAllFiles(): MemoryBankFile[] {
-    getOutputChannel().appendLine('getAllFiles called.');
+    Logger.getInstance().info('getAllFiles called.');
     return Array.from(this.files.values());
   }
 
   getFilesWithFilenames(): string {
-    getOutputChannel().appendLine('getFilesWithFilenames called.');
+    Logger.getInstance().info('getFilesWithFilenames called.');
     return Array.from(this.files.values())
       .map(
         (file) =>

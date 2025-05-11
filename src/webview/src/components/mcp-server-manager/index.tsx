@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill, RiPlayFill, RiStopFill } from "react-icons/ri";
 import { cn } from "../../utils/cn";
+import { sendLog } from '../../utils/message';
 
 export function MCPServerManager() {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,11 +36,12 @@ export function MCPServerManager() {
             command: "serverAlreadyRunning",
             port: checkPort,
           });
+          sendLog(`Detected running MCP server on port ${checkPort}`, "info", { action: "detectServer", port: checkPort });
         }
       }
     } catch (error) {
       // Server is not running or not responding, this is expected in many cases
-      console.log(`No server running on port ${checkPort}`);
+      sendLog(`No server running on port ${checkPort}: ${error instanceof Error ? error.message : String(error)}`, "info", { action: "detectServer", port: checkPort });
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +67,7 @@ export function MCPServerManager() {
   const handleStartMCPServer = useCallback(() => {
     setIsLoading(true);
     setIsMCPRunning(true);
+    sendLog("User clicked 'Start MCP Server' button", "info", { action: "startMCPServer" });
     window.vscodeApi?.postMessage({
       command: "startMCPServer",
     });
@@ -74,6 +77,7 @@ export function MCPServerManager() {
     setIsLoading(true);
     setIsMCPRunning(false);
     setPort(null);
+    sendLog("User clicked 'Stop MCP Server' button", "info", { action: "stopMCPServer" });
     window.vscodeApi?.postMessage({
       command: "stopMCPServer",
     });
@@ -104,6 +108,7 @@ export function MCPServerManager() {
     async (tool: string, params: Record<string, unknown> = {}) => {
       if (!port) {
         setFeedback("MCP server port not available.");
+        sendLog("MCP server port not available.", "error", { action: "callMCPTool", tool });
         return;
       }
       try {
@@ -114,16 +119,20 @@ export function MCPServerManager() {
         });
         if (!response.ok) {
           setFeedback(`Error: ${response.statusText}`);
+          sendLog(`MCP tool '${tool}' failed: ${response.statusText}`, "error", { action: "callMCPTool", tool });
           return;
         }
         const data = await response.json();
         if (data?.content?.[0]?.text) {
           setFeedback(data.content[0].text);
+          sendLog(`MCP tool '${tool}' response: ${data.content[0].text}`, "info", { action: "callMCPTool", tool });
         } else {
           setFeedback("No response from MCP tool.");
+          sendLog(`No response from MCP tool '${tool}'`, "error", { action: "callMCPTool", tool });
         }
       } catch (err) {
         setFeedback(`Request failed: ${err instanceof Error ? err.message : String(err)}`);
+        sendLog(`Request to MCP tool '${tool}' failed: ${err instanceof Error ? err.message : String(err)}`, "error", { action: "callMCPTool", tool });
       }
     },
     [port]
@@ -133,19 +142,20 @@ export function MCPServerManager() {
   const handleInitializeMemoryBank = useCallback(async () => {
     setInitLoading(true);
     setFeedback(null);
+    sendLog("User clicked 'Initialize Memory Bank' button", "info", { action: "initializeMemoryBank" });
     await callMCPTool("initialize-memory-bank");
     setInitLoading(false);
   }, [callMCPTool]);
 
   // Handler for Update Memory Bank
   const handleUpdateMemoryBank = useCallback(async () => {
-    // Simple prompt for file type and content (can be improved to a modal or form)
     const fileType = window.prompt("Enter memory bank file type (e.g. projectbrief.md):");
     if (!fileType) { return; }
     const content = window.prompt("Enter new content for the file:");
     if (content === null) { return; }
     setUpdateLoading(true);
     setFeedback(null);
+    sendLog("User clicked 'Update Memory Bank' button", "info", { action: "updateMemoryBank", fileType });
     await callMCPTool("update-memory-bank-file", { fileType, content });
     setUpdateLoading(false);
   }, [callMCPTool]);
@@ -154,6 +164,7 @@ export function MCPServerManager() {
   const handleRepairMemoryBank = useCallback(async () => {
     setFeedback(null);
     setUpdateLoading(true);
+    sendLog("User clicked 'Repair Memory Bank' button", "info", { action: "repairMemoryBank" });
     await callMCPTool("read-memory-bank-files");
     setUpdateLoading(false);
   }, [callMCPTool]);

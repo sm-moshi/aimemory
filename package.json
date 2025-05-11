@@ -43,8 +43,22 @@
       {
         "command": "aimemory.showOutput",
         "title": "AI Memory: Show Output Channel"
+      },
+      {
+        "command": "aimemory.setLogLevel",
+        "title": "AI Memory: Set Log Level"
       }
-    ]
+    ],
+    "configuration": {
+      "properties": {
+        "aimemory.logLevel": {
+          "type": "string",
+          "enum": [ "trace", "debug", "info", "warning", "error", "off" ],
+          "default": "info",
+          "description": "Controls the verbosity of the AI Memory Output Channel."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
