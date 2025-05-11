@@ -43,6 +43,10 @@
       {
         "command": "aimemory.showOutput",
         "title": "AI Memory: Show Output Channel"
+      },
+      {
+        "command": "aimemory.setLogLevel",
+        "title": "AI Memory: Set Log Level"
       }
     ],
     "configuration": {

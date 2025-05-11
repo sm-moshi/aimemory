@@ -228,12 +228,38 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Add our command to the extension's subscriptions
-  context.subscriptions.push(startMCPCommand);
-  context.subscriptions.push(cursorApiCommands);
-  context.subscriptions.push(stopServerCommand);
-  context.subscriptions.push(openWebviewCommand);
-  context.subscriptions.push(updateMCPConfigCommand);
+  // Register a command to set the log level via quick-pick UI
+  const setLogLevelCommand = vscode.commands.registerCommand(
+    "aimemory.setLogLevel",
+    async () => {
+      const levels = [
+        { label: "Trace", value: "trace" },
+        { label: "Debug", value: "debug" },
+        { label: "Info", value: "info" },
+        { label: "Warning", value: "warning" },
+        { label: "Error", value: "error" },
+        { label: "Off", value: "off" }
+      ];
+      const picked = await vscode.window.showQuickPick(levels, {
+        placeHolder: "Select log level"
+      });
+      if (picked) {
+        await vscode.workspace.getConfiguration("aimemory").update("logLevel", picked.value, vscode.ConfigurationTarget.Global);
+        logger.setLevel(parseLogLevel(picked.value));
+        vscode.window.showInformationMessage(`AI Memory log level set to ${picked.label}`);
+      }
+    }
+  );
+
+  // Add all commands to context subscriptions
+  context.subscriptions.push(
+    openWebviewCommand,
+    updateMCPConfigCommand,
+    startMCPCommand,
+    cursorApiCommands,
+    stopServerCommand,
+    setLogLevelCommand
+  );
 
   // Register a disposal event to stop the server when the extension is deactivated
   context.subscriptions.push({
