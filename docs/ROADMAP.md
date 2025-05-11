@@ -24,6 +24,8 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [ ] Visualisation tools for memory relationships (webview)
 - [~] Improved AI context reset and "active context" workflows (in progress)
 - [ ] More granular permissions and user roles
+- [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
+- [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
 
 ### v1.0.0 (Stable)
 - [ ] Full test coverage and CI/CD for all features
@@ -47,6 +49,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - Refactor extension to remove Express and use Cursor/VS Code APIs for all communication.
 - Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
 - Add a dedicated Output Channel for AI Memory extension logs using the Cursor/VS Code API.
+- Implement user-configurable log levels and webview error/event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
 - Review and analyse MCP and Developer Tools logs in `logs/` (especially `2025-05-10 15:19:50.log` and matching `vscode-app-*.log` files) for startup, error, and runtime issues.
 - Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
 - Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).

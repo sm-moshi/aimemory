@@ -15,6 +15,8 @@
 -   [x] Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
 -   [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
 -   [ ] Document findings and next steps in `docs/ROADMAP.md`.
+-   [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
+-   [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
 
 ## UI/UX
 
