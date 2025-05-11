@@ -1,17 +1,48 @@
-.vscode/**
-.vscode-test/**
-out/**
-node_modules/**
-src/**
-.gitignore
-.yarnrc
-esbuild.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
-**/*.map
-**/*.ts
-**/.vscode-test.*
-.cursor/**
+# Exclude everything except the extension code and allowed docs
+
+# Exclude all source, build, and dev files
+src/
+out/
+test/
+memory-bank/
+.cursor/
+.repomix/
+node_modules/
+dist/
+.vscode/
+.git/
+.github/
+.vscode-test/
+*.test.*
+*.log
+*.DS_Store
+*.env
+Thumbs.db
+npm-debug.log
+bak.vscodeignore copy
+repomix-output.txt
 pnpm-lock.yaml
-.env*
+tsconfig.json
+esbuild.js
+eslint.config.mjs
+.vscode-test.mjs
+Justfile
+
+# Exclude all docs except the allowed ones
+docs/*
+!docs/QUICKSTART.md
+!docs/TROUBLESHOOTING.md
+!docs/ROADMAP.md
+docs/experimental/
+
+# Exclude all markdown except the main docs
+*.md
+!README.md
+!CHANGELOG.md
+!LICENSE.md
+
+# Allow dist/extension.js and dist/assets for runtime
+!dist/extension.js
+!dist/assets/**
+!dist/lib/rules/**
+!dist/webview/**

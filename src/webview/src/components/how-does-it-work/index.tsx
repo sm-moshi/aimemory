@@ -24,6 +24,7 @@ export function HowDoesItWork() {
             <a
               className="text-blue-500"
               href="https://youtu.be/Uufa6flWid4"
+              rel="noreferrer"
               target="_blank"
             >
               https://youtu.be/Uufa6flWid4

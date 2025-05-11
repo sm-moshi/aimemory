@@ -3,3 +3,9 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+.repomix/
+.cursor/
+memory-bank/
+logs/
+docs/experimental/
+.vscode/settings.json

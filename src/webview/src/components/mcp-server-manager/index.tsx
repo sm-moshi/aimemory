@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill, RiPlayFill, RiStopFill } from "react-icons/ri";
 import { cn } from "../../utils/cn";
+import { sendLog } from '../../utils/message';
 
 export function MCPServerManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMCPRunning, setIsMCPRunning] = useState(false);
   const [port, setPort] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [initLoading, setInitLoading] = useState(false);
 
   // Function to check if MCP server is already running on a given port
   const checkServerRunning = useCallback(async (checkPort: number) => {
@@ -32,11 +36,12 @@ export function MCPServerManager() {
             command: "serverAlreadyRunning",
             port: checkPort,
           });
+          sendLog(`Detected running MCP server on port ${checkPort}`, "info", { action: "detectServer", port: checkPort });
         }
       }
     } catch (error) {
       // Server is not running or not responding, this is expected in many cases
-      console.log(`No server running on port ${checkPort}`);
+      sendLog(`No server running on port ${checkPort}: ${error instanceof Error ? error.message : String(error)}`, "info", { action: "detectServer", port: checkPort });
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +56,7 @@ export function MCPServerManager() {
     const checkAllPorts = async () => {
       for (const portToCheck of defaultPorts) {
         // If we already found a running server, stop checking
-        if (isMCPRunning) break;
+        if (isMCPRunning) { break; }
         await checkServerRunning(portToCheck);
       }
     };
@@ -62,6 +67,7 @@ export function MCPServerManager() {
   const handleStartMCPServer = useCallback(() => {
     setIsLoading(true);
     setIsMCPRunning(true);
+    sendLog("User clicked 'Start MCP Server' button", "info", { action: "startMCPServer" });
     window.vscodeApi?.postMessage({
       command: "startMCPServer",
     });
@@ -71,6 +77,7 @@ export function MCPServerManager() {
     setIsLoading(true);
     setIsMCPRunning(false);
     setPort(null);
+    sendLog("User clicked 'Stop MCP Server' button", "info", { action: "stopMCPServer" });
     window.vscodeApi?.postMessage({
       command: "stopMCPServer",
     });
@@ -96,8 +103,75 @@ export function MCPServerManager() {
     };
   }, [handleMessage]);
 
+  // Helper to call MCP tool via HTTP POST
+  const callMCPTool = useCallback(
+    async (tool: string, params: Record<string, unknown> = {}) => {
+      if (!port) {
+        setFeedback("MCP server port not available.");
+        sendLog("MCP server port not available.", "error", { action: "callMCPTool", tool });
+        return;
+      }
+      try {
+        const response = await fetch(`http://localhost:${port}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tool, params }),
+        });
+        if (!response.ok) {
+          setFeedback(`Error: ${response.statusText}`);
+          sendLog(`MCP tool '${tool}' failed: ${response.statusText}`, "error", { action: "callMCPTool", tool });
+          return;
+        }
+        const data = await response.json();
+        if (data?.content?.[0]?.text) {
+          setFeedback(data.content[0].text);
+          sendLog(`MCP tool '${tool}' response: ${data.content[0].text}`, "info", { action: "callMCPTool", tool });
+        } else {
+          setFeedback("No response from MCP tool.");
+          sendLog(`No response from MCP tool '${tool}'`, "error", { action: "callMCPTool", tool });
+        }
+      } catch (err) {
+        setFeedback(`Request failed: ${err instanceof Error ? err.message : String(err)}`);
+        sendLog(`Request to MCP tool '${tool}' failed: ${err instanceof Error ? err.message : String(err)}`, "error", { action: "callMCPTool", tool });
+      }
+    },
+    [port]
+  );
+
+  // Handler for Initialize Memory Bank
+  const handleInitializeMemoryBank = useCallback(async () => {
+    setInitLoading(true);
+    setFeedback(null);
+    sendLog("User clicked 'Initialize Memory Bank' button", "info", { action: "initializeMemoryBank" });
+    await callMCPTool("initialize-memory-bank");
+    setInitLoading(false);
+  }, [callMCPTool]);
+
+  // Handler for Update Memory Bank
+  const handleUpdateMemoryBank = useCallback(async () => {
+    const fileType = window.prompt("Enter memory bank file type (e.g. projectbrief.md):");
+    if (!fileType) { return; }
+    const content = window.prompt("Enter new content for the file:");
+    if (content === null) { return; }
+    setUpdateLoading(true);
+    setFeedback(null);
+    sendLog("User clicked 'Update Memory Bank' button", "info", { action: "updateMemoryBank", fileType });
+    await callMCPTool("update-memory-bank-file", { fileType, content });
+    setUpdateLoading(false);
+  }, [callMCPTool]);
+
+  // Handler for Repair Memory Bank
+  const handleRepairMemoryBank = useCallback(async () => {
+    setFeedback(null);
+    setUpdateLoading(true);
+    sendLog("User clicked 'Repair Memory Bank' button", "info", { action: "repairMemoryBank" });
+    await callMCPTool("read-memory-bank-files");
+    setUpdateLoading(false);
+  }, [callMCPTool]);
+
   return (
     <div className="flex flex-col gap-3">
+      {/* MCP Server Controls */}
       <div className="flex flex-col gap-1">
         <span className="text-xl font-bold">MCP Server</span>
         <span className="text-xs text-gray-500">
@@ -131,6 +205,7 @@ export function MCPServerManager() {
       <div className="flex gap-4 w-fit">
         {!isMCPRunning && (
           <button
+            type="button"
             className="flex items-center gap-1 px-2 py-1 text-white rounded-md"
             onClick={handleStartMCPServer}
           >
@@ -139,6 +214,7 @@ export function MCPServerManager() {
         )}
         {isMCPRunning && (
           <button
+            type="button"
             className="flex items-center gap-1 px-2 py-1 text-white rounded-md"
             onClick={handleStopMCPServer}
           >
@@ -146,6 +222,43 @@ export function MCPServerManager() {
           </button>
         )}
       </div>
+      {/* Memory Bank Controls */}
+      {isMCPRunning && (
+        <div className="flex flex-col gap-2 mt-4">
+          <div className="flex gap-4">
+            <button
+              type="button"
+              className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleInitializeMemoryBank}
+              disabled={initLoading}
+            >
+              {initLoading ? "Initializing..." : "Initialize Memory Bank"}
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              onClick={handleUpdateMemoryBank}
+              disabled={updateLoading}
+            >
+              {updateLoading ? "Updating..." : "Update Memory Bank"}
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
+              onClick={handleRepairMemoryBank}
+              disabled={updateLoading}
+            >
+              {updateLoading ? "Repairing..." : "Repair Memory Bank"}
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Feedback message */}
+      {feedback && (
+        <div className="mt-2 p-2 bg-gray-100 border rounded text-sm text-gray-800">
+          {feedback}
+        </div>
+      )}
       {port && isMCPRunning && (
         <span className="text-xs text-gray-500">
           Server running on <b>http://localhost:{port}/sse</b>

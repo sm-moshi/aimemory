@@ -1,4 +1,4 @@
-export const INITIALIZE_MEMORY_BANK_PROMPT = `I need you to initialize the Memory Bank for this project. 
+export const INITIALIZE_MEMORY_BANK_PROMPT = `I need you to initialize the Memory Bank for this project.
 
 STEPS:
 1. Read the Cursor rules at .cursor/rules/memory-bank.mdc to understand the Memory Bank structure
@@ -8,4 +8,4 @@ STEPS:
 
 This is critical for maintaining project context between sessions. Please start immediately.`;
 
-export const MEMORY_BANK_ALREADY_INITIALIZED_PROMPT = `The Memory Bank has already been initialized. Read the .cursor/rules/memory-bank.mdc file to understand the Memory Bank structure and how it works.`;
+export const MEMORY_BANK_ALREADY_INITIALIZED_PROMPT = "The Memory Bank has already been initialized. Read the .cursor/rules/memory-bank.mdc file to understand the Memory Bank structure and how it works.";

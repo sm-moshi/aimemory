@@ -31,6 +31,7 @@ function App() {
         <h1 className="mb-4 text-xl text-red-500">VSCode API not available</h1>
         <p>The extension is having trouble connecting to VSCode.</p>
         <button
+          type="button"
           className="px-4 py-2 mt-4 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
           onClick={() => setApiAvailable(!!window.vscodeApi)}
         >
