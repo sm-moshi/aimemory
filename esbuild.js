@@ -1,8 +1,14 @@
 // @ts-check
-const esbuild = require("esbuild");
-const path = require("node:path");
-const fs = require("node:fs");
-const { analyzeMetafile } = require("esbuild");
+// IMPORTANT: Your tsconfig.json must have "module": "NodeNext" or "Node16" for import.meta.url to work in ESM.
+import * as esbuild from "esbuild";
+// import { nodeExternalsPlugin } from "esbuild-node-externals"; // Remove if not installed/needed
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import * as fs from "node:fs";
+import { analyzeMetafile } from "esbuild";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
 const watch = args.includes("--watch");
@@ -168,8 +174,9 @@ const extensionBuild = async () => {
   /** @type {import('esbuild').BuildOptions} */
   const options = {
     ...sharedOptions,
+    format: "cjs", // <-- Ensure CommonJS for VS Code extension host
     entryPoints: ["./src/extension.ts"],
-    outfile: path.resolve(outdir, "extension.js"),
+    outfile: path.resolve(outdir, "extension.cjs"),
     plugins: [
       assetsCopyPlugin,
       excludeWebviewPlugin,
@@ -189,8 +196,34 @@ const extensionBuild = async () => {
   }
 };
 
-// Run the build
-extensionBuild().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Build the MCP CLI stdio server
+const mcpCliBuild = async () => {
+  /** @type {import('esbuild').BuildOptions} */
+  const options = {
+    ...sharedOptions,
+    entryPoints: ["./src/mcpServerCli.ts"],
+    outfile: path.resolve(outdir, "index.js"), // This is what Cursor expects!
+    plugins: [
+      assetsCopyPlugin,
+      excludeWebviewPlugin,
+      markdownCopyPlugin,
+      esbuildProblemMatcherPlugin,
+    ],
+    metafile: true,
+  };
+
+  if (watch) {
+    const context = await esbuild.context(options);
+    await context.watch();
+    console.log("Watching for changes (MCP CLI)...");
+  } else {
+    await esbuild.build(options);
+    console.log("MCP CLI build complete!");
+  }
+};
+
+// Run both builds
+(async () => {
+  await extensionBuild();
+  await mcpCliBuild();
+})();

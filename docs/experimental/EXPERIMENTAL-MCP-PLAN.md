@@ -93,5 +93,8 @@
 
 _Last updated: 2025-05-10_
 
-+---
-+**Note:** Documentation and findings are being updated as part of the robustness/self-healing memory bank work (May 2025). 🐹
+**Note:** Documentation and findings are being updated as part of the robustness/self-healing memory bank work (May 2025). 🐹
+
+---
+
+_For stable features and usage, see [README.md](../guides/README.md)._

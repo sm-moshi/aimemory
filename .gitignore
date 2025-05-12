@@ -1,11 +1,12 @@
 out
 dist
 node_modules
-.vscode-test/
-*.vsix
+.vscode*
 .repomix/
-.cursor/
+.cursor/rules/*.mdc
+!.cursor/rules/memory-bank.mdc
 memory-bank/
 logs/
-docs/experimental/
+docs/maybe/
 .vscode/settings.json
+*.vsix

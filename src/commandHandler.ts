@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import type { MemoryBankMCPServer } from "./mcpServer";
-import type { MemoryBankFile } from "./types";
+import type { MemoryBankMCPServer } from "./mcpServer.js";
+import type { MemoryBankFile } from "./types.js";
 
 export class CommandHandler {
   constructor(private mcpServer: MemoryBankMCPServer) {}

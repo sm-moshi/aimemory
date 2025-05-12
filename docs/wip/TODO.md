@@ -18,11 +18,13 @@
 -   [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
 -   [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
 -   [ ] Replace `Initialize Memory Bank` with `/memory init` command
+-   [ ] Add command: 'AI Memory: Create Memory Bank Rule' to create/restore memory-bank.mdc from template or rules source
+    -   [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
 
 ## UI/UX
 
 -   [x] Webview: Initialise/Update Memory Bank buttons
-    -   [ ] Fix "Initialise Memory Bank" button
+-   [ ] Fix "Initialise Memory Bank" button
     -   [ ] Text: Replace "Initialize Memory Bank"
 -   [ ] Webview: Memory Bank: always red "missing"
 -   [ ] Webview: Keep "MCP Server: Running/Stopped" status indicator in sync
@@ -57,6 +59,11 @@
 
 ---
 
-For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md).
+**Notes (2025-05-11):**
+- The ruleset and `.mdc` file are now up-to-date; self-healing is robust and automatic.
+- The "Reset the rules" button in the webview now provides user feedback and error handling.
+- MCP tool usage is now enforced and documented in the rules.
+
+For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 
 _Last updated: 2025-05-11 🐹_

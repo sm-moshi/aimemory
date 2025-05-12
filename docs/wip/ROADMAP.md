@@ -25,6 +25,8 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [ ] More granular permissions and user roles
 - [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
 - [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
+- [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source
+- [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
 
 ### v1.0.0 (Stable)
 - [ ] Full test coverage and CI/CD for all features
@@ -47,20 +49,23 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 
 ## Action Plan (May 2025)
 
-- Refactor extension to remove Express and use Cursor/VS Code APIs for all communication.
-- Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
-- Add a dedicated Output Channel for AI Memory extension logs using the Cursor/VS Code API.
-- Implement user-configurable log levels and webview error/event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
-- Review and analyse MCP and Developer Tools logs in `logs/` (especially `2025-05-10 15:19:50.log` and matching `vscode-app-*.log` files) for startup, error, and runtime issues.
-- Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
-- Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
-- Document findings and next steps in this ROADMAP.
-
-_Last updated: 2025-05-11 🐹_
+- [~] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication.
+- [ ] Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
+- [~] Add a dedicated Output Channel for AI Memory extension logs using the Cursor/VS Code API.
+- [~] Implement user-configurable log levels and webview error/event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
+- [ ] Review and analyse MCP and Developer Tools logs in `logs/` (especially `2025-05-10 15:19:50.log` and matching `vscode-app-*.log` files) for startup, error, and runtime issues.
+- [x] Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
+- [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
+- [ ] Document findings and next steps in this ROADMAP.
 
 ---
 
-For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md).
+**Notes (2025-05-11):**
+- The ruleset and `.mdc` file are now up-to-date; self-healing is robust and automatic.
+- The "Reset the rules" button in the webview now provides user feedback and error handling.
+- MCP tool usage is now enforced and documented in the rules.
+
+For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 
 ---
 

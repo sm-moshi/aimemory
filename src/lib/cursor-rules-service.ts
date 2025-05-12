@@ -41,9 +41,17 @@ export class CursorRulesService {
       }
 
       if (fileExists) {
-        // File already exists, do nothing
-        //TODO: Ask the user to overwrite the file?
+        // File already exists, ask the user to overwrite
+        const result = await vscode.window.showWarningMessage(
+          `The file ${filename} already exists in .cursor/rules/. Overwrite?`,
+          { modal: true },
+          "Yes",
+          "No"
+        );
+        if (result !== "Yes") {
+          // User chose not to overwrite
         return;
+        }
       }
 
       console.log("Creating cursor rules file");

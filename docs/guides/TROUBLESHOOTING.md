@@ -1,8 +1,10 @@
 # AI Memory Extension Troubleshooting Guide
 
+_This guide helps you diagnose and resolve common issues with AI Memory._
+
 This guide helps you diagnose and resolve common issues with the AI Memory extension for Cursor and VS Code, focusing on MCP, webview, and modular memory bank workflows.
 
-_For setup instructions, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IMPLEMENTATION.md](./IMPLEMENTATION.md). For the project roadmap, see [ROADMAP.md](./ROADMAP.md)._
+_For setup instructions, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md). For the project roadmap, see [ROADMAP.md](../wip/ROADMAP.md)._
 
 ---
 
@@ -59,7 +61,7 @@ _For setup instructions, see [QUICKSTART.md](./QUICKSTART.md). For technical det
 
 -   Use "Developer: Toggle Developer Tools" in Cursor/VS Code to inspect console logs.
 -   Check the extension output panel for detailed logs.
--   Review [IMPLEMENTATION.md](./IMPLEMENTATION.md) for architecture and troubleshooting context.
+-   Review [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md) for architecture and troubleshooting context.
 
 ---
 
@@ -95,9 +97,9 @@ _For setup instructions, see [QUICKSTART.md](./QUICKSTART.md). For technical det
 For more details, see:
 
 -   [QUICKSTART.md](./QUICKSTART.md)
--   [IMPLEMENTATION.md](./IMPLEMENTATION.md)
--   [ROADMAP.md](./ROADMAP.md)
--   [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md)
+-   [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md)
+-   [ROADMAP.md](../wip/ROADMAP.md)
+-   [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md)
 -   [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
 
 _Last updated: 2025-05-10 🐹_

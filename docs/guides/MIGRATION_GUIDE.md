@@ -1,5 +1,7 @@
 # Migration Guide: Upgrading to AI Memory 0.1.x+
 
+_This guide helps you migrate from older versions of AI Memory._
+
 This guide helps you migrate from older versions of AI Memory (0.0.6/0.0.7 and earlier) to the new modular, self-healing, and robust 0.1.x+ releases.
 
 ## Key Changes
@@ -24,7 +26,7 @@ This guide helps you migrate from older versions of AI Memory (0.0.6/0.0.7 and e
 
 -   The new structure is backwards compatible with most flat memory banks, but modularisation is recommended for best results.
 -   All major actions and errors are now logged for easier debugging.
--   For more details, see the [CHANGELOG.md](./CHANGELOG.md) and [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
+-   For more details, see the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
 
 ---
 

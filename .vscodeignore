@@ -30,10 +30,6 @@ Justfile
 
 # Exclude all docs except the allowed ones
 docs/*
-!docs/QUICKSTART.md
-!docs/TROUBLESHOOTING.md
-!docs/ROADMAP.md
-docs/experimental/
 
 # Exclude all markdown except the main docs
 *.md
@@ -41,8 +37,15 @@ docs/experimental/
 !CHANGELOG.md
 !LICENSE.md
 
-# Allow dist/extension.js and dist/assets for runtime
-!dist/extension.js
+# Allow dist/extension.cjs and dist/assets for runtime
+!dist/extension.cjs
 !dist/assets/**
 !dist/lib/rules/**
 !dist/webview/**
+!dist/cli.js
+!dist/commandHandler.js
+!dist/mcpServer*
+!dist/memoryBank*
+!dist/extension.js
+!dist/types.ts
+dist/*.js.map

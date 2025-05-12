@@ -1,6 +1,6 @@
 # AI Memory MCP Implementation Guide (v0.1.0 Target)
 
-*For a high-level overview, see [ROADMAP.md](./ROADMAP.md). For setup, see [QUICKSTART.md](./QUICKSTART.md). For actionable tasks, see [TODO.md](./TODO.md). For troubleshooting, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md). For experimental features, see [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md).*
+*For a high-level overview, see [ROADMAP.md](./ROADMAP.md). For setup, see [QUICKSTART.md](../guides/QUICKSTART.md). For actionable tasks, see [TODO.md](./TODO.md). For troubleshooting, see [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). For experimental features, see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).*
 
 This document outlines the implementation of the AI Memory extension, targeting v0.1.0 features, using the Model Context Protocol (MCP) SDK.
 
@@ -114,16 +114,16 @@ external: [
 
 ## Troubleshooting
 
-- For troubleshooting steps and advanced debugging, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
+- For troubleshooting steps and advanced debugging, see [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md).
 
 ---
 
 ## Further Reading & Planning
 
-- For setup and user-facing best practices, see [QUICKSTART.md](./QUICKSTART.md).
+- For setup and user-facing best practices, see [QUICKSTART.md](../guides/QUICKSTART.md).
 - For the project vision and milestones, see [ROADMAP.md](./ROADMAP.md).
 - For actionable tasks, see [TODO.md](./TODO.md).
-- For advanced/experimental features, see [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md).
+- For advanced/experimental features, see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 
 ---
 
@@ -212,7 +212,7 @@ external: [
   });
   ```
 
-> See also: [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md) for a step-by-step guide to safely prototyping these features.
+> See also: [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md) for a step-by-step guide to safely prototyping these features.
 
 ---
 

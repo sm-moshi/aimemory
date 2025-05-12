@@ -2,18 +2,18 @@ import * as vscode from "vscode";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import type { MemoryBankFileType } from "./types";
-import { MemoryBankService } from "./memoryBank";
+import type { MemoryBankFileType } from "./types.js";
+import { MemoryBankService } from "./memoryBank.js";
 import { z } from "zod";
 import express from "express";
 import type http from "node:http";
 import {
   INITIALIZE_MEMORY_BANK_PROMPT,
   MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
-} from "./lib/mcp-prompts";
-import { CommandHandler } from "./commandHandler";
-import { WebviewManager } from "./webviewManager";
-import { updateCursorMCPConfig } from "./utils/cursor-config";
+} from "./lib/mcp-prompts.js";
+import { CommandHandler } from "./commandHandler.js";
+import { WebviewManager } from "./webviewManager.js";
+import { updateCursorMCPConfig } from "./utils/cursor-config.js";
 
 export class MemoryBankMCPServer {
   private server: McpServer;

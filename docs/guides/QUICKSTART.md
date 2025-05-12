@@ -1,5 +1,7 @@
 # AI Memory Extension Quickstart Guide
 
+_This is the main getting started guide for AI Memory._
+
 Welcome to the AI Memory extension for Cursor and VS Code! This guide will help you get started quickly with installation, setup, and usage.
 
 ---
@@ -31,7 +33,7 @@ Welcome to the AI Memory extension for Cursor and VS Code! This guide will help 
    - Start the MCP server (default port: 7331, fallback: 7332)
    - Automatically update your Cursor MCP configuration to connect to the server
 
-*For technical details, see [IMPLEMENTATION.md](./IMPLEMENTATION.md).*
+*For technical details, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md).*
 
 ---
 
@@ -60,7 +62,7 @@ Welcome to the AI Memory extension for Cursor and VS Code! This guide will help 
   - `/memory list`: List all memory bank files
   - `/memory read <filename>`: Read a specific file
 
-*For advanced usage, see [IMPLEMENTATION.md](./IMPLEMENTATION.md) and [ROADMAP.md](./ROADMAP.md).*
+*For advanced usage, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md) and [ROADMAP.md](../wip/ROADMAP.md).*
 
 ---
 
@@ -68,12 +70,12 @@ Welcome to the AI Memory extension for Cursor and VS Code! This guide will help 
 - Use the webview for all memory bank actions
 - Keep your extension and dependencies up to date
 - Review feedback and logs for errors
-- For a technical deep dive and full tech stack, see [IMPLEMENTATION.md](./IMPLEMENTATION.md)
+- For a technical deep dive and full tech stack, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md)
 
 ---
 
 For more details, see:
-- [ROADMAP.md](./ROADMAP.md)
-- [TODO.md](./TODO.md)
+- [ROADMAP.md](../wip/ROADMAP.md)
+- [TODO.md](../wip/TODO.md)
 - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-- [IMPLEMENTATION.md](./IMPLEMENTATION.md)
+- [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md)

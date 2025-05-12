@@ -13,11 +13,18 @@ docs/
 
 # Exclude build artifacts and dependencies
 node_modules/
-dist/
-!dist/extension.js
+# Allow dist/extension.cjs and dist/assets for runtime
+!dist/extension.cjs
 !dist/assets/**
 !dist/lib/rules/**
 !dist/webview/**
+!dist/cli.js
+!dist/commandHandler.js
+!dist/mcpServer*
+!dist/memoryBank*
+!dist/extension.js
+!dist/types.ts
+dist/*.js.map
 
 # Exclude environment and log files
 .env
@@ -28,8 +35,11 @@ dist/
 .repomix/
 
 # Exclude any markdown rulesets (if not needed in npm)
-# *.mdc
+*.mdc
 
 # Exclude other common junk
 Thumbs.db
 npm-debug.log
+
+# Allow esbuild.js for npm scripts
+!esbuild.js
