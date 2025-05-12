@@ -5,9 +5,9 @@ import { sendLog } from '../../utils/message';
 
 export function RulesStatus() {
   const [isLoading, setIsLoading] = useState(true);
-
   const [rulesInitialized, setRulesInitialized] = useState(false);
-  const [_, setResetSuccess] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const requestRulesStatus = useCallback(() => {
     setIsLoading(true);
@@ -28,10 +28,12 @@ export function RulesStatus() {
           setIsLoading(false);
           break;
         case "resetRulesResult":
-          setResetSuccess(message.success);
-          // Refresh rules status after reset
+          setResetLoading(false);
           if (message.success) {
+            setFeedback("Rules reset successfully.");
             requestRulesStatus();
+          } else {
+            setFeedback(message.error ? `Failed to reset rules: ${message.error}` : "Failed to reset rules.");
           }
           break;
       }
@@ -48,6 +50,8 @@ export function RulesStatus() {
   }, [requestRulesStatus]);
 
   const resetRules = useCallback(() => {
+    setResetLoading(true);
+    setFeedback(null);
     sendLog('User clicked Reset Rules button', 'info', { action: 'resetRules' });
     window.vscodeApi?.postMessage({
       command: "resetRules",
@@ -76,9 +80,12 @@ export function RulesStatus() {
           </span>
         )}
       </div>
-      <button className="text-sm text-gray-500 w-fit" type="button" onClick={resetRules}>
-        Reset rules
+      <button className="text-sm text-gray-500 w-fit" type="button" onClick={resetRules} disabled={resetLoading}>
+        {resetLoading ? <span className="flex items-center gap-1"><RiLoader5Fill className="animate-spin size-4" /> Resetting...</span> : "Reset rules"}
       </button>
+      {feedback && (
+        <div className="mt-1 text-xs text-gray-700">{feedback}</div>
+      )}
     </div>
   );
 }

@@ -302,27 +302,53 @@ export class WebviewManager {
       // Reset rules by overwriting with original content
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders) {
-        throw new Error("No workspace folder found");
+        vscode.window.showErrorMessage("No workspace folder found");
+        this.panel.webview.postMessage({
+          type: "resetRulesResult",
+          success: false,
+          error: "No workspace folder found"
+        });
+        Logger.getInstance().error("Reset rules failed: No workspace folder found");
+        return;
       }
 
       // Create rules file with original content (overwriting existing if it exists)
+      let overwriteResult = true;
+      try {
       await this.cursorRulesService.createRulesFile(
         "memory-bank.mdc",
         CURSOR_MEMORY_BANK_RULES_FILE
       );
+        vscode.window.showInformationMessage("Memory bank rules have been reset.");
+        Logger.getInstance().info("Memory bank rules reset successfully.");
+      } catch (error: unknown) {
+        // If user cancels overwrite, treat as not successful
+        if (typeof error === "object" && error && "message" in error && typeof (error as { message: string }).message === "string" && (error as { message: string }).message.includes("overwrite")) {
+          overwriteResult = false;
+          Logger.getInstance().info("User cancelled rules overwrite.");
+        } else {
+          Logger.getInstance().error(`Error resetting rules: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        this.panel.webview.postMessage({
+          type: "resetRulesResult",
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return;
+      }
 
       // Send success message
       this.panel.webview.postMessage({
         type: "resetRulesResult",
-        success: true,
+        success: overwriteResult,
       });
     } catch (error) {
-      console.error("Error resetting rules:", error);
-
+      Logger.getInstance().error(`Error resetting rules: ${error instanceof Error ? error.message : String(error)}`);
       // Send error message
       this.panel.webview.postMessage({
         type: "resetRulesResult",
         success: false,
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   }

@@ -106,3 +106,62 @@ src/
 - This is a living document. Update after each major change.
 - Use checklists to track progress and next steps.
 - Reference this plan in PRs and team discussions.
+
+---
+
+## 7. Categorisation of Current `src/` Files (2025-05-11)
+
+### File/Folder Mapping to New Structure
+
+- **core/**
+  - memoryBank.ts
+  - memoryBankServiceCore.ts
+  - memoryBankCore.ts
+- **mcp/**
+  - mcpServer.ts
+  - mcpServerCli.ts
+  - coreMemoryBankMCP.ts
+  - commandHandler.ts (if tightly coupled to MCP logic)
+- **webview/**
+  - webviewManager.ts
+  - webview/ (entire folder, including src/, components/, utils/)
+- **types/**
+  - types.ts
+  - types/ (entire folder)
+- **utils/**
+  - utils/ (entire folder)
+  - lib/cursor-rules-service.ts
+  - lib/cursor-rules.ts
+  - lib/mcp-prompts.ts
+- **rules/**
+  - lib/rules/ (entire folder)
+- **test/**
+  - test/ (entire folder)
+- **assets/**
+  - assets/ (entire folder)
+- **Entry Points**
+  - extension.ts (remains at src/ root)
+  - cli.ts (remains at src/ root)
+
+### Rationale for Each Category
+
+- **core/**: Contains all context-agnostic memory bank logic, ensuring reusability across CLI, extension, and server. This supports Cursor-first and modular design.
+- **mcp/**: All MCP server logic, tool/resource registration, and protocol handling. Keeps Cursor/Claude integration clean and testable.
+- **webview/**: Vite/React app and related managers, fully isolated for UI development and Cursor/VS Code compatibility.
+- **types/**: Shared TypeScript types/interfaces for strong typing and maintainability.
+- **utils/**: Shared utilities, logging, file ops, and Cursor-specific helpers, promoting DRY and error-free code.
+- **rules/**: All Cursor rules logic, kept modular for easy updates and compliance.
+- **test/**: Unit and integration tests, supporting robust, repeatable validation (inspired by cursor-tools best practices).
+- **assets/**: Static resources, icons, and images, separated for clarity.
+- **Entry Points**: `extension.ts` and `cli.ts` remain at the root for discoverability and alignment with MCP/VS Code standards.
+
+### Next Steps
+
+1. Review this mapping and rationale.
+2. Move files/folders to their new locations (one category at a time, with tests after each move).
+3. Update imports and resolve any breakages.
+4. Document each migration step and update this plan after every major change.
+
+**This plan ensures a Cursor-first, modular, and error-free codebase, supporting future features and robust testing.**
+
+_Last updated: 2025-05-11 🐹_
