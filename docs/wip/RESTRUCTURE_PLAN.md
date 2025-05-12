@@ -80,8 +80,8 @@ src/
 ## 5. Checklist / Roadmap
 
 ### Codebase (`src/`)
-- [ ] Audit all files in `src/` and categorise by function
-- [ ] Move core logic to `src/core/`
+- [x] Audit all files in `src/` and categorise by function
+- [x] Move core logic to `src/core/` (memoryBank.ts, memoryBankServiceCore.ts, memoryBankCore.ts moved; all imports updated)
 - [ ] Move MCP server/tools to `src/mcp/`
 - [ ] Move webview code to `src/webview/`
 - [ ] Move shared types to `src/types/`
@@ -165,3 +165,9 @@ src/
 **This plan ensures a Cursor-first, modular, and error-free codebase, supporting future features and robust testing.**
 
 _Last updated: 2025-05-11 🐹_
+
+#### Migration Log (2025-05-12)
+- Moved memoryBank.ts, memoryBankServiceCore.ts, and memoryBankCore.ts to core/.
+- Updated all imports in the codebase to reflect the new structure.
+- Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
+- All core logic is now modular and ready for further refactor. 🐹

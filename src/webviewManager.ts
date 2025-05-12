@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules.js";
 import { CursorRulesService } from "./lib/cursor-rules-service.js";
-import { MemoryBankService } from "./memoryBank.js";
+import { MemoryBankService } from "./core/memoryBank.js";
 import type { MemoryBankMCPServer } from "./mcpServer.js";
 import * as http from "node:http";
 import * as crypto from "node:crypto";

@@ -2,16 +2,12 @@ import { z } from "zod";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { MemoryBankFileType } from "../types.js";
+export { MemoryBankFileType } from "../types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const MEMORY_BANK_DIR = path.resolve(__dirname, "../memory-bank");
-
-export type MemoryBankFileType =
-  | "core"
-  | "progress"
-  | "systemPatterns"
-  | "techContext";
 
 export async function readMemoryBankFile(fileType: MemoryBankFileType): Promise<string> {
   const filePath = path.join(MEMORY_BANK_DIR, `${fileType}.md`);

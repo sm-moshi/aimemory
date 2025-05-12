@@ -1,8 +1,8 @@
 import * as fs from "node:fs/promises";
 import type { Stats } from "node:fs";
 import * as path from "node:path";
-import type { MemoryBank, MemoryBankFile } from "./types.js";
-import { MemoryBankFileType } from "./types.js";
+import type { MemoryBank, MemoryBankFile } from "../types.js";
+import { MemoryBankFileType } from "../types.js";
 
 export class MemoryBankServiceCore implements MemoryBank {
   private _memoryBankFolder: string;

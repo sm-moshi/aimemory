@@ -3,8 +3,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 // @ts-ignore
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { readMemoryBankFile, updateMemoryBankFile } from "./memoryBankCore.js";
-import type { MemoryBankFileType } from "./memoryBankCore.js";
+import { readMemoryBankFile, updateMemoryBankFile } from "./core/memoryBankCore.js";
+import type { MemoryBankFileType } from "./core/memoryBankCore.js";
 
 const server = new McpServer({
   name: "AI Memory MCP Server",

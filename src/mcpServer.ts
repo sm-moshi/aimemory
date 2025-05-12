@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import type { MemoryBankFileType } from "./types.js";
-import { MemoryBankService } from "./memoryBank.js";
+import { MemoryBankService } from "./core/memoryBank.js";
 import { z } from "zod";
 import express from "express";
 import type http from "node:http";
