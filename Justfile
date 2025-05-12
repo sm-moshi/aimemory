@@ -48,9 +48,6 @@ vsix:
     pnpm run package:vsce
 
 ship: install lint typecheck backend webview-build test package vsix
-    # pnpm install
-    # npm install --omit=dev
-    # vsce ls --tree
 
 # Clean
 
