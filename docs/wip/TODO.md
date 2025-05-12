@@ -64,6 +64,6 @@
 - The "Reset the rules" button in the webview now provides user feedback and error handling.
 - MCP tool usage is now enforced and documented in the rules.
 
-For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](./EXPERIMENTAL-MCP-PLAN.md).
+For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 
 _Last updated: 2025-05-11 🐹_
