@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { MemoryBankMCPServer } from "./mcpServer.js";
+import type { MemoryBankMCPServer } from "./mcp/mcpServer.js";
 import type { MemoryBankFile } from "./types.js";
 
 export class CommandHandler {

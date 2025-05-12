@@ -201,7 +201,7 @@ const mcpCliBuild = async () => {
   /** @type {import('esbuild').BuildOptions} */
   const options = {
     ...sharedOptions,
-    entryPoints: ["./src/mcpServerCli.ts"],
+    entryPoints: ["./src/mcp/mcpServerCli.ts"],
     outfile: path.resolve(outdir, "index.js"), // This is what Cursor expects!
     plugins: [
       assetsCopyPlugin,

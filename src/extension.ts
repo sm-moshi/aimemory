@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as http from "node:http";
-import { MemoryBankMCPServer } from "./mcpServer.js";
+import { MemoryBankMCPServer } from "./mcp/mcpServer.js";
 import { CommandHandler } from "./commandHandler.js";
 import { WebviewManager } from "./webviewManager.js";
 import { updateCursorMCPConfig } from "./utils/cursor-config.js";

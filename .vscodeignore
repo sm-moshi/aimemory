@@ -15,6 +15,7 @@ dist/
 .vscode-test/
 *.test.*
 *.log
+logs/
 *.DS_Store
 *.env
 Thumbs.db
@@ -30,6 +31,9 @@ Justfile
 
 # Exclude all docs except the allowed ones
 docs/*
+docs/maybe/
+docs/wip/
+docs/experimental/
 
 # Exclude all markdown except the main docs
 *.md

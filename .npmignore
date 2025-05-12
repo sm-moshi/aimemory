@@ -10,6 +10,9 @@ memory-bank/
 *.test.*
 test/
 docs/
+docs/maybe/
+docs/wip/
+docs/experimental/
 
 # Exclude build artifacts and dependencies
 node_modules/
@@ -30,6 +33,7 @@ dist/*.js.map
 .env
 *.log
 *.DS_Store
+logs/
 
 # Exclude repomix and other local metadata
 .repomix/

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { CoreMemoryBankMCP } from "./coreMemoryBankMCP.js";
+import { CoreMemoryBankMCP } from "./mcp/coreMemoryBankMCP.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 async function main() {
