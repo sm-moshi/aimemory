@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import * as http from "node:http";
 import { MemoryBankMCPServer } from "./mcp/mcpServer.js";
 import { CommandHandler } from "./commandHandler.js";
-import { WebviewManager } from "./webviewManager.js";
+import { WebviewManager } from "./webview/webviewManager.js";
 import { updateCursorMCPConfig } from "./utils/cursor-config.js";
 import { Logger, LogLevel } from "./utils/log.js";
 

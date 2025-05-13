@@ -12,7 +12,7 @@ import {
   MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
 } from "../lib/mcp-prompts.js";
 import { CommandHandler } from "../commandHandler.js";
-import { WebviewManager } from "../webviewManager.js";
+import { WebviewManager } from "../webview/webviewManager.js";
 import { updateCursorMCPConfig } from "../utils/cursor-config.js";
 
 export class MemoryBankMCPServer {

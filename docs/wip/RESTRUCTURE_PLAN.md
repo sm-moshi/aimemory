@@ -83,7 +83,7 @@ src/
 - [x] Audit all files in `src/` and categorise by function
 - [x] Move core logic to `src/core/` (memoryBank.ts, memoryBankServiceCore.ts, memoryBankCore.ts moved; all imports updated)
 - [x] Move MCP server/tools to `src/mcp/` (mcpServer.ts, mcpServerCli.ts, coreMemoryBankMCP.ts moved; all imports and build config updated)
-- [ ] Move webview code to `src/webview/`
+- [x] Move webview code to `src/webview/` (webviewManager.ts moved; all imports updated; modularisation errors resolved)
 - [ ] Move shared types to `src/types/`
 - [ ] Move shared utils to `src/utils/`
 - [ ] Move tests to `src/test/`
@@ -175,3 +175,10 @@ _Last updated: 2025-05-11 🐹_
 - Updated all imports and build configuration to reflect the new structure.
 - Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
 - MCP logic is now modular and ready for further refactor. 🐹
+
+#### Migration Log (2025-05-13)
+- Moved webviewManager.ts to webview/.
+- Updated all imports in the codebase to reflect the new structure.
+- All webview logic is now modular and isolated under src/webview/.
+- Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
+- Webview code is now ready for further modularisation and UI improvements. 🐹
