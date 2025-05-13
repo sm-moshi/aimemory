@@ -20,7 +20,6 @@ logs/
 *.env
 Thumbs.db
 npm-debug.log
-bak.vscodeignore copy
 repomix-output.txt
 pnpm-lock.yaml
 tsconfig.json
@@ -43,13 +42,21 @@ docs/experimental/
 
 # Allow dist/extension.cjs and dist/assets for runtime
 !dist/extension.cjs
-!dist/assets/**
-!dist/lib/rules/**
-!dist/webview/**
+!dist/extension.js
 !dist/cli.js
 !dist/commandHandler.js
-!dist/mcpServer*
-!dist/memoryBank*
-!dist/extension.js
-!dist/types.ts
-dist/*.js.map
+!dist/index.js
+!dist/assets/**
+!dist/core/**
+!dist/lib/rules/**
+!dist/lib/**
+!dist/mcp/**
+!dist/types/**
+!dist/webview/**
+!dist/utils/**
+!dist/webview/**
+!dist/*.js.map
+
+# Exclude test output and system files
+dist/test/
+dist/.DS_Store

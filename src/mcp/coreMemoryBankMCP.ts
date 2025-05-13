@@ -1,5 +1,5 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { MemoryBankFileType } from "../types.js";
+import type { MemoryBankFileType } from "../types/types.js";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import { z } from "zod";
 

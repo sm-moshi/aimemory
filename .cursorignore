@@ -1,2 +1,4 @@
 archive/
 docs/maybe/
+logs/
+.vscode-test/

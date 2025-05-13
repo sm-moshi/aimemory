@@ -1,6 +1,6 @@
 # WIP: Source & Documentation Restructuring Plan 🐹
 
-_Last updated: (WIP, update date after each major edit)_
+_Last updated: 2025-05-13_
 
 ---
 
@@ -84,12 +84,13 @@ src/
 - [x] Move core logic to `src/core/` (memoryBank.ts, memoryBankServiceCore.ts, memoryBankCore.ts moved; all imports updated)
 - [x] Move MCP server/tools to `src/mcp/` (mcpServer.ts, mcpServerCli.ts, coreMemoryBankMCP.ts moved; all imports and build config updated)
 - [x] Move webview code to `src/webview/` (webviewManager.ts moved; all imports updated; modularisation errors resolved)
-- [ ] Move shared types to `src/types/`
-- [ ] Move shared utils to `src/utils/`
-- [ ] Move tests to `src/test/`
-- [ ] Refactor entry points for clarity
-- [ ] Update imports and resolve breakages
-- [ ] Document new structure in `IMPLEMENTATION.md`
+- [x] Move shared types to `src/types/`
+- [x] Move shared utils to `src/utils/`
+- [x] Move tests to `src/test/`
+- [x] Refactor entry points for clarity
+- [x] Update imports and resolve breakages
+- [x] Document new structure in `IMPLEMENTATION.md`
+- [~] Refactor MCP server to remove Express dependency (replace with MCP SDK/Node APIs; in progress)
 
 ### Documentation (`docs/`)
 - [x] Create `/docs/guides/` and move user guides
@@ -98,7 +99,7 @@ src/
 - [x] Update `/docs/README.md` as index
 - [x] Review and migrate any remaining docs
 - [x] Add/update `README.md` or `index.md` in each folder (RESTRUCTURE_PLAN.md serves as the living index for `/docs/wip/`)
-- [ ] Keep this plan up to date as changes are made
+- [x] Keep this plan up to date as changes are made
 
 ---
 
@@ -109,7 +110,7 @@ src/
 
 ---
 
-## 7. Categorisation of Current `src/` Files (2025-05-11)
+## 7. Categorisation of Current `src/` Files (2025-05-13)
 
 ### File/Folder Mapping to New Structure
 
@@ -158,27 +159,19 @@ src/
 ### Next Steps
 
 1. Review this mapping and rationale.
-2. Move files/folders to their new locations (one category at a time, with tests after each move).
-3. Update imports and resolve any breakages.
-4. Document each migration step and update this plan after every major change.
+2. [x] Move files/folders to their new locations (one category at a time, with tests after each move).
+3. [x] Update imports and resolve any breakages.
+4. [x] Document each migration step and update this plan after every major change.
 
 **This plan ensures a Cursor-first, modular, and error-free codebase, supporting future features and robust testing.**
 
-_Last updated: 2025-05-11 🐹_
-
-#### Migration Log (2025-05-12)
-- Moved memoryBank.ts, memoryBankServiceCore.ts, and memoryBankCore.ts to core/.
-- Updated all imports in the codebase to reflect the new structure.
-- Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
-- All core logic is now modular and ready for further refactor. 🐹
-- Moved mcpServer.ts, mcpServerCli.ts, and coreMemoryBankMCP.ts to mcp/.
-- Updated all imports and build configuration to reflect the new structure.
-- Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
-- MCP logic is now modular and ready for further refactor. 🐹
+_Last updated: 2025-05-13 🐹_
 
 #### Migration Log (2025-05-13)
-- Moved webviewManager.ts to webview/.
-- Updated all imports in the codebase to reflect the new structure.
-- All webview logic is now modular and isolated under src/webview/.
+- All core, MCP, webview, types, utils, rules, and test files have been moved to their respective folders.
+- Imports and build configuration have been updated to reflect the new structure.
+- Modularisation, webview overhaul, MCP CLI/stdio, and self-healing are complete.
+- Express removal is the last major refactor in progress.
+- The codebase is now Cursor-first, with VS Code compatibility as a bonus.
 - Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
-- Webview code is now ready for further modularisation and UI improvements. 🐹
+- All core logic is now modular and ready for further refactor. 🐹

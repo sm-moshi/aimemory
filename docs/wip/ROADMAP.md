@@ -8,7 +8,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 
 ## Milestones
 
-### v0.1.x (Current)
+### v0.1.x (Complete)
 - [x] Modular memory bank structure (`core/`, `systemPatterns/`, `techContext/`, `progress/`)
 - [x] MCP server with robust error handling and port failover
 - [x] Webview UI for memory bank management (init, update, feedback)
@@ -17,14 +17,19 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [x] Cursor 0.49+ and VS Code compatibility
 - [x] Ignore files reviewed and fixed; packaging issues resolved; 0.1.5 is new stable baseline (May 2025)
 
-### v0.2.x (Planned)
+### v0.2.x (Current)
+- [x] Full modularisation of codebase (core, mcp, webview, types, utils, test)
+- [x] MCP CLI/stdio entrypoint for Cursor-first operation
+- [x] Webview UI overhaul (React/Tailwind, status, repair, management)
+- [x] Self-healing memory bank and rules management
+- [x] MCP tools exposed and robust
+- [~] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication (in progress)
+- [~] User-configurable log levels for Output Channel (in progress)
+- [~] Webview error and event reporting to Output Channel (in progress)
 - [ ] Version control integration for memory bank files
 - [ ] Enhanced webview: file previews, diffs, and history
 - [ ] Visualisation tools for memory relationships (webview)
-- [~] Improved AI context reset and "active context" workflows (in progress)
 - [ ] More granular permissions and user roles
-- [~] User-configurable log levels for Output Channel (see docs/experimental/detailed-output-with-webview.md)
-- [~] Webview error and event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
 - [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source
 - [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
 
@@ -44,26 +49,27 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - Plugin system for custom memory bank modules
 - Remote/Cloud memory bank support
 
-
 ---
 
 ## Action Plan (May 2025)
 
-- [~] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication.
-- [ ] Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
-- [~] Add a dedicated Output Channel for AI Memory extension logs using the Cursor/VS Code API.
-- [~] Implement user-configurable log levels and webview error/event reporting to Output Channel (see docs/experimental/detailed-output-with-webview.md)
-- [ ] Review and analyse MCP and Developer Tools logs in `logs/` (especially `2025-05-10 15:19:50.log` and matching `vscode-app-*.log` files) for startup, error, and runtime issues.
-- [x] Rebuild and repackage the extension after refactoring (ignore files reviewed and fixed, 0.1.5 is new stable baseline).
-- [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
+- [x] Refactor extension to modular, Cursor-first structure (core, mcp, webview, types, utils, test)
+- [x] Add MCP CLI/stdio entrypoint for Cursor-first operation
+- [x] Webview UI overhaul and robust feedback
+- [x] Self-healing memory bank and rules management
+- [~] Remove Express and use Cursor/VS Code APIs for all communication (in progress)
+- [~] User-configurable log levels and webview error/event reporting (in progress)
+- [ ] Version control integration, advanced UI, and chunked file access (future)
+- [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code)
 - [ ] Document findings and next steps in this ROADMAP.
 
 ---
 
-**Notes (2025-05-11):**
-- The ruleset and `.mdc` file are now up-to-date; self-healing is robust and automatic.
-- The "Reset the rules" button in the webview now provides user feedback and error handling.
-- MCP tool usage is now enforced and documented in the rules.
+**Notes (2025-05-13):**
+- The codebase is now Cursor-first, with VS Code compatibility as a bonus.
+- Modularisation, webview overhaul, MCP CLI/stdio, and self-healing are complete.
+- Express removal is the last major refactor in progress.
+- Docs, rules, and packaging are up-to-date.
 
 For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 

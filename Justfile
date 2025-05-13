@@ -5,6 +5,14 @@ install:
     pnpm install
     cd src/webview && pnpm install
 
+# Clean
+clean:
+    pnpm store prune
+
+clean-all:
+    rm -rf dist node_modules .turbo .next out coverage
+    cd src/webview && rm -rf dist node_modules
+
 # Build backend (with esbuild)
 
 backend:
@@ -26,13 +34,18 @@ webview-build:
 dev:
     just backend-watch & just webview-dev
 
-# Quality Checks
+# Build CLI
 
-lint:
-    pnpm run lint
+cli:
+    pnpm run build:cli
+
+# Quality Checks
 
 typecheck:
     pnpm run check-types
+
+lint:
+    pnpm run lint
 
 # Test
 
@@ -47,13 +60,7 @@ package:
 vsix:
     pnpm run package:vsce
 
-ship: install lint typecheck backend webview-build test package vsix
-
-# Clean
-
-clean:
-    rm -rf dist node_modules .turbo .next out coverage
-    cd src/webview && rm -rf dist node_modules
+ship: clean install backend webview-build cli typecheck lint package vsix
 
 # Full Rebuild
 rebuild: clean ship

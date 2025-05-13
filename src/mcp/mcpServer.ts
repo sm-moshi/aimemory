@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import type { MemoryBankFileType } from "../types.js";
+import type { MemoryBankFileType } from "../types/types.js";
 import { MemoryBankService } from "../core/memoryBank.js";
 import { z } from "zod";
 import express from "express";

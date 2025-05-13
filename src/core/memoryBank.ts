@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import * as fs from "node:fs/promises";
 import type { Stats } from "node:fs";
 import * as path from "node:path";
-import type { MemoryBank, MemoryBankFile } from "../types.js";
-import { MemoryBankFileType } from "../types.js";
+import type { MemoryBank, MemoryBankFile } from "../types/types.js";
+import { MemoryBankFileType } from "../types/types.js";
 import { CursorRulesService } from "../lib/cursor-rules-service.js";
 import {
   CURSOR_MEMORY_BANK_FILENAME,

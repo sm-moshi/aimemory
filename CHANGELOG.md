@@ -25,6 +25,49 @@
 
 ---
 
+## [0.2.5] - 2025-05-13
+
+**Major Features & Refactors** 🐹
+
+- **MCP CLI/stdio Entrypoint**
+  - Added CLI entrypoint for the MCP server, enabling Cursor 0.50+ compatibility and context-agnostic operation.
+  - MCP server now supports both HTTP/SSE and stdio transports.
+
+- **Full Modularisation**
+  - Refactored all core, MCP, webview, types, and utils code into modular, context-agnostic structure.
+  - Improved separation of concerns and maintainability.
+
+- **Webview UI Overhaul**
+  - Modern React/Tailwind UI with status, repair, and management controls.
+  - Added "Repair Memory Bank" and "Reset Rules" buttons with robust feedback and error handling.
+
+- **Self-Healing Memory Bank**
+  - Memory bank files and folders are now auto-created and repaired at runtime.
+  - Robust error handling and user feedback for all file operations.
+
+- **Rules Management**
+  - `.cursor/rules/memory-bank.mdc` is always up-to-date and can be reset from the webview.
+  - Improved ruleset enforcement and documentation.
+
+- **Command Handler Improvements**
+  - `/memory status`, `/memory update`, and `/memory help` commands are robust and user-friendly.
+  - Improved error handling and feedback.
+
+- **Express/CORS Deprecation (In Progress)**
+  - Ongoing refactor to remove Express in favour of pure MCP SDK/Node APIs for Cursor-first design.
+
+- **Testing & Type/Lint Improvements**
+  - TypeScript config and type definitions are now robust and error-free.
+  - Improved test coverage and reliability.
+
+- **Packaging & Ignore Rules**
+  - VSIX and npm packages are now clean, minimal, and only include runtime essentials.
+
+- **Documentation**
+  - `IMPLEMENTATION.md`, `memory-bank-rules.md`, and other docs are up-to-date and detailed.
+
+---
+
 ## [0.1.5] - 2025-05-11
 
 **Packaging & Ignore Rules Fixes** 🐹

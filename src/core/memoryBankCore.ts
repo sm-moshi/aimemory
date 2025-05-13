@@ -2,8 +2,8 @@ import { z } from "zod";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { MemoryBankFileType } from "../types.js";
-export { MemoryBankFileType } from "../types.js";
+import type { MemoryBankFileType } from "../types/types.js";
+export { MemoryBankFileType } from "../types/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
