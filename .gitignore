@@ -1,6 +1,4 @@
-out
-dist
-node_modules
+node_modules/
 .vscode*
 .repomix/
 .cursor/rules/*.mdc
@@ -10,3 +8,5 @@ logs/
 docs/maybe/
 .vscode/settings.json
 *.vsix
+dist/
+out/
