@@ -3,9 +3,6 @@
 	"ProjectTree.withComment": true,
 	"crates.listPreReleases": true,
 	"cursor-retrieval.canAttemptGithubLogin": false,
-	"debug.javascript.defaultRuntimeExecutable": {
-		"pwa-node": "/Users/smeya/.local/share/mise/shims/node"
-	},
 	"dependi.go.enabled": false,
 	"dependi.npm.informPatchUpdates": true,
 	"dependi.npm.unstableFilter": "IncludeIfUnstable",
@@ -41,7 +38,6 @@
 		"dist": false, // set this to true to hide the "dist" folder with the compiled JS files
 		"out": false // set this to true to hide the "out" folder with the compiled JS files
 	},
-	"java.jdt.ls.java.home": "/Users/smeya/.local/share/mise/installs/java/24.0.1",
 	"javascript.updateImportsOnPaste.enabled": true,
 	"json.format.keepLines": true,
 	"json.schemaDownload.enable": true,
@@ -58,13 +54,15 @@
 	"php.suggest.basic": false,
 	"php.validate.enable": false,
 	"prettyxml.settings.formatOnSave": true,
-	"python.defaultInterpreterPath": "/Users/smeya/.local/share/mise/installs/python/3.12.10/bin/python",
+	"repomix.output.compress": true,
+	"repomix.output.includeEmptyDirectories": true,
 	"search.exclude": {
 		"dist": false, // set this to false to include "dist" folder in search results
 		"out": false // set this to false to include "out" folder in search results
 	},
 	"telemetry.feedback.enabled": true,
 	"testExplorer.mergeSuites": true,
+	"todo-tree.tree.showCountsInTree": true,
 	"typescript.preferences.preferTypeOnlyAutoImports": true,
 	"typescript.referencesCodeLens.enabled": true,
 	"typescript.referencesCodeLens.showOnAllFunctions": true,
@@ -83,5 +81,6 @@
 	"vue.format.style.initialIndent": true,
 	"window.autoDetectColorScheme": true,
 	"xml.codeLens.enabled": true,
-	"yaml.format.printWidth": 100
+	"yaml.format.printWidth": 100,
+	"dependi.npm.lockFileEnabled": false
 }

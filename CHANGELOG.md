@@ -179,3 +179,14 @@
 **Bug Fixes**
 
 - Various bug fixes and improvements.
+
+## [0.2.4] - 2025-05-13
+
+**Modularisation, Checklist, and Documentation Updates** 🐹
+
+- Moved all shared types to `src/types/` and shared utils to `src/utils/` for improved modularity and maintainability.
+- Updated all checklists in `docs/wip/RESTRUCTURE_PLAN.md` to mark types and utils migration as complete.
+- Confirmed `.js.map` files are included in the package for best debugging practices.
+- Added a future refactor note to remove Express from the MCP server in `RESTRUCTURE_PLAN.md`.
+- Ensured all living docs (`RESTRUCTURE_PLAN.md`, `MCP_SERVER.md`, `EXPERIMENTAL-MCP-PLAN.md`) reflect the current modular structure and progress.
+- No functional changes to extension logic; all changes are structural, documentation, and checklist updates.
