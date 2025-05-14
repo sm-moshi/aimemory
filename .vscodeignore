@@ -46,13 +46,6 @@ docs/experimental/
 !dist/cli.js
 !dist/commandHandler.js
 !dist/index.js
-!dist/mcpServer.js
-!dist/mcpServerCli.js
-!dist/memoryBank.js
-!dist/memoryBankCore.js
-!dist/memoryBankServiceCore.js
-!dist/types.js
-!dist/webviewManager.js
 !dist/assets/**
 !dist/core/**
 !dist/lib/rules/**
@@ -60,10 +53,8 @@ docs/experimental/
 !dist/mcp/**
 !dist/types/**
 !dist/webview/**
-!dist/core/**
-!dist/mcp/**
-!dist/types/**
 !dist/utils/**
+!dist/webview/**
 !dist/*.js.map
 
 # Exclude test output and system files
