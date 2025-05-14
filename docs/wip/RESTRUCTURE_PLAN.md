@@ -86,11 +86,11 @@ src/
 - [x] Move webview code to `src/webview/` (webviewManager.ts moved; all imports updated; modularisation errors resolved)
 - [x] Move shared types to `src/types/`
 - [x] Move shared utils to `src/utils/`
-- [ ] Move tests to `src/test/`
-- [ ] Refactor entry points for clarity
-- [ ] Update imports and resolve breakages
-- [ ] Document new structure in `IMPLEMENTATION.md`
-- [ ] Refactor MCP server to remove Express dependency (replace with MCP SDK stdio/CLI entrypoint and, if needed, Node's built-in HTTP for minimal endpoints; remove `express` and `@types/express` from `package.json` after refactor; update docs and tests for Cursor-first, dependency-light design)
+- [x] Move tests to `src/test/`
+- [x] Refactor entry points for clarity
+- [x] Update imports and resolve breakages
+- [x] Document new structure in `IMPLEMENTATION.md`
+- [~] Refactor MCP server to remove Express dependency (replace with MCP SDK/Node APIs; in progress)
 
 ### Documentation (`docs/`)
 - [x] Create `/docs/guides/` and move user guides
