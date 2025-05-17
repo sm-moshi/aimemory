@@ -17,7 +17,7 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 - [Implementation Guide](./wip/IMPLEMENTATION.md)
 - [Troubleshooting](./guides/TROUBLESHOOTING.md)
 - [Roadmap](./wip/ROADMAP.md)
-- [TODO](./wip/TO DO.md)
+- [TODO](./wip/TODO.md)
 
 ## 🛠️ Migration Checklist
 - [x] Move user guides to `/docs/guides/`
