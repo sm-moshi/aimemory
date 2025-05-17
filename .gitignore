@@ -3,7 +3,6 @@ node_modules/
 .repomix/
 .cursor/rules/*.mdc
 !.cursor/rules/memory-bank.mdc
-memory-bank/
 logs/
 docs/maybe/
 .vscode/settings.json
