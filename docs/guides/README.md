@@ -1,4 +1,6 @@
-# Guides Index
+# AI Memory Extension Guides Index
+
+_Last updated: 2025-05-17 🐹_
 
 This folder contains user-facing guides for AI Memory:
 
@@ -7,3 +9,5 @@ This folder contains user-facing guides for AI Memory:
 - [Troubleshooting Guide](./TROUBLESHOOTING.md): Diagnosing and resolving common issues.
 
 For advanced or experimental docs, see [../experimental/README.md](../experimental/README.md).
+
+---

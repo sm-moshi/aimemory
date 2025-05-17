@@ -23,15 +23,30 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [x] Webview UI overhaul (React/Tailwind, status, repair, management)
 - [x] Self-healing memory bank and rules management
 - [x] MCP tools exposed and robust
-- [~] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication (in progress)
-- [~] User-configurable log levels for Output Channel (in progress)
-- [~] Webview error and event reporting to Output Channel (in progress)
-- [ ] Version control integration for memory bank files
-- [ ] Enhanced webview: file previews, diffs, and history
-- [ ] Visualisation tools for memory relationships (webview)
-- [ ] More granular permissions and user roles
-- [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source
+- [~] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication (**last major refactor in progress**)
+- [~] User-configurable log levels for Output Channel (**basic support present, advanced features pending**)
+- [~] Webview error and event reporting to Output Channel (**basic support present, advanced features pending**)
+- [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source (**logic present, not yet exposed as command**)
 - [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
+- [ ] **Automated test coverage for MCP tools and extension commands (not started)**
+
+### v0.3.x (Future)
+- [ ] Refactor extension to support stdio MCP server process management (spawn, connect, lifecycle)
+- [ ] Refactor to use stdio transport as default for Cursor 0.50+ compatibility
+- [ ] Version control integration for memory bank files
+- [ ] Expose 'AI Memory: Create Memory Bank Rule' as a command in the command palette
+- [ ] Fix 'Initialise Memory Bank' button text in webview
+- [ ] Begin work on advanced UI features (refresh, preview, diff, visualisation)
+- [ ] Implement automated tests and CI/CD
+- [ ] **Build & Workspace Simplification**
+    - Unify TypeScript configs (single root config, only separate for webview if needed)
+    - Streamline build scripts (esbuild for Node/extension/server, vite for webview)
+    - Rationalise ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
+    - Use official test tools (@vscode/test-cli, MCP Inspector)
+    - Remove Express/HTTP from extension/server path (stdio only)
+    - Clarify and flatten folder structure
+    - Document all build/test/dev commands in README
+    - Only use monorepo/workspaces if webview is a separate package
 
 ### v1.0.0 (Stable)
 - [ ] Full test coverage and CI/CD for all features
@@ -48,6 +63,9 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - Multi-project and workspace memory management
 - Plugin system for custom memory bank modules
 - Remote/Cloud memory bank support
+- Enhanced webview: file previews, diffs, and history
+- Visualisation tools for memory relationships (webview)
+- More granular permissions and user roles
 
 ---
 
@@ -57,19 +75,23 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [x] Add MCP CLI/stdio entrypoint for Cursor-first operation
 - [x] Webview UI overhaul and robust feedback
 - [x] Self-healing memory bank and rules management
-- [~] Remove Express and use Cursor/VS Code APIs for all communication (in progress)
-- [~] User-configurable log levels and webview error/event reporting (in progress)
+- [~] Remove Express and use Cursor/VS Code APIs for all communication (**last major refactor in progress**)
+- [~] User-configurable log levels and webview error/event reporting (**basic support present, advanced features pending**)
 - [ ] Version control integration, advanced UI, and chunked file access (future)
 - [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code)
+- [ ] Implement automated tests and CI/CD
+- [ ] Expose 'AI Memory: Create Memory Bank Rule' as a command
+- [ ] **Simplify build/test/workspace as per v0.3.x plan**
 - [ ] Document findings and next steps in this ROADMAP.
 
 ---
 
-**Notes (2025-05-13):**
+**Notes (2025-05-17):**
 - The codebase is now Cursor-first, with VS Code compatibility as a bonus.
 - Modularisation, webview overhaul, MCP CLI/stdio, and self-healing are complete.
 - Express removal is the last major refactor in progress.
 - Docs, rules, and packaging are up-to-date.
+- Automated tests, advanced UI features, and build/workspace simplification are the next priorities.
 
 For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 

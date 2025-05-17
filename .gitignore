@@ -1,11 +1,11 @@
 node_modules/
-.vscode*
 .repomix/
 .cursor/rules/*.mdc
 !.cursor/rules/memory-bank.mdc
 logs/
 docs/maybe/
-.vscode/settings.json
 *.vsix
 dist/
 out/
+.vscode-test/*
+pnpm-lock.yaml

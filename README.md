@@ -1,15 +1,50 @@
 # AI Memory Extension for Cursor 🐹
 
-## Overview
+[![Build Status](https://img.shields.io/github/actions/workflow/status/sm-moshi/aimemory/ci.yml?branch=main)](https://github.com/sm-moshi/aimemory/actions)
+[![License](https://img.shields.io/github/license/sm-moshi/aimemory)](LICENSE)
+[![Version](https://img.shields.io/github/package-json/v/sm-moshi/aimemory/main)](package.json)
 
-AI Memory is a modular, robust, and user-friendly extension for Cursor (0.50+) and VS Code, providing persistent, context-aware memory for LLMs and agents. It features a modern webview, a stable MCP server (CLI/stdio), and a fully modular, self-healing memory bank system. Designed Cursor-first, it ensures seamless context retention, robust error handling, and a smooth developer experience.
+_A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
+
+_Last updated: 2025-05-17_
 
 ---
 
-## ✨ Key Features
+## 📑 Table of Contents
 
-- **Modular Memory Bank**: Structured folders (`core/`, `systemPatterns/`, `techContext/`, `progress/`) for project, product, technical, and progress context.
-- **MCP Server (CLI/stdio)**: Robust, async, error-tolerant, and Cursor-first. Automatic port failover and readiness checks.
+1. [AI Memory Extension for Cursor 🐹](#ai-memory-extension-for-cursor-)
+	1. [📑 Table of Contents](#-table-of-contents)
+	2. [🧠 Overview](#-overview)
+	3. [✨ Features](#-features)
+	4. [🖼 Visuals](#-visuals)
+	5. [🛠 Installation](#-installation)
+		1. [From Cursor Extension Panel (Recommended)](#from-cursor-extension-panel-recommended)
+		2. [From VSIX File](#from-vsix-file)
+	6. [⚡ Quick Start](#-quick-start)
+	7. [💡 Usage Examples](#-usage-examples)
+	8. [🗂 Project Structure](#-project-structure)
+	9. [⚙️ Configuration](#️-configuration)
+	10. [🔄 Migration](#-migration)
+	11. [🛠 Troubleshooting](#-troubleshooting)
+	12. [🤝 Contributing](#-contributing)
+	13. [📬 Support \& Contact](#-support--contact)
+	14. [📜 License](#-license)
+	15. [🔗 Links \& Docs](#-links--docs)
+
+---
+
+## 🧠 Overview
+
+AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) and VS Code, providing persistent, context-aware memory for LLMs and agents. It features a modern webview, a robust MCP server (CLI/stdio-only), and a fully modular, self-healing memory bank system. Designed Cursor-first, it ensures seamless context retention, robust error handling, and a smooth developer experience.
+
+> **Note:** This extension uses **stdio transport only** for MCP server communication. No HTTP/Express endpoints are used or required.
+
+---
+
+## ✨ Features
+
+- **Modular Memory Bank**: Structured folders for project, product, technical, and progress context.
+- **MCP Server (CLI/stdio-only)**: Robust, async, error-tolerant, and Cursor-first.
 - **Webview UI**: Initialise, update, and repair the memory bank with clear feedback and error messages.
 - **Self-Healing**: Auto-creates missing files/folders from templates. Manual repair available via webview.
 - **Migration Logic**: Detects and migrates flat memory banks to modular structure with user consent.
@@ -18,23 +53,12 @@ AI Memory is a modular, robust, and user-friendly extension for Cursor (0.50+) a
 
 ---
 
-## 🗂 Project Structure
+## 🖼 Visuals
 
-- `src/` — Modular TypeScript source (core logic, MCP server, webview, types, utils, tests, assets)
-- `memory-bank/` — Modular, persistent project memory (see below)
-- `docs/` — Public documentation, guides, and plans
-- `dist/` — Packaged extension and assets
+> _Screenshots and diagrams coming soon!_
 
-### Modular Memory Bank Structure
-
-| Folder            | Purpose                                        |
-| ----------------- | ---------------------------------------------- |
-| `core/`           | Project brief, product context, active context |
-| `systemPatterns/` | System architecture, design patterns, scanning |
-| `techContext/`    | Tech stack, dependencies, environment          |
-| `progress/`       | Progress index, current work, history          |
-
-All required files are auto-created if missing. See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
+- **Webview Dashboard:** _[Insert screenshot here]_
+- **Memory Bank Structure:** _[Insert diagram here]_
 
 ---
 
@@ -53,79 +77,113 @@ All required files are auto-created if missing. See [memory-bank rules](memory-b
 
 ---
 
-## 🚦 Setup & Usage
+## ⚡ Quick Start
 
-### Initial Setup
-1. Install the extension
-2. Open the webview dashboard (`AI Memory: Open Dashboard`)
-3. Click **Start MCP Server**
-4. Click **Initialise Memory Bank** (auto-creates all required files/folders)
-
-### Using the Memory Bank
-- **Webview Controls**: Initialise, update, and repair the memory bank with one click.
-- **/memory Commands**: Use `/memory status`, `/memory list`, `/memory read <filename>` in Cursor chat.
-- **Dashboard**: View and manage all memory bank files in one place.
-
-### Migration from Older Versions
-- Automatic detection and migration of flat memory banks to modular structure.
-- No files are overwritten without explicit user consent.
-
----
-
-## 🧠 Memory Bank Details
-
-- **Self-Healing**: Missing files/folders are auto-created from templates before any operation.
-- **Manual Repair**: Use the "Repair Memory Bank" button in the webview if needed.
-- **Consent & Safety**: No files are overwritten or deleted without user consent.
-- **Modular Structure**: Enables future features like version control, remote/cloud, and visualisation.
-
----
-
-## 🧩 Development & Contribution
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v16+)
-- [pnpm](https://pnpm.io/) (v8+)
-- Cursor IDE (0.50+) for testing
-
-### Setup
 ```bash
 pnpm install
+pnpm run compile
+# Press F5 in Cursor to launch the extension
 ```
 
-### Build & Test
-```bash
-pnpm run compile   # Build the extension
-pnpm run watch     # Watch for changes
-```
+- Open the webview dashboard (`AI Memory: Open Dashboard`)
+- Click **Start MCP Server**
+- Click **Initialise Memory Bank**
+- Use `/memory` commands in Cursor chat
 
-### Debug & Run
-- Press F5 in Cursor, or use the "Run Extension" launch config
-- Use `/memory` commands and webview controls
+---
 
-### Package for Distribution
-```bash
-pnpm run package
-pnpm run package:vsce
-```
+## 💡 Usage Examples
 
-### Commit & Release
-- Use [Conventional Commits](https://www.conventionalcommits.org/) and include an emoji (e.g., 🐹)
-- Follow [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) for branching and releases
+- **Check memory status:**
+  ```
+  /memory status
+  ```
+- **List memory files:**
+  ```
+  /memory list
+  ```
+- **Read a memory file:**
+  ```
+  /memory read core/projectbrief.md
+  ```
+- **Repair memory bank:**
+  - Use the "Repair Memory Bank" button in the webview
+
+---
+
+## 🗂 Project Structure
+
+| Folder         | Purpose                                      |
+| -------------- | -------------------------------------------- |
+| `src/`         | Extension, MCP server, webview, types, utils |
+| `memory-bank/` | Modular, persistent project memory           |
+| `docs/`        | Public documentation, guides, and plans      |
+| `dist/`        | Packaged extension and assets                |
+
+See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
+
+---
+
+## ⚙️ Configuration
+
+- All required files are auto-created if missing.
+- No manual configuration is required for basic use.
+- Advanced settings and customisation coming soon.
+
+---
+
+## 🔄 Migration
+
+- Automatic detection and migration of flat memory banks to modular structure.
+- No files are overwritten without explicit user consent.
+- See [Migration Guide](docs/guides/MIGRATION_GUIDE.md) for details.
 
 ---
 
 ## 🛠 Troubleshooting
-- **MCP Server Health**: Visit `http://localhost:7331/health` (or fallback port) for status.
-- **Port Conflicts**: Extension will auto-failover to next port.
-- **Repair**: Use the webview's repair button if files are missing or broken.
-- **See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)** for more.
+
+- **MCP Server Health:** Use the webview dashboard or `/memory status` in Cursor chat.
+- **Repair:** Use the webview's repair button if files are missing or broken.
+- **See [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)** for more.
+
+> **Tip:** If you encounter issues, check the Output Channel in Cursor/VS Code for logs.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see:
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Unified Ruleset](vsix-extension.mdc)
+
+> **Branching:** We use [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/). Please branch from `develop` and use `feature/*` for new features.
+
+---
+
+## 📬 Support & Contact
+
+- Open an [issue](https://github.com/sm-moshi/aimemory/issues) for bugs or feature requests
+- For questions, use GitHub Discussions or contact the maintainers via the repository
 
 ---
 
 ## 📜 License
-Apache 2.0
+
+[Apache 2.0](LICENSE)
 
 ---
 
-_Last updated: 2025-05-13_
+## 🔗 Links & Docs
+
+- [Quickstart Guide](docs/guides/QUICKSTART.md)
+- [Migration Guide](docs/guides/MIGRATION_GUIDE.md)
+- [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)
+- [Implementation Guide](docs/wip/IMPLEMENTATION.md)
+- [Roadmap](docs/wip/ROADMAP.md)
+- [Unified Ruleset](vsix-extension.mdc)
+- [GitHub Repository Best Practices](docs/devs/github-repo-guide.md)
+
+---
+
+> _Built with ❤️ for the Cursor and VS Code community. Contributions, feedback, and ideas are always welcome!_

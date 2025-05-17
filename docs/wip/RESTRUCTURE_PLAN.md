@@ -1,6 +1,6 @@
 # WIP: Source & Documentation Restructuring Plan 🐹
 
-_Last updated: 2025-05-13_
+_Last updated: 2025-05-17_
 
 ---
 
@@ -21,153 +21,48 @@ _Last updated: 2025-05-13_
 
 ---
 
-## 2. Current `src/` Structure & Issues
+## 2. Summary Table: What's Done
 
-- `src/` contains a mix of backend logic, webview UI, types, utils, and test files
-- Some logic is tightly coupled (e.g., MCP server, memory bank, webview manager)
-- Webview code is nested but not always clearly separated
-- Test and utility files are mixed in with core logic
-- Lacks clear boundaries for future modules (e.g., planner, chunking, advanced MCP tools)
+| Area                 | Status      | Notes                                         |
+| -------------------- | ----------- | --------------------------------------------- |
+| Core logic move      | Done        | All core files in `src/core/`                 |
+| MCP logic move       | Done        | All MCP files in `src/mcp/`                   |
+| Webview move         | Done        | All webview files in `src/webview/`           |
+| Types move           | Done        | All types in `src/types/`                     |
+| Utils move           | Done        | All utils in `src/utils/`                     |
+| Tests move           | Done        | All tests in `src/test/`                      |
+| Entry points         | Done        | `extension.ts`, `cli.ts` at root              |
+| Imports/build config | Done        | All updated and working                       |
+| Docs restructure     | Done        | `/guides/`, `/experimental/`, `/wip/` created |
+| Indexing             | Done        | `/docs/README.md` and folder indexes in place |
+| Modularisation       | Done        | Confirmed in migration log                    |
+| Express removal      | In progress | Last major refactor                           |
 
 ---
 
-## 3. Planned `src/` Structure & Principles
+## 3. Current Structure
 
-**Guiding Principles:**
-- KISS, DRY, YAGNI, idiomatic TypeScript
-- Async-first, concurrency-aware where needed
-- Modular: separate core, webview, utils, types, and test logic
-- Prepare for future features (planner, chunking, etc.)
-
-**Proposed Structure:**
 ```
 src/
-  core/           # Core memory bank logic (MemoryBankService, migration, etc.)
-  mcp/            # MCP server, tool/resource registration, protocol logic
-  webview/        # Vite/React webview app (src/, components/, utils/)
+  core/           # Core memory bank logic
+  mcp/            # MCP server, tool/resource registration
+  webview/        # Vite/React webview app
   types/          # Shared TypeScript types/interfaces
-  utils/          # Shared utilities (logger, file ops, etc.)
+  utils/          # Shared utilities
   test/           # Unit/integration tests
   extension.ts    # VS Code/Cursor extension entry point
-  ...             # (other entry points as needed)
+  cli.ts          # MCP CLI/stdio entry point
 ```
 
----
-
-## 4. Documentation (`docs/`) Restructuring
-
-**Current State:**
-- `/docs/` contains a mix of guides, experimental docs, roadmap, and WIP notes
-- Some files are duplicated or out of date
-- New conventions are being adopted (see below)
-
-**New Conventions:**
-- `/docs/guides/`: User-facing guides (Quickstart, Migration, Troubleshooting)
-- `/docs/experimental/`: Advanced, unstable, or in-progress features
-- `/docs/wip/`: Work-in-progress, drafts, ongoing refactors (this file)
-- `/docs/maybe/`: Private notes (gitignored)
-- `/docs/README.md`: Index and navigation
-- Each folder has a `README.md` or `index.md` for navigation
-
-**Migration Status:**
-- Most guides have been moved to `/docs/guides/`
-- Experimental plans and advanced logging docs are in `/docs/experimental/`
-- This plan and future refactor notes go in `/docs/wip/`
-- Some files still need review and migration (see checklist)
+`docs/` is now split into:
+- `/guides/`: User-facing guides
+- `/experimental/`: Advanced, unstable, or in-progress features
+- `/wip/`: Work-in-progress, drafts, ongoing refactors
+- `/README.md`: Index and navigation
 
 ---
 
-## 5. Checklist / Roadmap
-
-### Codebase (`src/`)
-- [x] Audit all files in `src/` and categorise by function
-- [x] Move core logic to `src/core/` (memoryBank.ts, memoryBankServiceCore.ts, memoryBankCore.ts moved; all imports updated)
-- [x] Move MCP server/tools to `src/mcp/` (mcpServer.ts, mcpServerCli.ts, coreMemoryBankMCP.ts moved; all imports and build config updated)
-- [x] Move webview code to `src/webview/` (webviewManager.ts moved; all imports updated; modularisation errors resolved)
-- [x] Move shared types to `src/types/`
-- [x] Move shared utils to `src/utils/`
-- [x] Move tests to `src/test/`
-- [x] Refactor entry points for clarity
-- [x] Update imports and resolve breakages
-- [x] Document new structure in `IMPLEMENTATION.md`
-- [~] Refactor MCP server to remove Express dependency (replace with MCP SDK/Node APIs; in progress)
-
-### Documentation (`docs/`)
-- [x] Create `/docs/guides/` and move user guides
-- [x] Create `/docs/experimental/` for advanced features
-- [x] Create `/docs/wip/` for WIP/refactor notes
-- [x] Update `/docs/README.md` as index
-- [x] Review and migrate any remaining docs
-- [x] Add/update `README.md` or `index.md` in each folder (RESTRUCTURE_PLAN.md serves as the living index for `/docs/wip/`)
-- [x] Keep this plan up to date as changes are made
-
----
-
-## 6. Notes
-- This is a living document. Update after each major change.
-- Use checklists to track progress and next steps.
-- Reference this plan in PRs and team discussions.
-
----
-
-## 7. Categorisation of Current `src/` Files (2025-05-13)
-
-### File/Folder Mapping to New Structure
-
-- **core/**
-  - memoryBank.ts
-  - memoryBankServiceCore.ts
-  - memoryBankCore.ts
-- **mcp/**
-  - mcpServer.ts
-  - mcpServerCli.ts
-  - coreMemoryBankMCP.ts
-  - commandHandler.ts (if tightly coupled to MCP logic)
-- **webview/**
-  - webviewManager.ts
-  - webview/ (entire folder, including src/, components/, utils/)
-- **types/**
-  - types.ts
-  - types/ (entire folder)
-- **utils/**
-  - utils/ (entire folder)
-  - lib/cursor-rules-service.ts
-  - lib/cursor-rules.ts
-  - lib/mcp-prompts.ts
-- **rules/**
-  - lib/rules/ (entire folder)
-- **test/**
-  - test/ (entire folder)
-- **assets/**
-  - assets/ (entire folder)
-- **Entry Points**
-  - extension.ts (remains at src/ root)
-  - cli.ts (remains at src/ root)
-
-### Rationale for Each Category
-
-- **core/**: Contains all context-agnostic memory bank logic, ensuring reusability across CLI, extension, and server. This supports Cursor-first and modular design.
-- **mcp/**: All MCP server logic, tool/resource registration, and protocol handling. Keeps Cursor/Claude integration clean and testable.
-- **webview/**: Vite/React app and related managers, fully isolated for UI development and Cursor/VS Code compatibility.
-- **types/**: Shared TypeScript types/interfaces for strong typing and maintainability.
-- **utils/**: Shared utilities, logging, file ops, and Cursor-specific helpers, promoting DRY and error-free code.
-- **rules/**: All Cursor rules logic, kept modular for easy updates and compliance.
-- **test/**: Unit and integration tests, supporting robust, repeatable validation (inspired by cursor-tools best practices).
-- **assets/**: Static resources, icons, and images, separated for clarity.
-- **Entry Points**: `extension.ts` and `cli.ts` remain at the root for discoverability and alignment with MCP/VS Code standards.
-
-### Next Steps
-
-1. Review this mapping and rationale.
-2. [x] Move files/folders to their new locations (one category at a time, with tests after each move).
-3. [x] Update imports and resolve any breakages.
-4. [x] Document each migration step and update this plan after every major change.
-
-**This plan ensures a Cursor-first, modular, and error-free codebase, supporting future features and robust testing.**
-
-_Last updated: 2025-05-13 🐹_
-
-#### Migration Log (2025-05-13)
+## 4. Migration Log (2025-05-17)
 - All core, MCP, webview, types, utils, rules, and test files have been moved to their respective folders.
 - Imports and build configuration have been updated to reflect the new structure.
 - Modularisation, webview overhaul, MCP CLI/stdio, and self-healing are complete.
@@ -175,3 +70,16 @@ _Last updated: 2025-05-13 🐹_
 - The codebase is now Cursor-first, with VS Code compatibility as a bonus.
 - Build and lint are clean; only a known VS Code test runner issue remains (unrelated to migration).
 - All core logic is now modular and ready for further refactor. 🐹
+
+---
+
+## 5. Next Steps
+- Complete Express removal from MCP server (replace with MCP SDK/Node APIs)
+- As new features (e.g., planner, chunking) are added, further modularisation may be needed
+- Update this plan and the migration log after each major change
+
+---
+
+**This plan ensures a Cursor-first, modular, and error-free codebase, supporting future features and robust testing.**
+
+_Last updated: 2025-05-17 🐹_
