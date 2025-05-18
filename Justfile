@@ -34,11 +34,6 @@ webview-build:
 dev:
     just backend-watch & just webview-dev
 
-# Build CLI
-
-cli:
-    pnpm run build:cli
-
 # Quality Checks
 
 typecheck:
@@ -57,19 +52,23 @@ test:
 package:
     pnpm run package
 
-vsix:
-    pnpm run package:vsce
-
-ship: clean install backend webview-build cli typecheck lint package vsix
+# The following commands are commented out because there are no corresponding scripts in package.json:
+# cli:
+#     pnpm run build:cli
+# vsix:
+#     pnpm run package:vsce
 
 # Full Rebuild
+# Removed 'cli' and 'vsix' from ship and rebuild as well
+ship: clean install backend webview-build typecheck lint package
+
 rebuild: clean ship
 
 # VSIX packaging with npm (for vsce compatibility)
-vsix-npm:
-    rm -rf node_modules
-    npm install --omit=dev
-    pnpm run package:vsce
+# vsix-npm:
+#     rm -rf node_modules
+#     npm install --omit=dev
+#     pnpm run package:vsce
 
 # Restore pnpm environment after packaging
 restore-pnpm:

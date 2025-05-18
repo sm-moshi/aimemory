@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "@vscode-elements/elements";
-import { Status } from "./components/status";
-import { HowDoesItWork } from "./components/how-does-it-work";
-import { MCPServerManager } from "./components/mcp-server-manager";
+import { Status } from "./components/status/index.js";
+import { HowDoesItWork } from "./components/how-does-it-work/index.js";
+import { MCPServerManager } from "./components/mcp-server-manager/index.js";
 
 function App() {
   const [apiAvailable, setApiAvailable] = useState(!!window.vscodeApi);
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   // Log VSCode API to debug
   console.log("VSCODE API in App:", window.vscodeApi);
@@ -24,6 +25,15 @@ function App() {
       return () => clearInterval(checkInterval);
     }
   }, [apiAvailable]);
+
+  // Handler for Review and Update Memory Bank
+  const handleReviewAndUpdateMemoryBank = useCallback(async () => {
+    setReviewLoading(true);
+    // You may need to call the MCP tool here, or pass this down if needed
+    // For now, just simulate async
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setReviewLoading(false);
+  }, []);
 
   if (!apiAvailable) {
     return (
@@ -51,7 +61,7 @@ function App() {
       </header>
       <main className="flex flex-col gap-8">
         <MCPServerManager />
-        <Status />
+        <Status onReviewAllFiles={handleReviewAndUpdateMemoryBank} reviewLoading={reviewLoading} />
         <HowDoesItWork />
       </main>
     </div>

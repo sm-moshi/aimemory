@@ -251,6 +251,15 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register a command to show the AI Memory Output Channel
+  const showOutputChannelCommand = vscode.commands.registerCommand(
+    "aimemory.showOutput",
+    () => {
+      const logger = Logger.getInstance();
+      logger.showOutput();
+    }
+  );
+
   // Add all commands to context subscriptions
   context.subscriptions.push(
     openWebviewCommand,
@@ -258,7 +267,8 @@ export function activate(context: vscode.ExtensionContext) {
     startMCPCommand,
     cursorApiCommands,
     stopServerCommand,
-    setLogLevelCommand
+    setLogLevelCommand,
+    showOutputChannelCommand
   );
 
   // Register a disposal event to stop the server when the extension is deactivated

@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { RiLoader5Fill, RiPlayFill, RiStopFill } from "react-icons/ri";
-import { cn } from "../../utils/cn";
-import { sendLog } from '../../utils/message';
+import { RiPlayFill, RiStopFill } from "react-icons/ri";
+import { cn } from "../../utils/cn.js";
+import { sendLog } from '../../utils/message.js';
+import { RulesStatus } from "../status/rules-status.js";
 
 export function MCPServerManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMCPRunning, setIsMCPRunning] = useState(false);
   const [port, setPort] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [initLoading, setInitLoading] = useState(false);
+  const [feedback] = useState<string | null>(null);
 
   // Function to check if MCP server is already running on a given port
   const checkServerRunning = useCallback(async (checkPort: number) => {
@@ -103,169 +102,63 @@ export function MCPServerManager() {
     };
   }, [handleMessage]);
 
-  // Helper to call MCP tool via HTTP POST
-  const callMCPTool = useCallback(
-    async (tool: string, params: Record<string, unknown> = {}) => {
-      if (!port) {
-        setFeedback("MCP server port not available.");
-        sendLog("MCP server port not available.", "error", { action: "callMCPTool", tool });
-        return;
-      }
-      try {
-        const response = await fetch(`http://localhost:${port}/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tool, params }),
-        });
-        if (!response.ok) {
-          setFeedback(`Error: ${response.statusText}`);
-          sendLog(`MCP tool '${tool}' failed: ${response.statusText}`, "error", { action: "callMCPTool", tool });
-          return;
-        }
-        const data = await response.json();
-        if (data?.content?.[0]?.text) {
-          setFeedback(data.content[0].text);
-          sendLog(`MCP tool '${tool}' response: ${data.content[0].text}`, "info", { action: "callMCPTool", tool });
-        } else {
-          setFeedback("No response from MCP tool.");
-          sendLog(`No response from MCP tool '${tool}'`, "error", { action: "callMCPTool", tool });
-        }
-      } catch (err) {
-        setFeedback(`Request failed: ${err instanceof Error ? err.message : String(err)}`);
-        sendLog(`Request to MCP tool '${tool}' failed: ${err instanceof Error ? err.message : String(err)}`, "error", { action: "callMCPTool", tool });
-      }
-    },
-    [port]
-  );
-
-  // Handler for Initialize Memory Bank
-  const handleInitializeMemoryBank = useCallback(async () => {
-    setInitLoading(true);
-    setFeedback(null);
-    sendLog("User clicked 'Initialize Memory Bank' button", "info", { action: "initializeMemoryBank" });
-    await callMCPTool("initialize-memory-bank");
-    setInitLoading(false);
-  }, [callMCPTool]);
-
-  // Handler for Update Memory Bank
-  const handleUpdateMemoryBank = useCallback(async () => {
-    const fileType = window.prompt("Enter memory bank file type (e.g. projectbrief.md):");
-    if (!fileType) { return; }
-    const content = window.prompt("Enter new content for the file:");
-    if (content === null) { return; }
-    setUpdateLoading(true);
-    setFeedback(null);
-    sendLog("User clicked 'Update Memory Bank' button", "info", { action: "updateMemoryBank", fileType });
-    await callMCPTool("update-memory-bank-file", { fileType, content });
-    setUpdateLoading(false);
-  }, [callMCPTool]);
-
-  // Handler for Repair Memory Bank
-  const handleRepairMemoryBank = useCallback(async () => {
-    setFeedback(null);
-    setUpdateLoading(true);
-    sendLog("User clicked 'Repair Memory Bank' button", "info", { action: "repairMemoryBank" });
-    await callMCPTool("read-memory-bank-files");
-    setUpdateLoading(false);
-  }, [callMCPTool]);
-
   return (
-    <div className="flex flex-col gap-3">
-      {/* MCP Server Controls */}
-      <div className="flex flex-col gap-1">
-        <span className="text-xl font-bold">MCP Server</span>
-        <span className="text-xs text-gray-500">
-          Manage the AI Memory MCP server
+    <div className="rounded-xl border border-border bg-muted p-4 shadow-sm space-y-4 mb-6">
+      <h2 className="text-xl font-bold mb-2 border-b border-border pb-1">MCP Server</h2>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-muted-foreground">Status:</span>
+        <span className={cn(
+          isMCPRunning ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
+          "px-2 py-0.5 rounded-full text-xs font-semibold"
+        )}>
+          {isMCPRunning ? "Running" : "Stopped"}
         </span>
       </div>
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-[var(--vscode-descriptionForeground)] underline">
-            MCP Server:
-          </span>
-          {isLoading && (
-            <span className="text-sm">
-              <RiLoader5Fill className="animate-spin size-4" />
-            </span>
-          )}
-          {!isLoading && (
-            <div className="flex flex-col gap-1">
-              <span
-                className={cn(
-                  isMCPRunning ? "text-green-500" : "text-red-500",
-                  "text-sm"
-                )}
-              >
-                {isMCPRunning ? "Running " : "Stopped"}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="flex gap-4 w-fit">
+      <div className="w-full max-w-md grid grid-cols-2 gap-2 pt-2">
         {!isMCPRunning && (
-          <button
-            type="button"
-            className="flex items-center gap-1 px-2 py-1 text-white rounded-md"
-            onClick={handleStartMCPServer}
-          >
-            <RiPlayFill className="size-4" /> Start MCP Server
-          </button>
+          <>
+            <button
+              type="button"
+              className="w-full flex items-center gap-1 btn btn-primary px-2 py-1 text-white rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleStartMCPServer}
+              disabled={isLoading}
+            >
+              <RiPlayFill className="size-4 mr-1" /> <span>Start MCP Server</span>
+            </button>
+            <div />
+          </>
         )}
         {isMCPRunning && (
-          <button
-            type="button"
-            className="flex items-center gap-1 px-2 py-1 text-white rounded-md"
-            onClick={handleStopMCPServer}
-          >
-            <RiStopFill className="size-4" /> Stop MCP Server
-          </button>
+          <>
+            <button
+              type="button"
+              className="w-full flex items-center gap-1 btn btn-destructive px-2 py-1 text-white rounded-md bg-red-600 hover:bg-red-700 disabled:opacity-50"
+              onClick={handleStopMCPServer}
+              disabled={isLoading}
+            >
+              <RiStopFill className="size-4 mr-1" /> <span>Stop MCP Server</span>
+            </button>
+            <div />
+          </>
         )}
+        <div className="col-span-2">
+          <RulesStatus />
+        </div>
       </div>
-      {/* Memory Bank Controls */}
-      {isMCPRunning && (
-        <div className="flex flex-col gap-2 mt-4">
-          <div className="flex gap-4">
-            <button
-              type="button"
-              className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              onClick={handleInitializeMemoryBank}
-              disabled={initLoading}
-            >
-              {initLoading ? "Initializing..." : "Initialize Memory Bank"}
-            </button>
-            <button
-              type="button"
-              className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-              onClick={handleUpdateMemoryBank}
-              disabled={updateLoading}
-            >
-              {updateLoading ? "Updating..." : "Update Memory Bank"}
-            </button>
-            <button
-              type="button"
-              className="px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
-              onClick={handleRepairMemoryBank}
-              disabled={updateLoading}
-            >
-              {updateLoading ? "Repairing..." : "Repair Memory Bank"}
-            </button>
-          </div>
-        </div>
-      )}
-      {/* Feedback message */}
+      <hr className="border-border my-4" />
       {feedback && (
-        <div className="mt-2 p-2 bg-gray-100 border rounded text-sm text-gray-800">
+        <pre className="bg-gray-100 p-2 rounded max-h-40 overflow-y-auto text-xs mt-2 transition-opacity duration-300">
           {feedback}
-        </div>
+        </pre>
       )}
       {port && isMCPRunning && (
-        <span className="text-xs text-gray-500">
-          Server running on <b>http://localhost:{port}/sse</b>
+        <p className="text-xs text-muted-foreground mt-2">
+          Server running on <span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
           <br />
-          Your Cursor MCP config has been automatically updated (Please check
-          Cursor MCP settings to ensure it is correct).
-        </span>
+          Your Cursor MCP config has been automatically updated.
+          <br />
+          Please check Cursor MCP settings to ensure it is correct.
+        </p>
       )}
     </div>
   );

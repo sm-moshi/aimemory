@@ -1,27 +1,49 @@
 ## [Unreleased]
 
-**Logging, Output, and Robustness Improvements** 🐹
+**Comprehensive Refactor & Cursor-First Improvements** 🐹
 
-- **Verbose Logging**
-  - Added verbose logging to the Output Channel in the memory bank service and core logic.
-  - Logs all major actions (file loads, updates, checks, method calls, and errors) for improved debugging and traceability.
-  - Output Channel feature is in progress: basic output is visible, verbose logging is implemented, further interactivity and UI feedback are planned.
+- **Build & Config**
+  - Unified and cleaned up TypeScript configs, build scripts (esbuild for Node/extension/server, Vite for webview), and ignore files.
+  - Removed unnecessary dependencies, deduplicated scripts, and ensured all build/test/dev commands are documented in `README.md`.
 
-- **Webview Feedback**
-  - The "Reset the rules" button in the webview now provides user feedback and error handling for all code paths (success, user cancel, error).
+- **MCP Server & Memory Bank**
+  - Migrated from Express/HTTP to Cursor/VS Code APIs and stdio transport for core operations.
+  - Refactored MCP tool and resource registration for both extension and CLI/server, ensuring feature parity and compliance (including per-file resource access).
+  - Centralised template logic in `src/lib/memoryBankTemplates.ts` for context-agnostic use.
+  - Implemented health/status commands (`/memory health`), self-healing, and robust file/folder checks.
+  - Updated command handler to support `/memory init`, `/memory health`, and other commands, with clear help text.
+
+- **Logging, Output, and Diagnostics**
+  - Added `aimemory.showOutput` command to show the Output Channel in the extension.
+  - Verbose logging for all major actions (file loads, updates, checks, method calls, and errors) for improved debugging and traceability.
+  - Output Channel feature: basic output is visible, verbose logging is implemented, further interactivity and UI feedback are planned.
+
+- **Webview & UI/UX**
+  - Updated React webview to use new tool names, fixed button labels, and improved feedback for memory bank actions.
+  - Enhanced status indicators and ensured UI reflects backend state.
+  - The "Reset the rules" button in the webview now provides user feedback and error handling for all code paths.
   - Improved user notifications and logging for rule resets and memory bank repairs.
 
 - **Ruleset & Self-Healing**
   - The ruleset and `.mdc` file are now up-to-date; self-healing is robust and automatic.
   - MCP tool usage is now enforced and documented in the rules.
 
-- **Documentation**
-  - Updated `TODO.md` and `ROADMAP.md` to reflect current progress, robust self-healing, and logging improvements.
-  - Clarified the use of MCP tools and the importance of tool-assisted reasoning in the rules.
+- **Bugfixes & Diagnostics**
+  - Fixed command routing, tool name mismatches, and clarified error messages.
+  - Diagnosed and resolved issues with command interception by Cursor's default AI agent.
+  - Ensured per-file resource registration for full MCP compliance.
 
-- **Refactoring**
-  - Continued refactor to remove Express and use Cursor/VS Code APIs for all communication (in progress).
-  - Improved modularity and context-agnostic design in memory bank core logic.
+- **Documentation & Roadmap**
+  - Updated `TODO.md` and `ROADMAP.md` to reflect current progress, robust self-healing, and logging improvements.
+  - Highlighted upcoming features: chunked file access, metadata tools, rule-bound validation, advanced UI, and automated testing/CI.
+
+- **User Experience**
+  - Ensured all changes are idiomatic, maintainable, and follow KISS/DRY principles.
+  - Prioritised Cursor-first operation, with VS Code compatibility as a bonus.
+  - Provided clear, actionable summaries and next steps throughout.
+
+- **Memory Bank Update**
+  - Used the summary to update `memory-bank/progress/current.md` with a detailed progress log and next steps.
 
 ---
 

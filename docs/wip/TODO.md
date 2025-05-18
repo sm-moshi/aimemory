@@ -25,6 +25,7 @@
 -   [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
 -   [ ] Document findings and next steps in `docs/ROADMAP.md`.
 -   [ ] Replace 'Initialize Memory Bank' with `/memory init` command
+-   [ ] Implement usage of new MCP prompt constants (health check, file missing, update confirmation, structure guide, usage tip) in the extension and/or webview. Wire up these prompts to relevant extension actions or UI events for improved agent and user feedback.
 
 ## UI/UX
 
@@ -43,6 +44,7 @@
 -   [x] Expose memory bank via MCP tools/resources
 -   [~] Improve AI context reset and 'active context' workflows (in progress)
 -   [ ] Add AI-driven suggestions for memory bank updates
+-   [ ] Integrate MCP prompts for agent-driven feedback and guidance (e.g., show health check or update confirmation prompts when appropriate).
 
 ## Documentation
 

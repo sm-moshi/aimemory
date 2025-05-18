@@ -34,8 +34,12 @@
     // next to the .js files
     // go to js file when using IDE functions like
     // "Go to Definition" in VSCode
-    "declarationMap": true
+    "declarationMap": true,
+    "types": [
+      "vite/client",
+      "@testing-library/jest-dom"
+    ]
   },
-  "include": ["src", ""],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
-} 
+}

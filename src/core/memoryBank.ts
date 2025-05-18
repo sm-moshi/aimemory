@@ -10,6 +10,7 @@ import {
   CURSOR_MEMORY_BANK_RULES_FILE,
 } from "../lib/cursor-rules.js";
 import { Logger, LogLevel } from '../utils/log.js';
+import { getTemplateForFileType } from "../lib/memoryBankTemplates.js";
 
 export class MemoryBankService implements MemoryBank {
   private _memoryBankFolder: string;
@@ -106,7 +107,7 @@ export class MemoryBankService implements MemoryBank {
           Logger.getInstance().info(`Loaded file: ${fileType}`);
         } catch {
           // File missing: create from template
-          content = MemoryBankService.getTemplateForFileType(fileType as MemoryBankFileType);
+          content = getTemplateForFileType(fileType as MemoryBankFileType);
           await fs.writeFile(filePath, content);
           stats = await fs.stat(filePath);
           createdFiles.push(fileType as MemoryBankFileType);
@@ -138,62 +139,6 @@ export class MemoryBankService implements MemoryBank {
    */
   isReady(): boolean {
     return this.ready;
-  }
-
-  /**
-   * Returns the template for a given file type.
-   */
-  static getTemplateForFileType(fileType: MemoryBankFileType): string {
-    // Modular templates
-    switch (fileType) {
-      // Core
-      case MemoryBankFileType.ProjectBrief:
-        return "# Project Brief\n\n*Foundation document that shapes all other files*\n\n## Core Requirements\n\n## Project Goals\n\n## Project Scope\n";
-      case MemoryBankFileType.ProductContext:
-        return "# Product Context\n\n## Why this project exists\n\n## Problems it solves\n\n## How it should work\n\n## User experience goals\n";
-      case MemoryBankFileType.ActiveContext:
-        return "# Active Context\n\n## Current work focus\n\n## Recent changes\n\n## Next steps\n\n## Active decisions and considerations\n";
-      // System Patterns
-      case MemoryBankFileType.SystemPatternsIndex:
-        return "# System Patterns Index\n\n*Summary of system patterns and architecture*\n";
-      case MemoryBankFileType.SystemPatternsArchitecture:
-        return "# System Architecture\n\n*Describe the overall system architecture here*\n";
-      case MemoryBankFileType.SystemPatternsPatterns:
-        return "# Patterns\n\n*List and describe design patterns in use*\n";
-      case MemoryBankFileType.SystemPatternsScanning:
-        return "# Scanning\n\n*Describe scanning or analysis patterns here*\n";
-      // Tech Context
-      case MemoryBankFileType.TechContextIndex:
-        return "# Tech Context Index\n\n*Summary of technology stack and constraints*\n";
-      case MemoryBankFileType.TechContextStack:
-        return "# Technology Stack\n\n*List all major technologies used*\n";
-      case MemoryBankFileType.TechContextDependencies:
-        return "# Dependencies\n\n*List and describe project dependencies*\n";
-      case MemoryBankFileType.TechContextEnvironment:
-        return "# Environment\n\n*Describe the development and production environments*\n";
-      // Progress
-      case MemoryBankFileType.ProgressIndex:
-        return "# Progress Index\n\n*Summary of project progress*\n";
-      case MemoryBankFileType.ProgressCurrent:
-        return "# Current Progress\n\n*Describe current work, blockers, and next steps*\n";
-      case MemoryBankFileType.ProgressHistory:
-        return "# Progress History\n\n*Log of past progress and milestones*\n";
-      // Legacy flat files (for migration/compatibility)
-      case MemoryBankFileType.ProjectBriefFlat:
-        return "# Project Brief\n\n*Foundation document that shapes all other files*\n\n## Core Requirements\n\n## Project Goals\n\n## Project Scope\n";
-      case MemoryBankFileType.ProductContextFlat:
-        return "# Product Context\n\n## Why this project exists\n\n## Problems it solves\n\n## How it should work\n\n## User experience goals\n";
-      case MemoryBankFileType.ActiveContextFlat:
-        return "# Active Context\n\n## Current work focus\n\n## Recent changes\n\n## Next steps\n\n## Active decisions and considerations\n";
-      case MemoryBankFileType.SystemPatternsFlat:
-        return "# System Patterns\n\n## System architecture\n\n## Key technical decisions\n\n## Design patterns in use\n\n## Component relationships\n";
-      case MemoryBankFileType.TechContextFlat:
-        return "# Tech Context\n\n## Technologies used\n\n## Development setup\n\n## Technical constraints\n\n## Dependencies\n";
-      case MemoryBankFileType.ProgressFlat:
-        return "# Progress\n\n## What works\n\n## What's left to build\n\n## Current status\n\n## Known issues\n";
-      default:
-        return "# Memory Bank File\n\n*This is a default template*\n";
-    }
   }
 
   getFile(type: MemoryBankFileType): MemoryBankFile | undefined {
@@ -231,5 +176,31 @@ export class MemoryBankService implements MemoryBank {
           `${file.type}:\nlast updated:${file.lastUpdated}\n\n${file.content}`
       )
       .join("\n\n");
+  }
+
+  async checkHealth(): Promise<string> {
+    const issues: string[] = [];
+    // Check root folder
+    try {
+      await fs.stat(this._memoryBankFolder);
+    } catch {
+      issues.push(`Missing folder: ${this._memoryBankFolder}`);
+    }
+    // Check all required files
+    for (const fileType of Object.values(MemoryBankFileType)) {
+      if (fileType.includes('/')) {
+        const filePath = path.join(this._memoryBankFolder, fileType);
+        try {
+          await fs.access(filePath);
+        } catch {
+          issues.push(`Missing or unreadable: ${fileType}`);
+        }
+      }
+    }
+    if (issues.length === 0) {
+      return "Memory Bank Health: ✅ All files and folders are present and readable.";
+    }
+    return `Memory Bank Health: ❌ Issues found:
+${issues.join("\n")}`;
   }
 }

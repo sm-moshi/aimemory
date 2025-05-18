@@ -29,6 +29,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source (**logic present, not yet exposed as command**)
 - [ ] Implement user prompt to overwrite if file exists (see cursor-rules-service.ts)
 - [ ] **Automated test coverage for MCP tools and extension commands (not started)**
+- [ ] Implement usage of new MCP prompt constants (health check, file missing, update confirmation, structure guide, usage tip) in the extension and/or webview. Wire up these prompts to relevant extension actions or UI events for improved agent and user feedback.
 
 ### v0.3.x (Future)
 - [ ] Refactor extension to support stdio MCP server process management (spawn, connect, lifecycle)

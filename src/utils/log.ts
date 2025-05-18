@@ -62,4 +62,11 @@ export class Logger {
    * Log a debug-level message.
    */
   debug(msg: string, meta?: Record<string, unknown>) { this.log(LogLevel.Debug, msg, meta); }
+
+  /**
+   * Show the output channel to the user.
+   */
+  showOutput() {
+    this.output.show();
+  }
 }

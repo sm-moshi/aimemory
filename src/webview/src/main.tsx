@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+/// <reference types="react" />
 import { createRoot } from "react-dom/client";
 import App from "./App.js";
 import "./index.css";
@@ -7,13 +9,19 @@ import "@vscode-elements/elements";
 declare global {
   interface Window {
     acquireVsCodeApi: () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       postMessage: (message: any) => void;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getState: () => any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setState: (state: any) => void;
     };
     vscodeApi?: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       postMessage: (message: any) => void;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getState: () => any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setState: (state: any) => void;
     };
   }
@@ -21,8 +29,10 @@ declare global {
 
 // Create a better mock implementation for development
 class MockVSCodeAPI {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private state: any = { rulesInitialized: false };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postMessage(message: any) {
     console.log("🔄 Mock VSCode - Message sent:", message);
 
@@ -46,14 +56,17 @@ class MockVSCodeAPI {
     }, 500); // Add delay to simulate network
   }
 
-  getState() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getState(): any {
     return this.state;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setState(newState: any) {
     this.state = { ...this.state, ...newState };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mockResponse(data: any) {
     console.log("⬅️ Mock VSCode - Response:", data);
     window.dispatchEvent(new MessageEvent("message", { data }));

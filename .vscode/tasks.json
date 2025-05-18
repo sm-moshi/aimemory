@@ -4,85 +4,54 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "build:cli",
+			"label": "build:extension",
 			"type": "shell",
-			"command": "pnpm run build:cli",
+			"command": "pnpm build",
 			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
 			"problemMatcher": []
 		},
 		{
-			"label": "run:cli-server",
+			"label": "build:cli",
 			"type": "shell",
-			"command": "node dist/cli.js",
-			"group": "test",
+			"command": "pnpm build",
+			"group": "build",
 			"presentation": {
 				"reveal": "always"
-			}
+			},
+			"problemMatcher": []
 		},
 		{
-			"label": "test:cli",
+			"label": "watch",
+			"type": "shell",
+			"command": "pnpm dev",
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "test",
 			"type": "shell",
 			"command": "pnpm test",
 			"group": "test",
 			"presentation": {
 				"reveal": "always"
-			}
-		},
-		{
-			"label": "watch",
-			"dependsOn": [
-				"npm: watch:tsc",
-				"npm: watch:esbuild"
-			],
-			"presentation": {
-				"reveal": "never"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"problemMatcher": []
 		},
 		{
-			"type": "npm",
-			"script": "watch:esbuild",
+			"label": "package",
+			"type": "shell",
+			"command": "pnpm package",
 			"group": "build",
-			"problemMatcher": "$esbuild-watch",
-			"isBackground": true,
-			"label": "npm: watch:esbuild",
 			"presentation": {
-				"group": "watch",
-				"reveal": "never"
-			}
-		},
-		{
-			"type": "npm",
-			"script": "watch:tsc",
-			"group": "build",
-			"problemMatcher": "$tsc-watch",
-			"isBackground": true,
-			"label": "npm: watch:tsc",
-			"presentation": {
-				"group": "watch",
-				"reveal": "never"
-			}
-		},
-		{
-			"type": "npm",
-			"script": "watch-tests",
-			"problemMatcher": "$tsc-watch",
-			"isBackground": true,
-			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
+				"reveal": "always"
 			},
-			"group": "build"
-		},
-		{
-			"label": "tasks: watch-tests",
-			"dependsOn": [
-				"npm: watch",
-				"npm: watch-tests"
-			],
 			"problemMatcher": []
 		}
 	]

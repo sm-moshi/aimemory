@@ -125,6 +125,22 @@ export class CommandHandler {
           }
         }
 
+        case "initialize":
+        case "init": {
+          try {
+            await this.mcpServer.getMemoryBank().initializeFolders();
+            await this.mcpServer.getMemoryBank().loadFiles();
+            return "Memory bank initialised successfully.";
+          } catch (error) {
+            return `Error initialising memory bank: ${error instanceof Error ? error.message : String(error)}`;
+          }
+        }
+
+        case "health": {
+          const healthReport = await this.mcpServer.getMemoryBank().checkHealth();
+          return healthReport;
+        }
+
         default: {
           return `Command "${command}" is not supported.\n\n${this.getHelpText()}`;
         }
@@ -154,6 +170,9 @@ AI Memory Bank Commands:
 
 /memory status - Check the status of all memory bank files
 /memory update <fileType> <content> - Update a specific memory bank file
+/memory initialize - Initialise the memory bank
+/memory init - Alias for /memory initialize
+/memory health - Check the health of the memory bank
 /memory help - Show this help text
 
 For more advanced operations, use the MCP tools:

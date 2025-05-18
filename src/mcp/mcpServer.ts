@@ -14,6 +14,7 @@ import {
 import { CommandHandler } from "../commandHandler.js";
 import { WebviewManager } from "../webview/webviewManager.js";
 import { updateCursorMCPConfig } from "../utils/cursor-config.js";
+import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 
 export class MemoryBankMCPServer {
   private server: McpServer;
@@ -37,7 +38,7 @@ export class MemoryBankMCPServer {
     this.server = new McpServer(
       {
         name: "AI Memory MCP Server",
-        version: "0.1.0",
+        version: "0.3.0",
       },
       {
         capabilities: {
@@ -50,7 +51,7 @@ export class MemoryBankMCPServer {
     this.setupRoutes();
     this.registerMCPResources();
     this.registerMCPTools();
-    this.registerMCPPrompts();
+    registerMemoryBankPrompts(this.server);
   }
 
   public getPort(): number {
@@ -267,23 +268,17 @@ export class MemoryBankMCPServer {
 
   private registerMCPTools(): void {
     this.server.tool(
-      "initialize-memory-bank",
+      "init-memory-bank",
       "Initialize the memory bank and generate the project documentation",
       {},
       async (_, extra) => {
         console.log("Initializing memory bank");
-
         try {
           await this.memoryBank.createMemoryBankRulesIfNotExists();
-
-          const isInitialized =
-            await this.memoryBank.getIsMemoryBankInitialized();
-
+          const isInitialized = await this.memoryBank.getIsMemoryBankInitialized();
           if (!isInitialized) {
             await this.memoryBank.initializeFolders();
-            console.log(
-              "Memory bank not initialized, sending initialization prompt"
-            );
+            console.log("Memory bank not initialized, sending initialization prompt");
             return {
               content: [
                 {
@@ -293,10 +288,8 @@ export class MemoryBankMCPServer {
               ],
             };
           }
-
           //Load memory bank files into memory
-          await this.memoryBank.loadFiles(); // TODO: Use returned createdFiles for webview feedback if needed
-
+          await this.memoryBank.loadFiles();
           return {
             content: [
               {
@@ -311,9 +304,7 @@ export class MemoryBankMCPServer {
             content: [
               {
                 type: "text" as const,
-                text: `Error initializing memory bank: ${
-                  error instanceof Error ? error.message : String(error)
-                }. Please try the command again.`,
+                text: `Error initializing memory bank: ${error instanceof Error ? error.message : String(error)}. Please try the command again.`,
               },
             ],
             isError: true,
@@ -538,65 +529,51 @@ export class MemoryBankMCPServer {
         };
       }
     });
-  }
 
-  private registerMCPPrompts(): void {
-    // Prompt for the bot to understand the memory bank structure
-    this.server.prompt("memory-bank-guide", () => ({
-      messages: [
-        {
-          role: "user",
-          content: {
-            type: "text",
-            text: `You are an AI assistant with access to a Memory Bank for this project.
-The Memory Bank contains files that document the project context, progress, and technical details.
+    this.server.tool(
+      "health-check-memory-bank",
+      {},
+      async () => {
+        const report = await this.memoryBank.checkHealth();
+        return { content: [{ type: "text", text: report }] };
+      }
+    );
 
-Memory Bank files:
-- projectbrief.md: The foundation document that defines core requirements and goals
-- productContext.md: Why this project exists, problems it solves, user experience goals
-- activeContext.md: Current work focus, recent changes, next steps
-- systemPatterns.md: System architecture, key technical decisions, design patterns
-- techContext.md: Technologies used, development setup, technical constraints
-- progress.md: What works, what's left to build, current status
-
-You can use the following tools:
-- get-memory-bank-file: Retrieve the content of a specific memory bank file
-- update-memory-bank-file: Update the content of a memory bank file
-- list-memory-bank-files: List all available memory bank files
-
-When interacting with the user, you should:
-1. Start by reviewing all memory bank files to understand the project context
-2. Help the user with their task based on the memory bank content
-3. Update the memory bank files as needed to reflect new information
-
-If the memory bank is missing information for a task, inform the user and suggest adding it.`,
+    this.server.tool(
+      "review-and-update-memory-bank",
+      {},
+      async () => {
+        // Memory bank readiness check
+        if (!this.memoryBank.isReady()) {
+          try {
+            await this.memoryBank.loadFiles();
+          } catch (err) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Memory bank is not ready. Please initialise it first.",
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+        await this.memoryBank.loadFiles();
+        const files = this.memoryBank.getAllFiles();
+        const reviewMessages = files.map((file) => ({
+          type: "text" as const,
+          text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
+        }));
+        return {
+          content: reviewMessages,
+          nextAction: {
+            type: "collect-updates",
+            files: files.map((file) => file.type),
           },
-        },
-      ],
-    }));
-
-    // Prompt for command processing
-    this.server.prompt("memory-command-processor", () => ({
-      messages: [
-        {
-          role: "user",
-          content: {
-            type: "text",
-            text: `You are an AI assistant that can process special /memory commands.
-
-IMPORTANT: Always look for and process commands that begin with "/memory" in the user's messages.
-
-When you detect a /memory command, immediately use the process-memory-command tool to handle it.
-Example commands:
-- /memory initialize - Initialize the memory bank
-- /memory list - List all memory bank files
-- /memory get <filename> - Get content of a specific memory bank file
-
-If the message doesn't contain a /memory command, respond normally to the user's query.`,
-          },
-        },
-      ],
-    }));
+        };
+      }
+    );
   }
 
   // Start the server

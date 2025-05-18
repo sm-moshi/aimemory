@@ -2,6 +2,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import type { MemoryBankFileType } from "../types/types.js";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import { z } from "zod";
+import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 
 export class CoreMemoryBankMCP {
   private server: McpServer;
@@ -12,7 +13,7 @@ export class CoreMemoryBankMCP {
     this.server = new McpServer(
       {
         name: "AI Memory MCP Server",
-        version: "0.0.1",
+        version: "0.3.0",
       },
       {
         capabilities: {
@@ -23,40 +24,68 @@ export class CoreMemoryBankMCP {
     );
     this.registerResources();
     this.registerTools();
-    this.registerPrompts();
+    registerMemoryBankPrompts(this.server);
   }
 
   private registerResources() {
-    // TODO: Register memory bank files as resources (move logic from MemoryBankMCPServer, but use this.memoryBank)
-    // ...
+    // Register per-file resource for each memory bank file
     this.server.resource(
-    "memory-bank-root",
-    "memory-bank://",
-    async () => {
-      // Return a simple status or list of files
-      const files = this.memoryBank.getAllFiles();
-      return {
-        contents: [
-          {
-            uri: "memory-bank://",
-            text: JSON.stringify(
-              files.map((file) => ({
-                type: file.type,
-                lastUpdated: file.lastUpdated,
-              })),
-              null,
-              2
-            ),
-          },
-        ],
-      };
-    });
+      "memory-bank-files",
+      new ResourceTemplate("memory-bank://{fileType}", {
+        list: async () => ({
+          resources: [
+            {
+              uri: "memory-bank://",
+              name: "Memory Bank Files",
+            },
+          ],
+        }),
+      }),
+      async (uri, { fileType }) => {
+        const type = fileType as MemoryBankFileType;
+        const file = this.memoryBank.getFile(type);
+        if (!file) {
+          throw new Error(`File ${type} not found`);
+        }
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              text: file.content,
+            },
+          ],
+        };
+      }
+    );
+    // Root resource to list all memory bank files
+    this.server.resource(
+      "memory-bank-root",
+      "memory-bank://",
+      async () => {
+        const files = this.memoryBank.getAllFiles();
+        return {
+          contents: [
+            {
+              uri: "memory-bank://",
+              text: JSON.stringify(
+                files.map((file) => ({
+                  type: file.type,
+                  lastUpdated: file.lastUpdated,
+                })),
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+    );
   }
 
   private registerTools() {
     // initialize-memory-bank
     this.server.tool(
-      "initialize-memory-bank",
+      "init-memory-bank",
       {},
       async () => {
         try {
@@ -193,11 +222,37 @@ export class CoreMemoryBankMCP {
         }
       }
     );
-  }
 
-  private registerPrompts() {
-    // TODO: Register MCP prompts (move logic from MemoryBankMCPServer)
-    // ...
+    // health-check-memory-bank
+    this.server.tool(
+      "health-check-memory-bank",
+      {},
+      async () => {
+        const report = await this.memoryBank.checkHealth();
+        return { content: [{ type: "text", text: report }] };
+      }
+    );
+
+    // review-and-update-memory-bank
+    this.server.tool(
+      "review-and-update-memory-bank",
+      {},
+      async () => {
+        await this.memoryBank.loadFiles();
+        const files = this.memoryBank.getAllFiles();
+        const reviewMessages = files.map((file) => ({
+          type: "text" as const,
+          text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
+        }));
+        return {
+          content: reviewMessages,
+          nextAction: {
+            type: "collect-updates",
+            files: files.map((file) => file.type),
+          },
+        };
+      }
+    );
   }
 
   getServer() {

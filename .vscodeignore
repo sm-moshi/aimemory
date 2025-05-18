@@ -1,6 +1,4 @@
-# Exclude everything except the extension code and allowed docs
-
-# Exclude all source, build, and dev files
+# Exclude source, dev, and local files not needed for VSIX
 src/
 out/
 test/
@@ -8,7 +6,6 @@ memory-bank/
 .cursor/
 .repomix/
 node_modules/
-dist/
 .vscode/
 .git/
 .github/
@@ -20,43 +17,24 @@ logs/
 *.env
 Thumbs.db
 npm-debug.log
-repomix-output.txt
-pnpm-lock.yaml
-tsconfig.json
-esbuild.js
-eslint.config.mjs
-.vscode-test.mjs
-Justfile
 
-# Exclude all docs except the allowed ones
-docs/*
-docs/maybe/
-docs/wip/
-docs/experimental/
-
-# Exclude all markdown except the main docs
-*.md
+# Exclude docs except main ones
 !README.md
 !CHANGELOG.md
 !LICENSE.md
 
-# Allow dist/extension.cjs and dist/assets for runtime
+docs/
+
+# Allow built extension and assets
 !dist/extension.cjs
-!dist/extension.js
-!dist/cli.js
-!dist/commandHandler.js
-!dist/index.js
 !dist/assets/**
+!dist/webview/**
 !dist/core/**
-!dist/lib/rules/**
 !dist/lib/**
 !dist/mcp/**
 !dist/types/**
-!dist/webview/**
 !dist/utils/**
-!dist/webview/**
 !dist/*.js.map
 
-# Exclude test output and system files
 dist/test/
 dist/.DS_Store

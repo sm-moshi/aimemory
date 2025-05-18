@@ -2,13 +2,33 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
+      "name": "Launch Extension",
+      "type": "pwa-extensionHost",
       "request": "launch",
-      "name": "Run MCP CLI Server",
-      "program": "${workspaceFolder}/dist/cli.js",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "preLaunchTask": "build:cli"
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug MCP CLI Server",
+      "type": "pwa-node",
+      "request": "launch",
+      "program": "${workspaceFolder}/dist/index.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Attach to Process",
+      "type": "pwa-node",
+      "request": "attach",
+      "processId": "${command:PickProcess}",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

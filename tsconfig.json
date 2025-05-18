@@ -17,5 +17,13 @@
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
 		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
 	},
-  "exclude": ["src/webview"]
+  "exclude": [
+    "src/webview/src",
+    "vitest.config.ts",
+    "esbuild.js",
+    "src/webview/vitest.config.ts",
+    "src/webview/vitest.setup.ts",
+    "node_modules",
+    "dist"
+  ]
 }

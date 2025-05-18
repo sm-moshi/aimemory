@@ -8,7 +8,7 @@ import type { MemoryBankFileType } from "../core/memoryBankCore.js";
 
 const server = new McpServer({
   name: "AI Memory MCP Server",
-  version: "0.1.0",
+  version: "0.3.0",
 });
 
 server.tool(
