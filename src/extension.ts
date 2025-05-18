@@ -1,11 +1,12 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import * as http from "http";
-import { MemoryBankMCPServer } from "./mcpServer";
-import { CommandHandler } from "./commandHandler";
-import { WebviewManager } from "./webviewManager";
-import { updateCursorMCPConfig } from "./utils/cursor-config";
+import * as http from "node:http";
+import { MemoryBankMCPServer } from "./mcp/mcpServer.js";
+import { CommandHandler } from "./commandHandler.js";
+import { WebviewManager } from "./webview/webviewManager.js";
+import { updateCursorMCPConfig } from "./utils/cursor-config.js";
+import { Logger, LogLevel } from "./utils/log.js";
 
 // Default MCP server options
 const DEFAULT_MCP_PORT = 7331;
@@ -51,10 +52,45 @@ async function isServerRunning(port: number): Promise<boolean> {
   });
 }
 
+// Helper to parse log level string from config
+function parseLogLevel(levelStr: string): LogLevel {
+  switch (levelStr) {
+    case "trace": return LogLevel.Trace;
+    case "debug": return LogLevel.Debug;
+    case "info": return LogLevel.Info;
+    case "warning": return LogLevel.Warning;
+    case "error": return LogLevel.Error;
+    default: return LogLevel.Info;
+  }
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  // Initialise the singleton Logger and set log level from config
+  const logger = Logger.getInstance();
+  const config = vscode.workspace.getConfiguration("aimemory");
+  const initialLevel = parseLogLevel(config.get<string>("logLevel") || "info");
+  logger.setLevel(initialLevel);
+
+  // Listen for changes to the log level config and update logger dynamically
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration("aimemory.logLevel")) {
+        const newLevel = vscode.workspace.getConfiguration("aimemory").get<string>("logLevel") || "info";
+        logger.setLevel(parseLogLevel(newLevel));
+        logger.info(`Log level changed to: ${newLevel}`);
+      }
+    })
+  );
+
   console.log("Registering open webview command");
+
+  // Create MCP server instance first
+  const mcpServer = new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
+
+  // Create webview manager
+  const webviewManager = new WebviewManager(context, mcpServer);
 
   // Register command to open the webview
   const openWebviewCommand = vscode.commands.registerCommand(
@@ -87,13 +123,6 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log("AI Memory extension is now active!");
-
-  // Create webview manager
-
-  // Create MCP server instance
-  const mcpServer = new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
-
-  const webviewManager = new WebviewManager(context, mcpServer);
 
   // Create command handler
   const commandHandler = new CommandHandler(mcpServer);
@@ -131,8 +160,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Show information about how to connect to the MCP server
         vscode.window.showInformationMessage(
-          `AI Memory MCP server started on port ${DEFAULT_MCP_PORT}. ` +
-            `You can connect to it through Cursor's MCP integration.`
+          `AI Memory MCP server started on port ${DEFAULT_MCP_PORT}. You can connect to it through Cursor's MCP integration.`
         );
       } catch (error) {
         // If the default port is in use, try the alternative port
@@ -147,8 +175,8 @@ export function activate(context: vscode.ExtensionContext) {
 
             // Show information about how to connect to the MCP server
             vscode.window.showInformationMessage(
-              `AI Memory MCP server started on port ${ALTERNATIVE_MCP_PORT}. ` +
-                `You can connect to it through Cursor's MCP integration.`
+              `AI Memory MCP server started on port ${ALTERNATIVE_MCP_PORT}.
+                You can connect to it through Cursor's MCP integration.`
             );
           } catch (innerError) {
             vscode.window.showErrorMessage(
@@ -200,12 +228,48 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // Add our command to the extension's subscriptions
-  context.subscriptions.push(startMCPCommand);
-  context.subscriptions.push(cursorApiCommands);
-  context.subscriptions.push(stopServerCommand);
-  context.subscriptions.push(openWebviewCommand);
-  context.subscriptions.push(updateMCPConfigCommand);
+  // Register a command to set the log level via quick-pick UI
+  const setLogLevelCommand = vscode.commands.registerCommand(
+    "aimemory.setLogLevel",
+    async () => {
+      const levels = [
+        { label: "Trace", value: "trace" },
+        { label: "Debug", value: "debug" },
+        { label: "Info", value: "info" },
+        { label: "Warning", value: "warning" },
+        { label: "Error", value: "error" },
+        { label: "Off", value: "off" }
+      ];
+      const picked = await vscode.window.showQuickPick(levels, {
+        placeHolder: "Select log level"
+      });
+      if (picked) {
+        await vscode.workspace.getConfiguration("aimemory").update("logLevel", picked.value, vscode.ConfigurationTarget.Global);
+        logger.setLevel(parseLogLevel(picked.value));
+        vscode.window.showInformationMessage(`AI Memory log level set to ${picked.label}`);
+      }
+    }
+  );
+
+  // Register a command to show the AI Memory Output Channel
+  const showOutputChannelCommand = vscode.commands.registerCommand(
+    "aimemory.showOutput",
+    () => {
+      const logger = Logger.getInstance();
+      logger.showOutput();
+    }
+  );
+
+  // Add all commands to context subscriptions
+  context.subscriptions.push(
+    openWebviewCommand,
+    updateMCPConfigCommand,
+    startMCPCommand,
+    cursorApiCommands,
+    stopServerCommand,
+    setLogLevelCommand,
+    showOutputChannelCommand
+  );
 
   // Register a disposal event to stop the server when the extension is deactivated
   context.subscriptions.push({

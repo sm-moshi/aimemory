@@ -1,11 +1,48 @@
 import * as vscode from "vscode";
-import * as path from "path";
-import * as fs from "fs";
-import { CURSOR_MEMORY_BANK_RULES_FILE } from "./lib/cursor-rules";
-import { CursorRulesService } from "./lib/cursor-rules-service";
-import { MemoryBankService } from "./memoryBank";
-import { MemoryBankMCPServer } from "./mcpServer";
-import * as http from "http";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import { CURSOR_MEMORY_BANK_RULES_FILE } from "../lib/cursor-rules.js";
+import { CursorRulesService } from "../lib/cursor-rules-service.js";
+import { MemoryBankService } from "../core/memoryBank.js";
+import type { MemoryBankMCPServer } from "../mcp/mcpServer.js";
+import * as http from "node:http";
+import * as crypto from "node:crypto";
+import * as fsPromises from 'node:fs/promises';
+import { Logger, LogLevel } from '../utils/log.js';
+
+// Utility to extract MCP server ports from .cursor/mcp.json
+async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
+  try {
+    const configPath = path.join(workspaceRoot, '.cursor', 'mcp.json');
+    const configRaw = await fsPromises.readFile(configPath, 'utf-8');
+    const config = JSON.parse(configRaw);
+    const ports: number[] = [];
+    if (!config || !config.mcpServers) {return ports;}
+    for (const key of Object.keys(config.mcpServers)) {
+      const server = config.mcpServers[key];
+      if (server && typeof server.url === 'string') {
+        // Try to extract port from URL (e.g., http://localhost:PORT/sse)
+        const match = server.url.match(/:(\d+)(?:\/|$)/);
+        if (match?.[1]) {
+          ports.push(Number(match[1]));
+        }
+      } else if (server && Array.isArray(server.args)) {
+        // Heuristic: look for a numeric arg that could be a port
+        for (let i = 0; i < server.args.length; i++) {
+          const arg = server.args[i];
+          const port = Number(arg);
+          if (!Number.isNaN(port) && port > 1024 && port < 65536) {
+            ports.push(port);
+          }
+        }
+      }
+    }
+    return ports;
+  } catch {
+    // If config not found or parse error, fallback
+    return [];
+  }
+}
 
 export class WebviewManager {
   private panel: vscode.WebviewPanel | undefined;
@@ -68,7 +105,13 @@ export class WebviewManager {
 
   // Check standard ports for already running MCP servers
   private async checkForRunningServers() {
-    const portsToCheck = [7331, 7332]; // Same as DEFAULT_MCP_PORT and ALTERNATIVE_MCP_PORT
+    // Try to get ports from .cursor/mcp.json, fallback to defaults
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+    let portsToCheck = await getMCPPortsFromConfig(workspaceRoot);
+    if (!portsToCheck.length) {
+      // Fallback to default ports if config not found or empty
+      portsToCheck = [7331, 7332]; // Same as DEFAULT_MCP_PORT and ALTERNATIVE_MCP_PORT
+    }
 
     for (const port of portsToCheck) {
       const isRunning = await this.checkServerHealth(port);
@@ -112,10 +155,11 @@ export class WebviewManager {
       {
         // Enable scripts in the webview
         enableScripts: true,
-        // Restrict the webview to only load resources from the extension's directory
+        // Restrict the webview to only load resources from the extension's directory and Vite dev server
         localResourceRoots: [
-          this.extensionUri,
-          vscode.Uri.parse("http://localhost:5173"),
+          vscode.Uri.joinPath(this.extensionUri, 'dist'), // Allow access to the main dist folder
+          vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'), // Explicitly allow webview assets
+          vscode.Uri.parse("http://localhost:5173"), // Allow Vite dev server (HMR)
         ],
         // Retain the webview when it becomes hidden
         retainContextWhenHidden: true,
@@ -167,6 +211,12 @@ export class WebviewManager {
               status: "stopped",
             });
             break;
+          case "logMessage": {
+            // Route webview log messages to the Output Channel via Logger
+            const level = message.level === "error" ? LogLevel.Error : LogLevel.Info;
+            Logger.getInstance().log(level, message.text, message.meta);
+            break;
+          }
         }
       },
       undefined,
@@ -252,36 +302,72 @@ export class WebviewManager {
       // Reset rules by overwriting with original content
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders) {
-        throw new Error("No workspace folder found");
+        vscode.window.showErrorMessage("No workspace folder found");
+        this.panel.webview.postMessage({
+          type: "resetRulesResult",
+          success: false,
+          error: "No workspace folder found"
+        });
+        Logger.getInstance().error("Reset rules failed: No workspace folder found");
+        return;
       }
 
       // Create rules file with original content (overwriting existing if it exists)
+      let overwriteResult = true;
+      try {
       await this.cursorRulesService.createRulesFile(
         "memory-bank.mdc",
         CURSOR_MEMORY_BANK_RULES_FILE
       );
+        vscode.window.showInformationMessage("Memory bank rules have been reset.");
+        Logger.getInstance().info("Memory bank rules reset successfully.");
+      } catch (error: unknown) {
+        // If user cancels overwrite, treat as not successful
+        if (typeof error === "object" && error && "message" in error && typeof (error as { message: string }).message === "string" && (error as { message: string }).message.includes("overwrite")) {
+          overwriteResult = false;
+          Logger.getInstance().info("User cancelled rules overwrite.");
+        } else {
+          Logger.getInstance().error(`Error resetting rules: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        this.panel.webview.postMessage({
+          type: "resetRulesResult",
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return;
+      }
 
       // Send success message
       this.panel.webview.postMessage({
         type: "resetRulesResult",
-        success: true,
+        success: overwriteResult,
       });
     } catch (error) {
-      console.error("Error resetting rules:", error);
-
+      Logger.getInstance().error(`Error resetting rules: ${error instanceof Error ? error.message : String(error)}`);
       // Send error message
       this.panel.webview.postMessage({
         type: "resetRulesResult",
         success: false,
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   }
 
+  /**
+   * Generates the HTML content for the webview, ensuring CSP compliance and secure asset loading.
+   * - Uses a strong nonce for scripts.
+   * - Loads all assets via webview.asWebviewUri.
+   * - CSP allows only required sources (scripts, styles, connect to MCP, images, fonts).
+   * - No unsafe-inline for scripts; only for styles if absolutely necessary.
+   * - All asset URIs are resolved at runtime for VSCode compatibility.
+   */
   private getWebviewContent(webview: vscode.Webview): string {
+    // Generate a nonce for CSP
+    const nonce = crypto.randomBytes(16).toString('base64');
+
     // Get path to dist folder for webview assets
     const distPath = path.join(this.extensionUri.fsPath, "dist", "webview");
 
-    // Check if dist folder exists (production build)
     // Get paths to JS & CSS files
     const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
     const stylePathOnDisk = path.join(distPath, "assets", "index.css");
@@ -290,20 +376,34 @@ export class WebviewManager {
     const scriptUri = webview.asWebviewUri(vscode.Uri.file(scriptPathOnDisk));
     const styleUri = webview.asWebviewUri(vscode.Uri.file(stylePathOnDisk));
 
-    // Create HTML with production assets
+    // Define Content Security Policy
+    // Allows scripts with the correct nonce, styles from webview, and connections to localhost for the MCP server.
+    // No unsafe-inline for scripts. Only allow inline styles if absolutely necessary (here, only for Tailwind JIT, otherwise remove).
+    const mcpPort = this.mcpServer.getPort(); // Get the current MCP port
+    const csp = [
+      "default-src 'none'", // Block all by default
+      `style-src ${webview.cspSource} 'unsafe-inline'`, // Allow styles from webview and inline (Tailwind JIT needs this)
+      `script-src 'nonce-${nonce}'`, // Only allow scripts with this nonce
+      `connect-src http://localhost:${mcpPort}`, // Only allow connecting to MCP server
+      `img-src ${webview.cspSource} data:`, // Allow images from webview and data URIs
+      `font-src ${webview.cspSource}` // Allow fonts from webview
+    ].join('; ');
+
+    // Return HTML with strict CSP and correct asset URIs
     return `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link href="${styleUri}" rel="stylesheet">
-          <title>AI Memory</title>
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="module" src="${scriptUri}"></script>
-        </body>
-        </html>`;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="${csp}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="${styleUri}" rel="stylesheet">
+  <title>AI Memory</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="${scriptUri}" nonce="${nonce}"></script>
+</body>
+</html>`;
   }
 
   public getWebviewPanel(): vscode.WebviewPanel | undefined {

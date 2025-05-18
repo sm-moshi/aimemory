@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { MemoryBankMCPServer } from "./mcpServer";
+import type { MemoryBankMCPServer } from "./mcp/mcpServer.js";
+import type { MemoryBankFile } from "./types/types.js";
 
 export class CommandHandler {
   constructor(private mcpServer: MemoryBankMCPServer) {}
@@ -26,29 +27,127 @@ export class CommandHandler {
     parts.shift();
 
     // The first part is the command
-    const command = parts.shift()!;
+    const command = parts[0];
+    if (!command) {
+      return this.getHelpText();
+    }
 
     // The rest are arguments
-    const args = parts;
+    const args = parts.slice(1);
 
     try {
-      // In the new MCP-based implementation, we don't directly handle commands
-      // Instead, we provide information about the MCP server
-      if (command === "help") {
-        return this.getHelpText();
-      }
+      switch (command) {
+        case "help": {
+          return this.getHelpText();
+        }
 
-      if (command === "status") {
-        return "AI Memory MCP server is running. Use it through Cursor's built-in MCP support.";
-      }
+        case "status": {
+          const memoryBank = this.mcpServer.getMemoryBank();
+          const isInitialized = await memoryBank.getIsMemoryBankInitialized();
+          if (!isInitialized) {
+            return "Memory Bank Status: Not initialized\nUse the initialize-memory-bank tool to set up the memory bank.";
+          }
 
-      // For all other commands, we'll just provide the help text
-      return `Command "${command}" is not directly supported. Please use Cursor's MCP integration to access the AI Memory MCP server.\n\n${this.getHelpText()}`;
+          // Ensure the in-memory file list is up-to-date and all files are loaded/created
+          const createdFiles = await memoryBank.loadFiles();
+          let selfHealingMsg = "";
+          if (createdFiles.length > 0) {
+            selfHealingMsg = `\n[Self-healing] Created missing files: ${createdFiles.join(", ")}`;
+          }
+
+          // Get all files and their status
+          const files = memoryBank.getAllFiles();
+
+          // Group files by category
+          const categories = {
+            core: [] as string[],
+            systemPatterns: [] as string[],
+            techContext: [] as string[],
+            progress: [] as string[],
+            legacy: [] as string[]
+          };
+
+          for (const file of files) {
+            const status = `${file.type}: Last updated ${file.lastUpdated ? new Date(file.lastUpdated).toLocaleString() : "never"}`;
+            if (file.type.startsWith("core/")) {
+              categories.core.push(status);
+            } else if (file.type.startsWith("systemPatterns/")) {
+              categories.systemPatterns.push(status);
+            } else if (file.type.startsWith("techContext/")) {
+              categories.techContext.push(status);
+            } else if (file.type.startsWith("progress/")) {
+              categories.progress.push(status);
+            } else {
+              categories.legacy.push(status);
+            }
+          }
+
+          // Build status output
+          let output = "Memory Bank Status: Initialized\n\n";
+          if (selfHealingMsg) {output = `${output}${selfHealingMsg}\n\n`;}
+
+          if (categories.core.length) {
+            output += `Core Files:\n${categories.core.join("\n")}\n\n`;
+          }
+          if (categories.systemPatterns.length) {
+            output += `System Patterns:\n${categories.systemPatterns.join("\n")}\n\n`;
+          }
+          if (categories.techContext.length) {
+            output += `Tech Context:\n${categories.techContext.join("\n")}\n\n`;
+          }
+          if (categories.progress.length) {
+            output += `Progress:\n${categories.progress.join("\n")}\n\n`;
+          }
+          if (categories.legacy.length) {
+            output += `Legacy Files:\n${categories.legacy.join("\n")}`;
+          }
+
+          return output.trim();
+        }
+
+        case "update": {
+          if (!args.length) {
+            return "Error: /memory update requires a file type argument\nUsage: /memory update <fileType> <content>";
+          }
+
+          const fileType = args[0];
+          const content = args.slice(1).join(" ");
+
+          if (!content) {
+            return "Error: /memory update requires content\nUsage: /memory update <fileType> <content>";
+          }
+
+          try {
+            await this.mcpServer.updateMemoryBankFile(fileType, content);
+            return `Successfully updated ${fileType}`;
+          } catch (error) {
+            return `Error updating ${fileType}: ${error instanceof Error ? error.message : String(error)}`;
+          }
+        }
+
+        case "initialize":
+        case "init": {
+          try {
+            await this.mcpServer.getMemoryBank().initializeFolders();
+            await this.mcpServer.getMemoryBank().loadFiles();
+            return "Memory bank initialised successfully.";
+          } catch (error) {
+            return `Error initialising memory bank: ${error instanceof Error ? error.message : String(error)}`;
+          }
+        }
+
+        case "health": {
+          const healthReport = await this.mcpServer.getMemoryBank().checkHealth();
+          return healthReport;
+        }
+
+        default: {
+          return `Command "${command}" is not supported.\n\n${this.getHelpText()}`;
+        }
+      }
     } catch (error) {
       console.error("Error processing command:", error);
-      return `Error processing command: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      return `Error processing command: ${error instanceof Error ? error.message : String(error)}`;
     }
   }
 
@@ -67,26 +166,20 @@ export class CommandHandler {
    */
   private getHelpText(): string {
     return `
-AI Memory Bank MCP Commands:
+AI Memory Bank Commands:
 
-This extension now uses the Model Context Protocol (MCP) for communication.
-The MCP server exposes the following functionality:
+/memory status - Check the status of all memory bank files
+/memory update <fileType> <content> - Update a specific memory bank file
+/memory initialize - Initialise the memory bank
+/memory init - Alias for /memory initialize
+/memory health - Check the health of the memory bank
+/memory help - Show this help text
 
-Resources:
-- memory-bank:// - List all memory bank files
-- memory-bank://{fileType} - Access a specific memory bank file
-
-Tools:
-- initialize-memory-bank - Initialize the memory bank with template files
-- list-memory-bank-files - List all memory bank files
-- get-memory-bank-file - Get the content of a specific memory bank file
-- update-memory-bank-file - Update the content of a specific memory bank file
-
-Prompts:
-- initialize-memory-bank - Prompt for initializing the memory bank
-- update-memory-bank-file - Prompt for updating a memory bank file
-
-You can use these capabilities through Cursor's MCP integration.
+For more advanced operations, use the MCP tools:
+- initialize-memory-bank
+- list-memory-bank-files
+- get-memory-bank-file
+- update-memory-bank-file
 `;
   }
 }

@@ -1,156 +1,112 @@
-# Cursor's Memory Bank
+---
+description: Cursor Memory Bank Rules for the AI Memory Extension
+alwaysApply: true
+globs:
+    - "memory-bank/**/*.md"
+---
 
-I am Cursor, an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
+# Cursor Memory Bank Rules (AI Memory v0.3.0+)
+
+Welcome to the AI Memory system. This file acts as the blueprint for how Cursor understands and works with your Memory Bank. It will be transformed automatically into `.cursor/rules/memory-bank.mdc` by the AI Memory extension on first initialization.
+
+## Reset & Load
+
+-   On every session reset, run `read-memory-bank-files()`
+-   Always load:
+    -   `core/*.md`
+    -   `progress/current.md`, `progress/history.md`
+    -   `systemPatterns/index.md`
+    -   `techContext/index.md`
+-   Other files are loaded lazily when contextually required
+
+## Memory Tiering
+
+| Tier | Files                              | Access Rule               |
+| ---- | ---------------------------------- | ------------------------- |
+| Hot  | `core/*.md`, `progress/current.md` | Always load immediately   |
+| Warm | `systemPatterns/index.md`          | Load on plan or diagnosis |
+| Cold | >30KB files, old history           | Load chunked or deferred  |
+
+## File Size Guidelines
+
+-   `< 15KB`: Load freely
+-   `15–30KB`: Warn, consider chunking
+-   `> 30KB`: Chunked access required via `chunkIndex`
+-   Limit to 5 parallel loads
+
+## Safety Rules
+
+-   Never overwrite `projectBrief.md` or `productContext.md`
+-   Always prompt before modifying `progress/current.md`
+-   Chunk read >30KB files
+
+## Memory Bank Flow
+
+```mermaid
+flowchart TD
+    User["User asks question or issues command"] --> Agent["Agent reads relevant file(s) from memory bank"]
+    Agent --> Answer["Agent answers or performs action"]
+    Answer --> UpdateCheck{"Does user want to update memory?"}
+    UpdateCheck -- Yes --> Update["Agent updates file (with consent if needed)"]
+    UpdateCheck -- No --> Continue["User continues working"]
+    Update --> Continue
+```
 
 ## Memory Bank Structure
 
-The Memory Bank consists of required core files and optional context files, all in Markdown format. Files build upon each other in a clear hierarchy:
-
 ```mermaid
 flowchart TD
-    PB[projectbrief.md] --> PC[productContext.md]
-    PB --> SP[systemPatterns.md]
-    PB --> TC[techContext.md]
-    
-    PC --> AC[activeContext.md]
-    SP --> AC
-    TC --> AC
-    
-    AC --> P[progress.md]
-```
+    CORE[Core] --> PB[projectbrief.md]
+    CORE --> PC[productContext.md]
+    CORE --> AC[activeContext.md]
 
-### Core Files (Required)
-1. `projectbrief.md`
-   - Foundation document that shapes all other files
-   - Created at project start if it doesn't exist
-   - Defines core requirements and goals
-   - Source of truth for project scope
+    subgraph Modules
+      SP_IDX[systemPatterns/index.md]
+      SP_IDX --> SP_ARCH[architecture.md]
+      SP_IDX --> SP_PTRN[patterns.md]
+      SP_IDX --> SP_SCAN[scanning.md]
 
-2. `productContext.md`
-   - Why this project exists
-   - Problems it solves
-   - How it should work
-   - User experience goals
+      TC_IDX[techContext/index.md]
+      TC_IDX --> TC_STACK[stack.md]
+      TC_IDX --> TC_DEPS[dependencies.md]
+      TC_IDX --> TC_ENV[environment.md]
 
-3. `activeContext.md`
-   - Current work focus
-   - Recent changes
-   - Next steps
-   - Active decisions and considerations
-
-4. `systemPatterns.md`
-   - System architecture
-   - Key technical decisions
-   - Design patterns in use
-   - Component relationships
-
-5. `techContext.md`
-   - Technologies used
-   - Development setup
-   - Technical constraints
-   - Dependencies
-
-6. `progress.md`
-   - What works
-   - What's left to build
-   - Current status
-   - Known issues
-
-### Additional Context
-Create additional files/folders within memory-bank/ when they help organize:
-- Complex feature documentation
-- Integration specifications
-- API documentation
-- Testing strategies
-- Deployment procedures
-
-## Core Workflows
-
-### Plan Mode
-```mermaid
-flowchart TD
-    Start[Start] --> ReadFiles[Read Memory Bank]
-    ReadFiles --> CheckFiles{Files Complete?}
-    
-    CheckFiles -->|No| Plan[Create Plan]
-    Plan --> Document[Document in Chat]
-    
-    CheckFiles -->|Yes| Verify[Verify Context]
-    Verify --> Strategy[Develop Strategy]
-    Strategy --> Present[Present Approach]
-```
-
-### Act Mode
-```mermaid
-flowchart TD
-    Start[Start] --> Context[Check Memory Bank]
-    Context --> Update[Update Documentation]
-    Update --> Rules[Update .cursor/rules/memory-bank.mdc if needed]
-    Rules --> Execute[Execute Task]
-    Execute --> Document[Document Changes]
+      PR_IDX[progress/index.md]
+      PR_IDX --> PR_CUR[current.md]
+      PR_IDX --> PR_HIST[history.md]
+    end
 ```
 
 ## Documentation Updates
 
-Memory Bank updates occur when:
-1. Discovering new project patterns
-2. After implementing significant changes
-3. When user requests with **update memory bank** (MUST review ALL files)
-4. When context needs clarification
-
 ```mermaid
 flowchart TD
-    Start[Update Process]
-    
-    subgraph Process
-        P1[Review ALL Files]
-        P2[Document Current State]
-        P3[Clarify Next Steps]
-        P4[Update .cursor/rules/memory-bank.mdc]
-        
-        P1 --> P2 --> P3 --> P4
-    end
-    
-    Start --> Process
+    Start[Trigger] --> Review[Review Files]
+    Review --> Summarise[Summarise Current State]
+    Summarise --> Clarify[Clarify Next Steps]
+    Clarify --> Update[Write Plan or Edits]
 ```
 
-Note: When triggered by **update memory bank**, I MUST review every memory bank file, even if some don't require updates. Focus particularly on activeContext.md and progress.md as they track current state.
+## Required MCP Tools
 
-## Project Intelligence (.cursor/rules/memory-bank.mdc)
+| Tool                       | Purpose                   |
+| -------------------------- | ------------------------- |
+| `read-memory-bank-files`   | Full memory scan on reset |
+| `get-memory-bank-file`     | Targeted file read        |
+| `update-memory-bank-file`  | Safe writes               |
+| `get-memory-bank-metadata` | File size + status        |
+| `initialize-memory-bank`   | Initial scaffolding       |
+| `update-current-plan`      | Modify current roadmap    |
 
-The .cursor/rules/memory-bank.mdc file is my learning journal for each project. It captures important patterns, preferences, and project intelligence that help me work more effectively. As I work with you and the project, I'll discover and document key insights that aren't obvious from the code alone.
+# Implementation Notes & Best Practices
 
-```mermaid
-flowchart TD
-    Start{Discover New Pattern}
-    
-    subgraph Learn [Learning Process]
-        D1[Identify Pattern]
-        D2[Validate with User]
-        D3[Document in .cursor/rules/memory-bank.mdc]
-    end
-    
-    subgraph Apply [Usage]
-        A1[Read .cursor/rules/memory-bank.mdc]
-        A2[Apply Learned Patterns]
-        A3[Improve Future Work]
-    end
-    
-    Start --> Learn
-    Learn --> Apply
-```
+- Self-healing: The extension will auto-create any missing required files/folders on startup or access, using templates. This is considered safe and does not require user consent.
+- Shared core logic: Both CLI and extension/server must use the same context-agnostic core logic for all memory bank operations.
+- Cursor config automation: The extension will automatically update `.cursor/mcp.json` to ensure Cursor can find the MCP server.
+- Consent for sensitive operations: All file overwrites (except self-healing) require user consent. `memory-bank.mdc` may only be regenerated or overwritten with explicit user consent.
 
-### What to Capture
-- Critical implementation paths
-- User preferences and workflow
-- Project-specific patterns
-- Known challenges
-- Evolution of project decisions
-- Tool usage patterns
+This file will be read by `cursor-rules-service.ts` and compiled into a `.mdc` format for rule execution.
 
-The format is flexible - focus on capturing valuable insights that help me work more effectively with you and the project. Think of .cursor/rules/memory-bank.mdc as a living document that grows smarter as we work together.
+Cursor agents should regularly check the .cursor/rules/ directory for other rulesets that may affect project behaviour.
 
-REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
-
-# Planning
-When asked to enter "Planner Mode" or using the /plan command, deeply reflect upon the changes being asked and analyze existing code to map the full scope of changes needed. Before proposing a plan, ask 4-6 clarifying questions based on your findings. Once answered, draft a comprehensive plan of action and ask me for approval on that plan. Once approved, implement all steps in that plan. After completing each phase/step, mention what was just completed and what the next steps are + phases remaining after these steps
+_Last updated: 2025-05-18_

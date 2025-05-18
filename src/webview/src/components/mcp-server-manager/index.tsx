@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { RiLoader5Fill, RiPlayFill, RiStopFill } from "react-icons/ri";
-import { cn } from "../../utils/cn";
+import { RiPlayFill, RiStopFill } from "react-icons/ri";
+import { cn } from "../../utils/cn.js";
+import { sendLog } from '../../utils/message.js';
+import { RulesStatus } from "../status/rules-status.js";
 
 export function MCPServerManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMCPRunning, setIsMCPRunning] = useState(false);
   const [port, setPort] = useState<number | null>(null);
+  const [feedback] = useState<string | null>(null);
 
   // Function to check if MCP server is already running on a given port
   const checkServerRunning = useCallback(async (checkPort: number) => {
@@ -32,11 +35,12 @@ export function MCPServerManager() {
             command: "serverAlreadyRunning",
             port: checkPort,
           });
+          sendLog(`Detected running MCP server on port ${checkPort}`, "info", { action: "detectServer", port: checkPort });
         }
       }
     } catch (error) {
       // Server is not running or not responding, this is expected in many cases
-      console.log(`No server running on port ${checkPort}`);
+      sendLog(`No server running on port ${checkPort}: ${error instanceof Error ? error.message : String(error)}`, "info", { action: "detectServer", port: checkPort });
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +55,7 @@ export function MCPServerManager() {
     const checkAllPorts = async () => {
       for (const portToCheck of defaultPorts) {
         // If we already found a running server, stop checking
-        if (isMCPRunning) break;
+        if (isMCPRunning) { break; }
         await checkServerRunning(portToCheck);
       }
     };
@@ -62,6 +66,7 @@ export function MCPServerManager() {
   const handleStartMCPServer = useCallback(() => {
     setIsLoading(true);
     setIsMCPRunning(true);
+    sendLog("User clicked 'Start MCP Server' button", "info", { action: "startMCPServer" });
     window.vscodeApi?.postMessage({
       command: "startMCPServer",
     });
@@ -71,6 +76,7 @@ export function MCPServerManager() {
     setIsLoading(true);
     setIsMCPRunning(false);
     setPort(null);
+    sendLog("User clicked 'Stop MCP Server' button", "info", { action: "stopMCPServer" });
     window.vscodeApi?.postMessage({
       command: "stopMCPServer",
     });
@@ -97,62 +103,62 @@ export function MCPServerManager() {
   }, [handleMessage]);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <span className="text-xl font-bold">MCP Server</span>
-        <span className="text-xs text-gray-500">
-          Manage the AI Memory MCP server
+    <div className="rounded-xl border border-border bg-muted p-4 shadow-sm space-y-4 mb-6">
+      <h2 className="text-xl font-bold mb-2 border-b border-border pb-1">MCP Server</h2>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-muted-foreground">Status:</span>
+        <span className={cn(
+          isMCPRunning ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
+          "px-2 py-0.5 rounded-full text-xs font-semibold"
+        )}>
+          {isMCPRunning ? "Running" : "Stopped"}
         </span>
       </div>
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-[var(--vscode-descriptionForeground)] underline">
-            MCP Server:
-          </span>
-          {isLoading && (
-            <span className="text-sm">
-              <RiLoader5Fill className="animate-spin size-4" />
-            </span>
-          )}
-          {!isLoading && (
-            <div className="flex flex-col gap-1">
-              <span
-                className={cn(
-                  isMCPRunning ? "text-green-500" : "text-red-500",
-                  "text-sm"
-                )}
-              >
-                {isMCPRunning ? "Running " : "Stopped"}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="flex gap-4 w-fit">
+      <div className="w-full max-w-md grid grid-cols-2 gap-2 pt-2">
         {!isMCPRunning && (
-          <button
-            className="flex items-center gap-1 px-2 py-1 text-white rounded-md"
-            onClick={handleStartMCPServer}
-          >
-            <RiPlayFill className="size-4" /> Start MCP Server
-          </button>
+          <>
+            <button
+              type="button"
+              className="w-full flex items-center gap-1 btn btn-primary px-2 py-1 text-white rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleStartMCPServer}
+              disabled={isLoading}
+            >
+              <RiPlayFill className="size-4 mr-1" /> <span>Start MCP Server</span>
+            </button>
+            <div />
+          </>
         )}
         {isMCPRunning && (
-          <button
-            className="flex items-center gap-1 px-2 py-1 text-white rounded-md"
-            onClick={handleStopMCPServer}
-          >
-            <RiStopFill className="size-4" /> Stop MCP Server
-          </button>
+          <>
+            <button
+              type="button"
+              className="w-full flex items-center gap-1 btn btn-destructive px-2 py-1 text-white rounded-md bg-red-600 hover:bg-red-700 disabled:opacity-50"
+              onClick={handleStopMCPServer}
+              disabled={isLoading}
+            >
+              <RiStopFill className="size-4 mr-1" /> <span>Stop MCP Server</span>
+            </button>
+            <div />
+          </>
         )}
+        <div className="col-span-2">
+          <RulesStatus />
+        </div>
       </div>
+      <hr className="border-border my-4" />
+      {feedback && (
+        <pre className="bg-gray-100 p-2 rounded max-h-40 overflow-y-auto text-xs mt-2 transition-opacity duration-300">
+          {feedback}
+        </pre>
+      )}
       {port && isMCPRunning && (
-        <span className="text-xs text-gray-500">
-          Server running on <b>http://localhost:{port}/sse</b>
+        <p className="text-xs text-muted-foreground mt-2">
+          Server running on <span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
           <br />
-          Your Cursor MCP config has been automatically updated (Please check
-          Cursor MCP settings to ensure it is correct).
-        </span>
+          Your Cursor MCP config has been automatically updated.
+          <br />
+          Please check Cursor MCP settings to ensure it is correct.
+        </p>
       )}
     </div>
   );

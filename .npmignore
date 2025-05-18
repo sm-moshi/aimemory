@@ -1,0 +1,42 @@
+# Exclude version control and editor config
+.git/
+.vscode/
+.vscode-test/
+
+# Exclude local memory bank and config
+memory-bank/
+.cursor/
+.repomix/
+
+# Exclude tests and docs
+*.test.*
+test/
+docs/
+
+# Exclude build artifacts and dependencies
+node_modules/
+# Allow built extension and assets
+!dist/extension.cjs
+!dist/assets/**
+!dist/webview/**
+!dist/core/**
+!dist/lib/**
+!dist/mcp/**
+!dist/types/**
+!dist/utils/**
+!dist/*.js.map
+
+# Exclude environment and log files
+.env
+*.log
+logs/
+*.DS_Store
+Thumbs.db
+npm-debug.log
+
+# Allow esbuild.js for npm scripts
+!esbuild.js
+
+# Exclude test output and system files
+dist/test/
+dist/.DS_Store
