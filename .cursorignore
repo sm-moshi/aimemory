@@ -1,4 +1,4 @@
 archive/
 docs/maybe/
-logs/
-.vscode-test/
+.vscode-test/user-data/
+.vscode-test/vscode-darwin-arm64-1.96.2/

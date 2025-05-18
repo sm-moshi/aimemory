@@ -7,8 +7,8 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 | Folder                | Purpose                                           | Example Contents                                                    |
 | --------------------- | ------------------------------------------------- | ------------------------------------------------------------------- |
 | `/docs/guides/`       | User guides, onboarding, migration                | `QUICKSTART.md`, `MIGRATION_GUIDE.md`, `TROUBLESHOOTING.md`         |
-| `/docs/experimental/` | Experimental features, design spikes              | `EXPERIMENTAL-MCP-PLAN.md`, `DETAILED_OUTPUT.md`, `MCP_SERVER.md`   |
-| `/docs/wip/`          | Work-in-progress, drafts, ongoing refactors       | `RESTRUCTURE_PLAN.md`, `ROADMAP.md`, `TODO.md`, `IMPLEMENTATION.md` |
+| `/docs/experimental/` | Experimental features, design spikes              | *(none currently)*                                                  |
+| `/docs/wip/`          | Work-in-progress, drafts, ongoing refactors       | `RESTRUCTURE_PLAN.md`, `ROADMAP.md`, `TODO.md`, `IMPLEMENTATION.md`, `DETAILED_OUTPUT.md`, `EXPERIMENTAL-MCP-PLAN.md`, `MCP_SERVER.md` |
 | `/docs/maybe/`        | Private, unvetted, or personal notes (gitignored) | (not tracked)                                                       |
 
 ## 📚 Main Docs
@@ -18,6 +18,9 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 - [Troubleshooting](./guides/TROUBLESHOOTING.md)
 - [Roadmap](./wip/ROADMAP.md)
 - [TODO](./wip/TODO.md)
+- [Logging & Output Channel (Advanced)](./wip/DETAILED_OUTPUT.md)
+- [Experimental MCP Plan](./wip/EXPERIMENTAL-MCP-PLAN.md)
+- [MCP Server Guide](./wip/MCP_SERVER.md)
 
 ## 🛠️ Migration Checklist
 - [x] Move user guides to `/docs/guides/`
@@ -25,6 +28,7 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 - [x] Move WIP docs to `/docs/wip/`
 - [x] Keep `/docs/maybe/` for private notes (gitignored)
 - [x] Update all internal links
+- [x] Move advanced/experimental docs to `/docs/wip/` as they stabilise
 
 ## 📝 Notes
 - Each folder contains a `README.md` or `index.md` for navigation.

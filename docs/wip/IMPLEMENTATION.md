@@ -1,6 +1,6 @@
-# AI Memory MCP Implementation Guide (v0.2.5 Target)
+# AI Memory MCP Implementation Guide (v0.3.1 Target)
 
-_Last updated: 2025-05-13_
+_Last updated: 2025-05-18_
 
 *For a high-level overview, see [ROADMAP.md](./ROADMAP.md). For setup, see [QUICKSTART.md](../guides/QUICKSTART.md). For actionable tasks, see [TODO.md](./TODO.md). For troubleshooting, see [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). For experimental features, see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).*
 
@@ -18,6 +18,16 @@ The AI Memory extension is now fully modular and Cursor-first, with VS Code comp
 6. **MCP CLI/stdio Entrypoint (`src/cli.ts`, `src/mcp/coreMemoryBankMCP.ts`, `src/mcp/mcpServerCli.ts`)**: Provides a Cursor-first, dependency-light CLI for MCP server operation, supporting both HTTP/SSE and stdio transports.
 
 *For more on the tech stack, see: [Vite Guide](https://vitejs.dev/guide/), [React Docs](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), [Model Context Protocol](https://modelcontextprotocol.org)*
+
+---
+
+## Build & Configuration (as of v0.3.1)
+
+- Build and workspace simplification is now complete:
+  - Unified TypeScript configs (single root config, only separate for webview if needed)
+  - Streamlined build scripts (esbuild for Node/extension/server, vite for webview)
+  - Rationalised ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
+- Express removal is still in progress; MCP SDK/Node APIs are the target for all server logic.
 
 ---
 

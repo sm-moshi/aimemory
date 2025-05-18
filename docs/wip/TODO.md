@@ -20,10 +20,10 @@
 -   [ ] Version control integration for memory bank files (**not started**)
 -   [ ] Chunked file access (**not started**)
 -   [ ] Implement remote/cloud memory bank support (**not started**)
--   [ ] Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
+-   [x] Ensure all communication and MCP tool logic is Cursor-first (Cursor compatibility is the top priority; VS Code compatibility is a bonus).
 -   [ ] Review and analyse MCP and Developer Tools logs in `logs/` for startup, error, and runtime issues.
 -   [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code).
--   [ ] Document findings and next steps in `docs/ROADMAP.md`.
+-   [x] Document findings and next steps in `docs/ROADMAP.md`.
 -   [ ] Replace 'Initialize Memory Bank' with `/memory init` command
 -   [ ] Implement usage of new MCP prompt constants (health check, file missing, update confirmation, structure guide, usage tip) in the extension and/or webview. Wire up these prompts to relevant extension actions or UI events for improved agent and user feedback.
 
@@ -66,9 +66,9 @@
 
 ## Build & Workspace Simplification
 
--   [ ] Unify TypeScript configs (single root config, only separate for webview if needed)
--   [ ] Streamline build scripts (esbuild for Node/extension/server, vite for webview)
--   [ ] Rationalise ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
+-   [x] Unify TypeScript configs (single root config, only separate for webview if needed)
+-   [x] Streamline build scripts (esbuild for Node/extension/server, vite for webview)
+-   [x] Rationalise ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
 -   [ ] Use official test tools (@vscode/test-cli, MCP Inspector)
 -   [ ] Remove Express/HTTP from extension/server path (stdio only)
 -   [ ] Clarify and flatten folder structure

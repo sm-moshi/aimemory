@@ -1,6 +1,7 @@
 # Exclude version control and editor config
 .git/
 .vscode/
+.vscode-test/
 
 # Exclude local memory bank and config
 memory-bank/

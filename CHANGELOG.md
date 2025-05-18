@@ -1,5 +1,25 @@
 ## [Unreleased]
 
+## [0.3.2] - 2025-05-18
+
+**Small Maintenance Release** 🐹
+
+- Bumped extension version to 0.3.2 in `package.json` for release tracking.
+- No functional or code changes; this is a version alignment and housekeeping update.
+
+## [0.3.1] - 2025-05-18
+
+**CI Unification, Version Bump, and Ruleset Improvements** 🦔
+
+- Consolidated build, lint, and test GitHub Actions into a single, robust CI workflow for clarity and maintainability.
+- Added `workflow_dispatch` to the ESLint workflow for manual runs.
+- Updated `.gitignore` and `.cursorignore` to reflect new folder structure and ignore rules.
+- Bumped version to 0.3.1 in `package.json` and `src/webview/package.json`.
+- Added `mise.toml` for Node version management.
+- Added `.cursor/rules/memory-bank.mdc` (auto-generated) to codify memory bank rules for Cursor agents.
+- Minor tweaks to `esbuild.js` and submodule for consistency.
+- All changes follow KISS and DRY principles, prioritising clarity and maintainability.
+
 **Comprehensive Refactor & Cursor-First Improvements** 🐹
 
 - **Build & Config**
@@ -87,6 +107,19 @@
 
 - **Documentation**
   - `IMPLEMENTATION.md`, `memory-bank-rules.md`, and other docs are up-to-date and detailed.
+
+---
+
+## [0.2.4] - 2025-05-13
+
+**Modularisation, Checklist, and Documentation Updates** 🐹
+
+- Moved all shared types to `src/types/` and shared utils to `src/utils/` for improved modularity and maintainability.
+- Updated all checklists in `docs/wip/RESTRUCTURE_PLAN.md` to mark types and utils migration as complete.
+- Confirmed `.js.map` files are included in the package for best debugging practices.
+- Added a future refactor note to remove Express from the MCP server in `RESTRUCTURE_PLAN.md`.
+- Ensured all living docs (`RESTRUCTURE_PLAN.md`, `MCP_SERVER.md`, `EXPERIMENTAL-MCP-PLAN.md`) reflect the current modular structure and progress.
+- No functional changes to extension logic; all changes are structural, documentation, and checklist updates.
 
 ---
 
@@ -201,14 +234,3 @@
 **Bug Fixes**
 
 - Various bug fixes and improvements.
-
-## [0.2.4] - 2025-05-13
-
-**Modularisation, Checklist, and Documentation Updates** 🐹
-
-- Moved all shared types to `src/types/` and shared utils to `src/utils/` for improved modularity and maintainability.
-- Updated all checklists in `docs/wip/RESTRUCTURE_PLAN.md` to mark types and utils migration as complete.
-- Confirmed `.js.map` files are included in the package for best debugging practices.
-- Added a future refactor note to remove Express from the MCP server in `RESTRUCTURE_PLAN.md`.
-- Ensured all living docs (`RESTRUCTURE_PLAN.md`, `MCP_SERVER.md`, `EXPERIMENTAL-MCP-PLAN.md`) reflect the current modular structure and progress.
-- No functional changes to extension logic; all changes are structural, documentation, and checklist updates.

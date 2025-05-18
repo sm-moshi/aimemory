@@ -39,15 +39,15 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [ ] Fix 'Initialise Memory Bank' button text in webview
 - [ ] Begin work on advanced UI features (refresh, preview, diff, visualisation)
 - [ ] Implement automated tests and CI/CD
-- [ ] **Build & Workspace Simplification**
-    - Unify TypeScript configs (single root config, only separate for webview if needed)
-    - Streamline build scripts (esbuild for Node/extension/server, vite for webview)
-    - Rationalise ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
-    - Use official test tools (@vscode/test-cli, MCP Inspector)
-    - Remove Express/HTTP from extension/server path (stdio only)
-    - Clarify and flatten folder structure
-    - Document all build/test/dev commands in README
-    - Only use monorepo/workspaces if webview is a separate package
+- [x] **Build & Workspace Simplification**
+    - [x] Unify TypeScript configs (single root config, only separate for webview if needed)
+    - [x] Streamline build scripts (esbuild for Node/extension/server, vite for webview)
+    - [x] Rationalise ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
+    - [ ] Use official test tools (@vscode/test-cli, MCP Inspector)
+    - [ ] Remove Express/HTTP from extension/server path (stdio only)
+    - [ ] Clarify and flatten folder structure
+    - [ ] Document all build/test/dev commands in README
+    - [ ] Only use monorepo/workspaces if webview is a separate package
 
 ### v1.0.0 (Stable)
 - [ ] Full test coverage and CI/CD for all features
@@ -82,7 +82,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code)
 - [ ] Implement automated tests and CI/CD
 - [ ] Expose 'AI Memory: Create Memory Bank Rule' as a command
-- [ ] **Simplify build/test/workspace as per v0.3.x plan**
+- [x] **Simplify build/test/workspace as per v0.3.x plan**
 - [ ] Document findings and next steps in this ROADMAP.
 
 ---

@@ -24,11 +24,10 @@ if (!fs.existsSync(outdir)) {
 
 const shared = {
   bundle: true,
-  platform: "node",
+  platform: 'node',
   target: ["es2022"],
   external: [
     "vscode",
-    "express", // Remove when refactored
     "canvas",
     "node:test",
     "node:worker_threads"
