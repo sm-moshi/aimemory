@@ -10,3 +10,5 @@ memory-bank/*.md
 !.cursor/rules/memory-bank.mdc
 logs/
 docs/devs/
+
+pnpm-lock.yaml

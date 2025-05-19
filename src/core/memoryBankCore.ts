@@ -3,20 +3,26 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { MemoryBankFileType } from "../types/types.js";
+import { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
 export { MemoryBankFileType } from "../types/types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const MEMORY_BANK_DIR = path.resolve(__dirname, "../memory-bank");
 
+const memoryBankServiceCore = new MemoryBankServiceCore(MEMORY_BANK_DIR);
+
 export async function readMemoryBankFile(fileType: MemoryBankFileType): Promise<string> {
-  const filePath = path.join(MEMORY_BANK_DIR, `${fileType}.md`);
-  return fs.readFile(filePath, "utf-8");
+  await memoryBankServiceCore.loadFiles();
+		const file = memoryBankServiceCore.getFile(fileType);
+		if (!file) {
+			throw new Error(`File ${fileType} not found`);
+		}
+		return file.content;
 }
 
 export async function updateMemoryBankFile(fileType: MemoryBankFileType, content: string): Promise<void> {
-  const filePath = path.join(MEMORY_BANK_DIR, `${fileType}.md`);
-  await fs.writeFile(filePath, content, "utf-8");
+  await memoryBankServiceCore.updateFile(fileType, content);
 }
 
 export function getMemoryBankTools() {
