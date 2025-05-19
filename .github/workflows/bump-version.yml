@@ -109,7 +109,7 @@ jobs:
           GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           
       - name: Create GitHub Tag Reference
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ env.GH_TOKEN }}
           script: |
