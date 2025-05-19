@@ -21,8 +21,8 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       zod:
-        specifier: ^3.24.4
-        version: 3.25.4
+        specifier: ^3.25.5
+        version: 3.25.5
     devDependencies:
       '@types/cors':
         specifier: 2.8.18
@@ -3090,8 +3090,8 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.25.4:
-    resolution: {integrity: sha512-7zz8qNtVv37yCd8OeUW37PMXrR0K/zg+6vw+Z2FJ2+oozVdRbFKldkCoqxd9nJflDrx2ZkjUJrPF2DMj+L4pBQ==}
+  zod@3.25.5:
+    resolution: {integrity: sha512-ualArhgJydGAKkSdtxQyu6RXFW8nHFKWaw20jey8UFXU9uzkHYqWXJ93Iz+hUVVJb37VpF4LCCsOOfj6xaCVRQ==}
 
 snapshots:
 
@@ -3357,8 +3357,8 @@ snapshots:
       express-rate-limit: 7.5.0(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
-      zod: 3.25.4
-      zod-to-json-schema: 3.24.5(zod@3.25.4)
+      zod: 3.25.5
+      zod-to-json-schema: 3.24.5(zod@3.25.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -6525,8 +6525,8 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-to-json-schema@3.24.5(zod@3.25.4):
+  zod-to-json-schema@3.24.5(zod@3.25.5):
     dependencies:
-      zod: 3.25.4
+      zod: 3.25.5
 
-  zod@3.25.4: {}
+  zod@3.25.5: {}
