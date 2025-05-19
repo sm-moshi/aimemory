@@ -64,7 +64,7 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 
 ## 🛠 Installation
 
-### From Cursor Extension Panel (Recommended)
+### **WiP:** From Cursor Extension Panel (Recommended)
 1. Open Cursor
 2. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X)
 3. Search for "AI Memory"
