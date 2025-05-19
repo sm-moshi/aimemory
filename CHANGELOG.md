@@ -1,3 +1,7 @@
+## [0.4.1](https://github.com/sm-moshi/aimemory/compare/v0.4.0...v0.4.1) (2025-05-19)
+
+
+
 # 0.4.0 (2025-05-18)
 
 
