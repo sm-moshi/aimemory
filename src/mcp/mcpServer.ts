@@ -185,6 +185,12 @@ export class MemoryBankMCPServer {
         }
       }
     });
+
+    // Add at the end of setupRoutes()
+    this.app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      console.error("Unhandled error:", err);
+      res.status(500).json({ error: "Internal Server Error", details: err instanceof Error ? err.message : String(err) });
+    });
   }
 
   private registerMCPResources(): void {
