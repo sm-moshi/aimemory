@@ -1,0 +1,6 @@
+{
+	"sonarlint.connectedMode.project": {
+		"connectionId": "sm-moshi-org",
+		"projectKey": "sm-moshi_aimemory"
+	}
+}
