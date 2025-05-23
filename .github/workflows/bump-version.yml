@@ -17,17 +17,17 @@ jobs:
     name: Bump Version on main
     runs-on: ubuntu-latest
     if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
-    
+
     permissions:
       contents: write  # Gives permission to push to the repository
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ env.GH_TOKEN }}
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,20 +37,20 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          
+
       - name: Install dependencies
         run: npm install -g conventional-changelog-cli conventional-recommended-bump standard-version
-        
+
       - name: Get previous version
         id: prev_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-        
+
       - name: Determine bump type
         id: bump_type
         run: |
           COMMITS=$(git log --format=%B --no-merges $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD^)..HEAD)
           echo "$COMMITS" > commits.txt
-          
+
           if grep -q "^feat" commits.txt; then
             echo "type=minor" >> $GITHUB_OUTPUT
           elif grep -q "^fix" commits.txt; then
@@ -60,19 +60,19 @@ jobs:
           else
             echo "type=patch" >> $GITHUB_OUTPUT
           fi
-          
+
       - name: Bump version
         id: version_bump
         run: |
           BUMP_TYPE=${{ steps.bump_type.outputs.type }}
           CURRENT_VERSION=${{ steps.prev_version.outputs.version }}
-          
+
           # Split version into parts
           IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
           MAJOR=${VERSION_PARTS[0]}
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
-          
+
           # Increment based on bump type
           if [ "$BUMP_TYPE" == "major" ]; then
             MAJOR=$((MAJOR + 1))
@@ -84,17 +84,17 @@ jobs:
           else
             PATCH=$((PATCH + 1))
           fi
-          
+
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
+
           # Update version in package.json
           npm version $NEW_VERSION --no-git-tag-version
-          
+
       - name: Generate changelog
         run: |
           npx conventional-changelog -p angular -i CHANGELOG.md -s
-          
+
       - name: Commit and push changes
         run: |
           git add package.json CHANGELOG.md
@@ -107,7 +107,7 @@ jobs:
           git tag -l
         env:
           GITHUB_TOKEN: ${{ env.GH_TOKEN }}
-          
+
       - name: Create GitHub Tag Reference
         uses: actions/github-script@v7
         with:
@@ -115,9 +115,9 @@ jobs:
           script: |
             const tagName = `v${{ steps.version_bump.outputs.new_version }}`;
             const sha = context.sha;
-            
+
             console.log(`Creating tag reference for ${tagName} at ${sha}`);
-            
+
             try {
               // First try to get the reference to see if it already exists
               await github.rest.git.getRef({
@@ -126,31 +126,9 @@ jobs:
                 ref: `tags/${tagName}`
               });
               console.log(`Tag ${tagName} already exists. Updating it.`);
-              
+
               // Update the existing reference
               await github.rest.git.updateRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: `tags/${tagName}`,
-                sha: sha,
-                force: true
-              });
-            } catch (error) {
-              // If the reference doesn't exist, create it
-              if (error.status === 404) {
-                console.log(`Tag ${tagName} doesn't exist. Creating it.`);
-                await github.rest.git.createRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: `refs/tags/${tagName}`,
-                  sha: sha
-                });
-              } else {
-                console.log(`Error: ${error.message}`);
-                throw error;
-              }
-            }
-          
-      - name: Log version bump
-        run: |
-          echo "Bumped version from ${{ steps.prev_version.outputs.version }} to ${{ steps.version_bump.outputs.new_version }}"
+                ref: `
