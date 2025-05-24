@@ -6,6 +6,7 @@
 
 _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
 
+_Last updated: 2025-05-24_
 > _Last updated: 2025-05-25_
 
 ---
@@ -18,6 +19,7 @@ _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabli
 	3. [✨ Features](#-features)
 	4. [🖼 Visuals](#-visuals)
 	5. [🛠 Installation](#-installation)
+		1. [**WiP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		1. [**WIP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		2. [From VSIX File](#from-vsix-file)
 	6. [⚡ Quick Start](#-quick-start)
@@ -53,6 +55,7 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 - **Self-Healing**: Auto-creates missing files/folders from templates. Manual repair available via webview.
 - **Migration Logic**: Detects and migrates flat memory banks to modular structure with user consent.
 - **/memory Commands**: Interact directly with the memory bank from Cursor chat (e.g., `/memory status`, `/memory list`, `/memory read <filename>`).
+- **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, ESBuild for compilation.
 - **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, SWC for compilation.
 - **Version Control Ready**: Modular structure supports future versioning, remote/cloud, and visualisation features.
 
@@ -119,17 +122,23 @@ pnpm run test:unit
 
 - **Check memory status:**
 
+  ```
+
   ```text
   /memory status
   ```
 
 - **List memory files:**
 
+  ```
+
   ```text
   /memory list
   ```
 
 - **Read a memory file:**
+
+  ```
 
   ```text
   /memory read core/projectbrief.md
@@ -157,6 +166,15 @@ pnpm run test:unit
 | `biome.json`      | Biome linting and formatting configuration   |
 | `package.json`    | Dependencies and build scripts               |
 | `tsconfig.json`   | TypeScript compiler configuration           |
+| `esbuild.js`      | Extension and MCP server build configuration |
+
+### Key Configuration Files
+
+| File              | Purpose                                      |
+| ----------------- | -------------------------------------------- |
+| `biome.json`      | Biome linting and formatting configuration   |
+| `package.json`    | Dependencies and build scripts               |
+| `tsconfig.json`   | TypeScript compiler configuration           |
 | `rollup.config.js`| Extension and MCP server build configuration |
 
 See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
@@ -168,6 +186,13 @@ See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 - All required files are auto-created if missing.
 - No manual configuration is required for basic use.
 - Advanced settings and customisation coming soon.
+
+### Development Configuration
+
+- **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
+- **TypeScript**: Strict configuration for type safety
+- **VS Code**: Workspace includes recommended extensions (Biome)
+- **Build**: ESBuild for fast compilation
 
 ### Development Configuration
 
