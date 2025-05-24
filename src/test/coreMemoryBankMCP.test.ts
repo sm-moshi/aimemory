@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoreMemoryBankMCP } from '../mcp/coreMemoryBankMCP.js';
 
 // Mock dependencies
@@ -12,7 +12,7 @@ vi.mock('../core/memoryBankServiceCore.js', () => ({
     updateFile: vi.fn().mockResolvedValue(undefined),
     checkHealth: vi.fn().mockResolvedValue('Healthy'),
     getFile: vi.fn().mockReturnValue({ type: 'mock', content: 'mock', lastUpdated: new Date() }),
-  }))
+  })),
 }));
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => {
   class McpServer {
@@ -48,12 +48,18 @@ describe('CoreMemoryBankMCP', () => {
     // @ts-expect-error: access private for test
     const server = mcp.server;
     // Find the tool registration for init-memory-bank
-    const call = (server.tool as unknown as { mock: { calls: [string, ...unknown[]][] } }).mock.calls.find((args: [string, ...unknown[]]) => args[0] === 'init-memory-bank');
+    const call = (
+      server.tool as unknown as { mock: { calls: [string, ...unknown[]][] } }
+    ).mock.calls.find((args: [string, ...unknown[]]) => args[0] === 'init-memory-bank');
     expect(call).toBeDefined();
-    if (!call) {throw new Error('init-memory-bank tool not registered');}
+    if (!call) {
+      throw new Error('init-memory-bank tool not registered');
+    }
     // Simulate calling the handler
     const handler = call[2] as () => Promise<unknown>;
-    const result = await handler() as { content: { text: string }[] };
-    expect(result.content[0].text).toMatch(/Memory bank initialized successfully|already initialized/);
+    const result = (await handler()) as { content: { text: string }[] };
+    expect(result.content[0].text).toMatch(
+      /Memory bank initialized successfully|already initialized/
+    );
   });
 });

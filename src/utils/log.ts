@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 /**
  * Log levels for the AI Memory extension Output Channel.
@@ -17,7 +17,7 @@ export enum LogLevel {
  */
 export class Logger {
   private static instance: Logger;
-  private output = vscode.window.createOutputChannel("AI Memory");
+  private output = vscode.window.createOutputChannel('AI Memory');
   private level: LogLevel = LogLevel.Info;
 
   private constructor() {}
@@ -45,7 +45,7 @@ export class Logger {
   log(level: LogLevel, msg: string, meta?: Record<string, unknown>) {
     if (level >= this.level && this.level !== LogLevel.Off) {
       const prefix = `[Webview] ${new Date().toISOString()} - ${LogLevel[level].toUpperCase()}`;
-      const metaStr = meta ? ` ${JSON.stringify(meta)}` : "";
+      const metaStr = meta ? ` ${JSON.stringify(meta)}` : '';
       this.output.appendLine(`${prefix} ${msg}${metaStr}`);
     }
   }
@@ -53,15 +53,21 @@ export class Logger {
   /**
    * Log an info-level message.
    */
-  info(msg: string, meta?: Record<string, unknown>) { this.log(LogLevel.Info, msg, meta); }
+  info(msg: string, meta?: Record<string, unknown>) {
+    this.log(LogLevel.Info, msg, meta);
+  }
   /**
    * Log an error-level message.
    */
-  error(msg: string, meta?: Record<string, unknown>) { this.log(LogLevel.Error, msg, meta); }
+  error(msg: string, meta?: Record<string, unknown>) {
+    this.log(LogLevel.Error, msg, meta);
+  }
   /**
    * Log a debug-level message.
    */
-  debug(msg: string, meta?: Record<string, unknown>) { this.log(LogLevel.Debug, msg, meta); }
+  debug(msg: string, meta?: Record<string, unknown>) {
+    this.log(LogLevel.Debug, msg, meta);
+  }
 
   /**
    * Show the output channel to the user.

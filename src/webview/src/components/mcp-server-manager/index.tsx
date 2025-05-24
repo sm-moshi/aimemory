@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { RiPlayFill, RiStopFill } from "react-icons/ri";
-import { cn } from "../../utils/cn.js";
+import { useCallback, useEffect, useState } from 'react';
+import { RiPlayFill, RiStopFill } from 'react-icons/ri';
+import { cn } from '../../utils/cn.js';
 import { sendLog } from '../../utils/message.js';
-import { RulesStatus } from "../status/rules-status.js";
+import { RulesStatus } from '../status/rules-status.js';
 
 export function MCPServerManager() {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,9 +15,9 @@ export function MCPServerManager() {
     try {
       setIsLoading(true);
       const response = await fetch(`http://localhost:${checkPort}/health`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Accept: "application/json",
+          Accept: 'application/json',
         },
         // Short timeout to avoid hanging if server is not responsive
         signal: AbortSignal.timeout(1000),
@@ -25,22 +25,29 @@ export function MCPServerManager() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.status === "ok ok") {
+        if (data.status === 'ok ok') {
           // Server is already running on this port
           setIsMCPRunning(true);
           setPort(checkPort);
 
           // Notify extension that we detected a running server
           window.vscodeApi?.postMessage({
-            command: "serverAlreadyRunning",
+            command: 'serverAlreadyRunning',
             port: checkPort,
           });
-          sendLog(`Detected running MCP server on port ${checkPort}`, "info", { action: "detectServer", port: checkPort });
+          sendLog(`Detected running MCP server on port ${checkPort}`, 'info', {
+            action: 'detectServer',
+            port: checkPort,
+          });
         }
       }
     } catch (error) {
       // Server is not running or not responding, this is expected in many cases
-      sendLog(`No server running on port ${checkPort}: ${error instanceof Error ? error.message : String(error)}`, "info", { action: "detectServer", port: checkPort });
+      sendLog(
+        `No server running on port ${checkPort}: ${error instanceof Error ? error.message : String(error)}`,
+        'info',
+        { action: 'detectServer', port: checkPort }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +62,9 @@ export function MCPServerManager() {
     const checkAllPorts = async () => {
       for (const portToCheck of defaultPorts) {
         // If we already found a running server, stop checking
-        if (isMCPRunning) { break; }
+        if (isMCPRunning) {
+          break;
+        }
         await checkServerRunning(portToCheck);
       }
     };
@@ -66,9 +75,9 @@ export function MCPServerManager() {
   const handleStartMCPServer = useCallback(() => {
     setIsLoading(true);
     setIsMCPRunning(true);
-    sendLog("User clicked 'Start MCP Server' button", "info", { action: "startMCPServer" });
+    sendLog("User clicked 'Start MCP Server' button", 'info', { action: 'startMCPServer' });
     window.vscodeApi?.postMessage({
-      command: "startMCPServer",
+      command: 'startMCPServer',
     });
   }, []);
 
@@ -76,17 +85,17 @@ export function MCPServerManager() {
     setIsLoading(true);
     setIsMCPRunning(false);
     setPort(null);
-    sendLog("User clicked 'Stop MCP Server' button", "info", { action: "stopMCPServer" });
+    sendLog("User clicked 'Stop MCP Server' button", 'info', { action: 'stopMCPServer' });
     window.vscodeApi?.postMessage({
-      command: "stopMCPServer",
+      command: 'stopMCPServer',
     });
   }, []);
 
   const handleMessage = useCallback((event: MessageEvent) => {
     const message = event.data;
     switch (message.type) {
-      case "MCPServerStatus":
-        setIsMCPRunning(message.status === "started");
+      case 'MCPServerStatus':
+        setIsMCPRunning(message.status === 'started');
         setIsLoading(false);
         if (message.port) {
           setPort(message.port);
@@ -96,9 +105,9 @@ export function MCPServerManager() {
   }, []);
 
   useEffect(() => {
-    window.addEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('message', handleMessage);
     };
   }, [handleMessage]);
 
@@ -107,11 +116,13 @@ export function MCPServerManager() {
       <h2 className="text-xl font-bold mb-2 border-b border-border pb-1">MCP Server</h2>
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">Status:</span>
-        <span className={cn(
-          isMCPRunning ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
-          "px-2 py-0.5 rounded-full text-xs font-semibold"
-        )}>
-          {isMCPRunning ? "Running" : "Stopped"}
+        <span
+          className={cn(
+            isMCPRunning ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800',
+            'px-2 py-0.5 rounded-full text-xs font-semibold'
+          )}
+        >
+          {isMCPRunning ? 'Running' : 'Stopped'}
         </span>
       </div>
       <div className="w-full max-w-md grid grid-cols-2 gap-2 pt-2">
@@ -153,7 +164,8 @@ export function MCPServerManager() {
       )}
       {port && isMCPRunning && (
         <p className="text-xs text-muted-foreground mt-2">
-          Server running on <span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
+          Server running on{' '}
+          <span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
           <br />
           Your Cursor MCP config has been automatically updated.
           <br />

@@ -52,7 +52,8 @@ button:hover {
   background-color: var(--vscode-button-hoverBackground);
 }
 
-input, textarea {
+input,
+textarea {
   background-color: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
   border: 1px solid var(--vscode-input-border, transparent);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { CoreMemoryBankMCP } from "./mcp/coreMemoryBankMCP.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CoreMemoryBankMCP } from './mcp/coreMemoryBankMCP.js';
 
 async function main(testMode = false) {
   try {
@@ -15,7 +15,7 @@ async function main(testMode = false) {
       await new Promise(() => {}); // Never resolves in normal mode
     }
   } catch (err) {
-    console.error("[aimemory-mcp] MCP server failed to start:", err);
+    console.error('[aimemory-mcp] MCP server failed to start:', err);
     process.exit(1);
   }
 }

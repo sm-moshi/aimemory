@@ -1,7 +1,7 @@
-import * as os from "node:os";
-import * as path from "node:path";
-import * as fs from "node:fs/promises";
-import * as vscode from "vscode";
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import * as vscode from 'vscode';
 
 /**
  * Updates the Cursor MCP config to point to our MCP server
@@ -9,16 +9,16 @@ import * as vscode from "vscode";
 export async function updateCursorMCPConfig(port: number): Promise<void> {
   try {
     const homeDir = os.homedir();
-    const mcpConfigPath = path.join(homeDir, ".cursor", "mcp.json");
+    const mcpConfigPath = path.join(homeDir, '.cursor', 'mcp.json');
 
     // Create our server config object
     const ourServer = {
-      name: "AI Memory",
+      name: 'AI Memory',
       url: `http://localhost:${port}/sse`,
     };
 
     // Ensure .cursor directory exists
-    const cursorDir = path.join(homeDir, ".cursor");
+    const cursorDir = path.join(homeDir, '.cursor');
     try {
       await fs.mkdir(cursorDir, { recursive: true });
     } catch (err) {
@@ -32,14 +32,12 @@ export async function updateCursorMCPConfig(port: number): Promise<void> {
     let fileExists = false;
 
     try {
-      const fileContent = await fs.readFile(mcpConfigPath, "utf-8");
+      const fileContent = await fs.readFile(mcpConfigPath, 'utf-8');
       existingConfig = JSON.parse(fileContent);
       fileExists = true;
     } catch (err) {
       // File doesn't exist or isn't valid JSON, we'll create it
-      console.log(
-        "Config file doesn't exist or isn't valid, will create new one"
-      );
+      console.log("Config file doesn't exist or isn't valid, will create new one");
       existingConfig = { mcpServers: {} };
     }
 
@@ -49,24 +47,21 @@ export async function updateCursorMCPConfig(port: number): Promise<void> {
     }
 
     // Check if our server is already in the configuration with the same URL
-    const existingEntry = existingConfig.mcpServers["AI Memory"];
+    const existingEntry = existingConfig.mcpServers['AI Memory'];
     const urlMatches = existingEntry && existingEntry.url === ourServer.url;
 
     if (!existingEntry || !urlMatches) {
       // Add/update our server in the configuration
-      existingConfig.mcpServers["AI Memory"] = ourServer;
+      existingConfig.mcpServers['AI Memory'] = ourServer;
 
       // Write the updated config
-      await fs.writeFile(
-        mcpConfigPath,
-        JSON.stringify(existingConfig, null, 2)
-      );
+      await fs.writeFile(mcpConfigPath, JSON.stringify(existingConfig, null, 2));
 
       vscode.window.showInformationMessage(
         `Cursor MCP config updated to use AI Memory server on port ${port}`
       );
     } else {
-      console.log("AI Memory server already configured in Cursor MCP config");
+      console.log('AI Memory server already configured in Cursor MCP config');
     }
   } catch (error) {
     vscode.window.showErrorMessage(

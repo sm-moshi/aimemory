@@ -1,9 +1,9 @@
-import { MemoryBankStatus } from "./memory-bank-status.js";
+import { MemoryBankStatus } from './memory-bank-status.js';
 // import { RulesStatus } from "./rules-status";
 
 export function Status({
   onReviewAllFiles,
-  reviewLoading
+  reviewLoading,
 }: {
   onReviewAllFiles: () => void;
   reviewLoading: boolean;

@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { RiLoader5Fill } from "react-icons/ri";
-import { cn } from "../../utils/cn.js";
+import { useCallback, useEffect, useState } from 'react';
+import { RiLoader5Fill } from 'react-icons/ri';
+import { cn } from '../../utils/cn.js';
 import { sendLog } from '../../utils/message.js';
 
 export function MemoryBankStatus({
   onReviewAllFiles,
-  reviewLoading
+  reviewLoading,
 }: {
   onReviewAllFiles: () => void;
   reviewLoading: boolean;
@@ -19,30 +19,34 @@ export function MemoryBankStatus({
     setIsLoading(true);
     sendLog('Requesting memory bank status', 'info', { action: 'requestMemoryBankStatus' });
     window.vscodeApi?.postMessage({
-      command: "requestMemoryBankStatus",
+      command: 'requestMemoryBankStatus',
     });
   }, []);
 
   // Handlers moved from MCPServerManager
   const handleInitializeMemoryBank = useCallback(async () => {
     setInitLoading(true);
-    window.vscodeApi?.postMessage({ command: "startMCPServer" });
+    window.vscodeApi?.postMessage({ command: 'startMCPServer' });
     setInitLoading(false);
   }, []);
 
   const handleUpdateMemoryBank = useCallback(async () => {
-    const fileType = window.prompt("Enter memory bank file type (e.g. projectbrief.md):");
-    if (!fileType) { return; }
-    const content = window.prompt("Enter new content for the file:");
-    if (content === null) { return; }
+    const fileType = window.prompt('Enter memory bank file type (e.g. projectbrief.md):');
+    if (!fileType) {
+      return;
+    }
+    const content = window.prompt('Enter new content for the file:');
+    if (content === null) {
+      return;
+    }
     setUpdateLoading(true);
-    window.vscodeApi?.postMessage({ command: "updateMemoryBankFile", fileType, content });
+    window.vscodeApi?.postMessage({ command: 'updateMemoryBankFile', fileType, content });
     setUpdateLoading(false);
   }, []);
 
   const handleRepairMemoryBank = useCallback(async () => {
     setUpdateLoading(true);
-    window.vscodeApi?.postMessage({ command: "repairMemoryBank" });
+    window.vscodeApi?.postMessage({ command: 'repairMemoryBank' });
     setUpdateLoading(false);
   }, []);
 
@@ -50,22 +54,25 @@ export function MemoryBankStatus({
     // Setup message listener
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
-      sendLog(`Received message in memory-bank-status: ${message.type}`, 'info', { action: 'handleMessage', messageType: message.type });
+      sendLog(`Received message in memory-bank-status: ${message.type}`, 'info', {
+        action: 'handleMessage',
+        messageType: message.type,
+      });
       switch (message.type) {
-        case "memoryBankStatus":
+        case 'memoryBankStatus':
           setIsMemoryBankInitialized(message.initialized);
           setIsLoading(false);
           break;
       }
     };
 
-    window.addEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
 
     // Request initial memory bank status
     requestMemoryBankStatus();
 
     return () => {
-      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('message', handleMessage);
     };
   }, [requestMemoryBankStatus]);
 
@@ -81,19 +88,16 @@ export function MemoryBankStatus({
         {!isLoading && (
           <span
             className={cn(
-              isMemoryBankInitialized
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800",
-              "px-2 py-0.5 rounded-full text-xs font-semibold"
+              isMemoryBankInitialized ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800',
+              'px-2 py-0.5 rounded-full text-xs font-semibold'
             )}
           >
-            {isMemoryBankInitialized ? "Initialized" : "Missing"}
+            {isMemoryBankInitialized ? 'Initialized' : 'Missing'}
           </span>
         )}
       </div>
       <span className="text-xs text-muted-foreground mt-1">
-        Tip: Type "Initialise memory bank" in cursor to start the initialisation
-        process.
+        Tip: Type "Initialise memory bank" in cursor to start the initialisation process.
       </span>
       {/* Memory bank action buttons */}
       <div className="grid grid-cols-2 gap-2 mt-2 w-full max-w-md">
@@ -103,7 +107,7 @@ export function MemoryBankStatus({
           onClick={handleInitializeMemoryBank}
           disabled={isLoading || initLoading}
         >
-          {initLoading ? "Initialising..." : "Initialise Memory Bank"}
+          {initLoading ? 'Initialising...' : 'Initialise Memory Bank'}
         </button>
         <button
           type="button"
@@ -111,7 +115,7 @@ export function MemoryBankStatus({
           onClick={handleRepairMemoryBank}
           disabled={isLoading || updateLoading}
         >
-          {updateLoading ? "Repairing..." : "Repair Memory Bank"}
+          {updateLoading ? 'Repairing...' : 'Repair Memory Bank'}
         </button>
         <button
           type="button"
@@ -119,7 +123,7 @@ export function MemoryBankStatus({
           onClick={handleUpdateMemoryBank}
           disabled={isLoading || updateLoading}
         >
-          {updateLoading ? "Updating..." : "Update Memory Bank"}
+          {updateLoading ? 'Updating...' : 'Update Memory Bank'}
         </button>
         <button
           type="button"
@@ -127,7 +131,7 @@ export function MemoryBankStatus({
           onClick={onReviewAllFiles}
           disabled={isLoading || reviewLoading}
         >
-          {reviewLoading ? "Reviewing..." : "Review All Files"}
+          {reviewLoading ? 'Reviewing...' : 'Review All Files'}
         </button>
       </div>
     </div>

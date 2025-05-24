@@ -4,34 +4,34 @@ export interface MCPOptions {
 
 export enum MemoryBankFileType {
   // Core
-  ProjectBrief = "core/projectbrief.md",
-  ProductContext = "core/productContext.md",
-  ActiveContext = "core/activeContext.md",
+  ProjectBrief = 'core/projectbrief.md',
+  ProductContext = 'core/productContext.md',
+  ActiveContext = 'core/activeContext.md',
 
   // System Patterns
-  SystemPatternsIndex = "systemPatterns/index.md",
-  SystemPatternsArchitecture = "systemPatterns/architecture.md",
-  SystemPatternsPatterns = "systemPatterns/patterns.md",
-  SystemPatternsScanning = "systemPatterns/scanning.md",
+  SystemPatternsIndex = 'systemPatterns/index.md',
+  SystemPatternsArchitecture = 'systemPatterns/architecture.md',
+  SystemPatternsPatterns = 'systemPatterns/patterns.md',
+  SystemPatternsScanning = 'systemPatterns/scanning.md',
 
   // Tech Context
-  TechContextIndex = "techContext/index.md",
-  TechContextStack = "techContext/stack.md",
-  TechContextDependencies = "techContext/dependencies.md",
-  TechContextEnvironment = "techContext/environment.md",
+  TechContextIndex = 'techContext/index.md',
+  TechContextStack = 'techContext/stack.md',
+  TechContextDependencies = 'techContext/dependencies.md',
+  TechContextEnvironment = 'techContext/environment.md',
 
   // Progress
-  ProgressIndex = "progress/index.md",
-  ProgressCurrent = "progress/current.md",
-  ProgressHistory = "progress/history.md",
+  ProgressIndex = 'progress/index.md',
+  ProgressCurrent = 'progress/current.md',
+  ProgressHistory = 'progress/history.md',
 
   // Legacy flat files (for migration/compatibility)
-  ProjectBriefFlat = "projectbrief.md",
-  ProductContextFlat = "productContext.md",
-  ActiveContextFlat = "activeContext.md",
-  SystemPatternsFlat = "systemPatterns.md",
-  TechContextFlat = "techContext.md",
-  ProgressFlat = "progress.md",
+  ProjectBriefFlat = 'projectbrief.md',
+  ProductContextFlat = 'productContext.md',
+  ActiveContextFlat = 'activeContext.md',
+  SystemPatternsFlat = 'systemPatterns.md',
+  TechContextFlat = 'techContext.md',
+  ProgressFlat = 'progress.md',
 }
 
 export interface MemoryBankFile {

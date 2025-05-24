@@ -6,7 +6,7 @@
 
 _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
 
-_Last updated: 2025-05-17_
+_Last updated: 2025-05-24_
 
 ---
 
@@ -18,15 +18,19 @@ _Last updated: 2025-05-17_
 	3. [✨ Features](#-features)
 	4. [🖼 Visuals](#-visuals)
 	5. [🛠 Installation](#-installation)
-		1. [From Cursor Extension Panel (Recommended)](#from-cursor-extension-panel-recommended)
+		1. [**WiP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		2. [From VSIX File](#from-vsix-file)
 	6. [⚡ Quick Start](#-quick-start)
+		1. [Development Commands](#development-commands)
 	7. [💡 Usage Examples](#-usage-examples)
 	8. [🗂 Project Structure](#-project-structure)
+		1. [Key Configuration Files](#key-configuration-files)
 	9. [⚙️ Configuration](#️-configuration)
+		1. [Development Configuration](#development-configuration)
 	10. [🔄 Migration](#-migration)
 	11. [🛠 Troubleshooting](#-troubleshooting)
 	12. [🤝 Contributing](#-contributing)
+		 1. [Development Standards](#development-standards)
 	13. [📬 Support \& Contact](#-support--contact)
 	14. [📜 License](#-license)
 	15. [🔗 Links \& Docs](#-links--docs)
@@ -49,6 +53,7 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 - **Self-Healing**: Auto-creates missing files/folders from templates. Manual repair available via webview.
 - **Migration Logic**: Detects and migrates flat memory banks to modular structure with user consent.
 - **/memory Commands**: Interact directly with the memory bank from Cursor chat (e.g., `/memory status`, `/memory list`, `/memory read <filename>`).
+- **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, ESBuild for compilation.
 - **Version Control Ready**: Modular structure supports future versioning, remote/cloud, and visualisation features.
 
 ---
@@ -65,12 +70,14 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 ## 🛠 Installation
 
 ### **WiP:** From Cursor Extension Panel (Recommended)
+
 1. Open Cursor
 2. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X)
 3. Search for "AI Memory"
 4. Click Install
 
 ### From VSIX File
+
 1. Download the latest `.vsix` from [GitHub releases](https://github.com/sm-moshi/aimemory/releases)
 2. In Cursor, open the Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
 3. Run "Extensions: Install from VSIX..." and select the file
@@ -81,7 +88,7 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 
 ```bash
 pnpm install
-pnpm run compile
+pnpm run build
 # Press F5 in Cursor to launch the extension
 ```
 
@@ -90,22 +97,44 @@ pnpm run compile
 - Click **Initialise Memory Bank**
 - Use `/memory` commands in Cursor chat
 
+### Development Commands
+
+```bash
+# Build extension and webview
+pnpm run build
+
+# Development with hot reload
+pnpm run dev
+
+# Lint and format code
+pnpm run lint:fix
+
+# Run tests
+pnpm run test:unit
+```
+
 ---
 
 ## 💡 Usage Examples
 
 - **Check memory status:**
+
   ```
   /memory status
   ```
+
 - **List memory files:**
+
   ```
   /memory list
   ```
+
 - **Read a memory file:**
+
   ```
   /memory read core/projectbrief.md
   ```
+
 - **Repair memory bank:**
   - Use the "Repair Memory Bank" button in the webview
 
@@ -119,6 +148,16 @@ pnpm run compile
 | `memory-bank/` | Modular, persistent project memory           |
 | `docs/`        | Public documentation, guides, and plans      |
 | `dist/`        | Packaged extension and assets                |
+| `.vscode/`     | VS Code workspace configuration              |
+
+### Key Configuration Files
+
+| File              | Purpose                                      |
+| ----------------- | -------------------------------------------- |
+| `biome.json`      | Biome linting and formatting configuration   |
+| `package.json`    | Dependencies and build scripts               |
+| `tsconfig.json`   | TypeScript compiler configuration           |
+| `esbuild.js`      | Extension and MCP server build configuration |
 
 See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 
@@ -129,6 +168,13 @@ See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 - All required files are auto-created if missing.
 - No manual configuration is required for basic use.
 - Advanced settings and customisation coming soon.
+
+### Development Configuration
+
+- **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
+- **TypeScript**: Strict configuration for type safety
+- **VS Code**: Workspace includes recommended extensions (Biome)
+- **Build**: ESBuild for fast compilation
 
 ---
 
@@ -153,9 +199,24 @@ See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 ## 🤝 Contributing
 
 We welcome contributions! Please see:
+
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Unified Ruleset](vsix-extension.mdc)
+
+### Development Standards
+
+- **Code Quality**: All code is automatically formatted with [Biome](https://biomejs.dev/)
+- **Type Safety**: Strict TypeScript configuration enforced
+- **Testing**: Unit tests required for new features
+- **Pre-commit**: Run `pnpm run lint:fix` before committing
+
+```bash
+# Before committing
+pnpm run lint:fix
+pnpm run test:unit
+pnpm run build
+```
 
 > **Branching:** We use [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/). Please branch from `develop` and use `feature/*` for new features.
 

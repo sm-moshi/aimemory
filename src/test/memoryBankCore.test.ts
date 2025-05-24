@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as memoryBankCore from '../core/memoryBankCore.js';
 import { MemoryBankFileType } from '../types/types.js';
 
@@ -19,23 +19,31 @@ describe('memoryBankCore', () => {
   });
 
   it('updateMemoryBankFile writes the correct file', async () => {
-    await expect(memoryBankCore.updateMemoryBankFile(MemoryBankFileType.ProjectBrief, 'new content')).resolves.toBeUndefined();
+    await expect(
+      memoryBankCore.updateMemoryBankFile(MemoryBankFileType.ProjectBrief, 'new content')
+    ).resolves.toBeUndefined();
   });
 
   it('getMemoryBankTools returns handlers that call the correct functions', async () => {
     const tools = memoryBankCore.getMemoryBankTools();
-    const readTool = tools.find(t => t.name === 'read-memory-bank-file');
-    const updateTool = tools.find(t => t.name === 'update-memory-bank-file');
+    const readTool = tools.find((t) => t.name === 'read-memory-bank-file');
+    const updateTool = tools.find((t) => t.name === 'update-memory-bank-file');
     expect(readTool).toBeDefined();
     expect(updateTool).toBeDefined();
     if (readTool && updateTool) {
-      const readResult = await readTool.handler({ fileType: MemoryBankFileType.ProjectBrief, content: '' });
+      const readResult = await readTool.handler({
+        fileType: MemoryBankFileType.ProjectBrief,
+        content: '',
+      });
       if ('content' in readResult) {
         expect(readResult.content).toBe('mock file content');
       } else {
         throw new Error('readTool.handler did not return expected result');
       }
-      const updateResult = await updateTool.handler({ fileType: MemoryBankFileType.ProjectBrief, content: 'abc' });
+      const updateResult = await updateTool.handler({
+        fileType: MemoryBankFileType.ProjectBrief,
+        content: 'abc',
+      });
       if ('success' in updateResult) {
         expect(updateResult.success).toBe(true);
       } else {

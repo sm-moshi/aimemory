@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { registerMemoryBankPrompts } from '../lib/mcp-prompts-registry.js';
 
 describe('registerMemoryBankPrompts', () => {
@@ -7,7 +7,7 @@ describe('registerMemoryBankPrompts', () => {
     const mockServer = {
       prompt: (name: string, fn: any) => {
         registered.push(name);
-      }
+      },
     };
     // @ts-expect-error: partial mock is fine for this test
     registerMemoryBankPrompts(mockServer);

@@ -1,9 +1,9 @@
 // Type for log levels
-export type WebviewLogLevel = "info" | "error";
+export type WebviewLogLevel = 'info' | 'error';
 
 // Type for log messages sent from webview to extension
 export interface WebviewLogMessage {
-  command: "logMessage";
+  command: 'logMessage';
   level: WebviewLogLevel;
   text: string;
   meta?: Record<string, unknown>;
@@ -16,7 +16,7 @@ export type WebviewMessage = WebviewLogMessage; // | OtherMessageTypes
 export const postMessage = (message: WebviewMessage) => {
   if (window.vscodeApi) {
     window.vscodeApi.postMessage(message);
-    console.log("Message sent:", message);
+    console.log('Message sent:', message);
   } else {
     console.warn("VSCode API not available, can't send message:", message);
   }
@@ -30,11 +30,11 @@ export const postMessage = (message: WebviewMessage) => {
  */
 export function sendLog(
   text: string,
-  level: WebviewLogLevel = "info",
+  level: WebviewLogLevel = 'info',
   meta?: Record<string, unknown>
 ) {
   const message: WebviewLogMessage = {
-    command: "logMessage",
+    command: 'logMessage',
     level,
     text,
     meta,
