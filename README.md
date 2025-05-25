@@ -174,7 +174,7 @@ See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 - **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
 - **Type Safety**: Strict TypeScript configuration enforced
 - **VS Code**: Workspace includes recommended extensions (Biome)
-- **Build**: ESBuild for fast compilation
+- **Build**: SWC for fast and efficient compilation
 
 ---
 
