@@ -38,62 +38,17 @@ export class MemoryBankService implements MemoryBank {
 	async getIsMemoryBankInitialized(): Promise<boolean> {
 		try {
 			Logger.getInstance().info("Checking if memory bank is initialised...");
-			const isDirectoryExists = await fs
-				.stat(this._memoryBankFolder)
-				.then((stat) => stat.isDirectory())
-				.catch(() => false);
-			if (!isDirectoryExists) {
-				Logger.getInstance().info("Memory bank folder does not exist.");
+
+			if (!(await this.checkDirectoryExists())) {
 				return false;
 			}
 
-			const missingOrInvalidFiles: string[] = [];
-			const filesToInvalidate: string[] = [];
+			const { missingFiles, filesToInvalidate } = await this.validateAllFiles();
+			this.invalidateMissingFiles(filesToInvalidate);
 
-			for (const fileType of Object.values(MemoryBankFileType)) {
-				if (fileType.includes("/")) {
-					const filePath = path.join(this._memoryBankFolder, fileType);
-					let stats: Stats | undefined;
-					try {
-						stats = await fs.stat(filePath);
-						if (!stats.isFile()) {
-							missingOrInvalidFiles.push(fileType);
-							filesToInvalidate.push(filePath);
-							Logger.getInstance().info(
-								`Checked file: ${fileType} - Exists: false (not a file)`,
-							);
-							this._cacheStats.misses++;
-						} else {
-							const cached = this._fileCache.get(filePath);
-							if (cached && cached.mtimeMs === stats.mtimeMs) {
-								this._cacheStats.hits++;
-							} else {
-								this._cacheStats.misses++;
-							}
-							Logger.getInstance().info(`Checked file: ${fileType} - Exists: true`);
-						}
-					} catch {
-						missingOrInvalidFiles.push(fileType);
-						filesToInvalidate.push(filePath);
-						Logger.getInstance().info(`Checked file: ${fileType} - Exists: false`);
-						this._cacheStats.misses++;
-					}
-				}
-			}
-
-			// Invalidate cache for missing/invalid files only
-			for (const filePath of filesToInvalidate) {
-				if (this._fileCache.has(filePath)) {
-					this._fileCache.delete(filePath);
-					Logger.getInstance().info(
-						`Cache invalidated for missing/invalid file: ${filePath}`,
-					);
-				}
-			}
-
-			if (missingOrInvalidFiles.length > 0) {
+			if (missingFiles.length > 0) {
 				Logger.getInstance().info(
-					`Memory bank is NOT initialised. Missing/invalid files: ${missingOrInvalidFiles.join(", ")}`,
+					`Memory bank is NOT initialised. Missing/invalid files: ${missingFiles.join(", ")}`,
 				);
 				return false;
 			}
@@ -105,6 +60,101 @@ export class MemoryBankService implements MemoryBank {
 				`Error checking memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`,
 			);
 			return false;
+		}
+	}
+
+	/**
+	 * Check if the memory bank directory exists
+	 */
+	private async checkDirectoryExists(): Promise<boolean> {
+		const isDirectoryExists = await fs
+			.stat(this._memoryBankFolder)
+			.then((stat) => stat.isDirectory())
+			.catch(() => false);
+
+		if (!isDirectoryExists) {
+			Logger.getInstance().info("Memory bank folder does not exist.");
+		}
+
+		return isDirectoryExists;
+	}
+
+	/**
+	 * Validate all memory bank files and return missing files and files to invalidate
+	 */
+	private async validateAllFiles(): Promise<{
+		missingFiles: string[];
+		filesToInvalidate: string[];
+	}> {
+		const missingFiles: string[] = [];
+		const filesToInvalidate: string[] = [];
+
+		for (const fileType of Object.values(MemoryBankFileType)) {
+			if (fileType.includes("/")) {
+				const validationResult = await this.validateSingleFile(fileType);
+
+				if (!validationResult.isValid) {
+					missingFiles.push(fileType);
+					filesToInvalidate.push(validationResult.filePath);
+				}
+			}
+		}
+
+		return { missingFiles, filesToInvalidate };
+	}
+
+	/**
+	 * Validate a single memory bank file
+	 */
+	private async validateSingleFile(fileType: string): Promise<{
+		isValid: boolean;
+		filePath: string;
+	}> {
+		const filePath = path.join(this._memoryBankFolder, fileType);
+
+		try {
+			const stats = await fs.stat(filePath);
+
+			if (!stats.isFile()) {
+				Logger.getInstance().info(`Checked file: ${fileType} - Exists: false (not a file)`);
+				this._cacheStats.misses++;
+				return { isValid: false, filePath };
+			}
+
+			this.updateCacheStats(filePath, stats);
+			Logger.getInstance().info(`Checked file: ${fileType} - Exists: true`);
+			return { isValid: true, filePath };
+		} catch {
+			Logger.getInstance().info(`Checked file: ${fileType} - Exists: false`);
+			this._cacheStats.misses++;
+			return { isValid: false, filePath };
+		}
+	}
+
+	/**
+	 * Update cache statistics for a file
+	 */
+	private updateCacheStats(filePath: string, stats: Stats): void {
+		const cached = this._fileCache.get(filePath);
+
+		if (cached && cached.mtimeMs === stats.mtimeMs) {
+			this._cacheStats.hits++;
+		} else {
+			this._cacheStats.misses++;
+		}
+	}
+
+	/**
+	 * Invalidate cache entries for missing files
+	 */
+	private invalidateMissingFiles(filesToInvalidate: string[]): void {
+		for (const filePath of filesToInvalidate) {
+			if (this._fileCache.has(filePath)) {
+				this._fileCache.delete(filePath);
+				Logger.getInstance().info(
+					`Cache invalidated for missing/invalid file: ${filePath}`,
+				);
+			}
 		}
 	}
 

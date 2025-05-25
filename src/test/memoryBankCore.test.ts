@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as memoryBankCore from "../core/memoryBankCore.js";
 import { MemoryBankFileType } from "../types/types.js";
 

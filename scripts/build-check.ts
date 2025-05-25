@@ -21,6 +21,7 @@ function runCommand(command: string) {
 		execSync(command, { stdio: "inherit" });
 	} catch (err) {
 		console.error(`❌ Command failed: ${command}`);
+		console.error(`Error details: ${err instanceof Error ? err.message : String(err)}`);
 		process.exit(1);
 	}
 }

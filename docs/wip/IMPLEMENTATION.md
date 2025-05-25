@@ -11,7 +11,8 @@ _For a high-level overview, see [ROADMAP.md](./ROADMAP.md). For setup, see [QUIC
 The AI Memory extension is now fully modular and Cursor-first, with VS Code compatibility as a bonus. It consists of the following core components:
 
 1. **MemoryBankService (`src/core/memoryBank.ts`)**: Manages the _modular_ memory bank files (`core/`, `systemPatterns/`, `techContext/`, `progress/` subfolders) on disk. All file operations are async and robust, with explicit readiness checks, error handling, and self-healing (auto-creation of missing files/folders). Migration from legacy flat structures is complete.
-2. **MemoryBankMCPServer (`src/mcp/mcpServer.ts`)**: Implements the MCP server using the MCP SDK. Exposes the modular memory bank via resources and tools. All endpoints/tools check memory-bank readiness and fail gracefully if not initialised. Automatic port failover and robust error handling are included. (Express removal is in progress; MCP SDK/Node APIs are the target.)
+2. **MemoryBankMCPServer (`src/mcp/mcpServer.ts`)**: @deprecated - Express-based MCP server implementation, replaced by STDIO transport in Phase 1d. Now exists as a stub for reference only.
+   **MemoryBankMCPAdapter (`src/mcp/mcpAdapter.ts`)**: The current STDIO-based MCP server implementation using the official MCP SDK. Manages child process communication and provides all memory bank tools/resources via STDIO transport.
 3. **CommandHandler (`src/commandHandler.ts`)**: Processes direct `/memory` commands in Cursor, primarily providing status and delegating actions to MCP tools.
 4. **WebviewManager (`src/webview/webviewManager.ts`)**: Manages the dashboard webview. Features "Initialise Memory Bank" and "Update Memory Bank" buttons for direct user interaction, with clear feedback and error handling. CSP and asset loading issues have been addressed.
 5. **Extension (`src/extension.ts`)**: The main VSCode/Cursor extension entry point. Handles activation, initiates memory bank checks, starts the MCP server, registers commands, and manages the webview.
@@ -27,7 +28,7 @@ _For more on the tech stack, see: [Vite Guide](https://vitejs.dev/guide/), [Reac
   - Unified TypeScript configs (single root config, only separate for webview if needed)
   - Streamlined build scripts (esbuild for Node/extension/server, vite for webview)
   - Rationalised ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
-- Express removal is still in progress; MCP SDK/Node APIs are the target for all server logic.
+- **Express removal completed in Phase 1d**: Extension now uses STDIO transport exclusively via MemoryBankMCPAdapter.
 
 ---
 
@@ -286,7 +287,7 @@ external: [
 - Support remote memory banks.
 - Add visualisation tools for memory bank relationships (potentially via the webview).
 - Improve robustness and error handling for all components.
-- Complete Express removal and migrate to pure MCP SDK/Node APIs for all server logic.
+- ✅ **Completed**: Express removal and migration to STDIO transport (Phase 1d).
 
 ---
 
