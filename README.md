@@ -6,7 +6,7 @@
 
 _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
 
-_Last updated: 2025-05-24_
+> _Last updated: 2025-05-25_
 
 ---
 
@@ -119,19 +119,19 @@ pnpm run test:unit
 
 - **Check memory status:**
 
-  ```
+  ```text
   /memory status
   ```
 
 - **List memory files:**
 
-  ```
+  ```text
   /memory list
   ```
 
 - **Read a memory file:**
 
-  ```
+  ```text
   /memory read core/projectbrief.md
   ```
 
@@ -172,7 +172,7 @@ See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 ### Development Configuration
 
 - **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
-- **TypeScript**: Strict configuration for type safety
+- **Type Safety**: Strict TypeScript configuration enforced
 - **VS Code**: Workspace includes recommended extensions (Biome)
 - **Build**: ESBuild for fast compilation
 
@@ -242,7 +242,6 @@ pnpm run build
 - [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)
 - [Implementation Guide](docs/wip/IMPLEMENTATION.md)
 - [Roadmap](docs/wip/ROADMAP.md)
-- [Unified Ruleset](vsix-extension.mdc)
 - [GitHub Repository Best Practices](docs/devs/github-repo-guide.md)
 
 ---
