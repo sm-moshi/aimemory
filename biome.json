@@ -6,72 +6,57 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": false,
 		"ignore": [
-			"dist/**",
-			"node_modules/**",
-			"**/*.d.ts",
+			"**/dist/**",
+			"**/out/**",
+			"**/node_modules/**",
+			"**/coverage/**",
 			".vscode-test/**",
-			"coverage/**"
+			".cursor/**",
+			".repomix/**"
 		]
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "space",
-		"indentWidth": 2,
+		"indentStyle": "tab",
+		"indentWidth": 4,
 		"lineWidth": 100
-	},
-	"organizeImports": { "enabled": true },
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"style": {
-				"useBlockStatements": "warn",
-				"noNonNullAssertion": "off"
-			},
-			"suspicious": {
-				"noDoubleEquals": "warn",
-				"noExplicitAny": "off"
-			},
-			"complexity": {
-				"noBannedTypes": "off"
-			}
-		}
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "single",
-			"semicolons": "always",
-			"trailingCommas": "es5"
-		},
-		"globals": [ ]
+			"quoteStyle": "double",
+			"jsxQuoteStyle": "double",
+			"trailingCommas": "all",
+			"semicolons": "always"
+		}
+	},
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
 	},
 	"overrides": [
 		{
-			"include": [ "**/*.ts", "**/*.tsx" ],
-			"javascript": {
-				"formatter": {
-					"quoteStyle": "single",
-					"semicolons": "always",
-					"trailingCommas": "es5"
-				}
-			},
-			"linter": {
-				"rules": {
-					"style": {
-						"useImportType": "warn"
-					}
-				}
-			}
-		},
-		{
-			"include": [ "**/*.test.ts", "**/*.test.tsx" ],
+			"include": ["**/*.test.ts", "**/*.test.tsx"],
 			"linter": {
 				"rules": {
 					"suspicious": {
 						"noExplicitAny": "off"
 					}
+				}
+			}
+		},
+		{
+			"include": ["src/webview/**/*.{ts,tsx}"],
+			"javascript": {
+				"formatter": {
+					"quoteStyle": "double",
+					"jsxQuoteStyle": "double",
+					"lineWidth": 100
 				}
 			}
 		}

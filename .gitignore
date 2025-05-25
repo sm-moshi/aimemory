@@ -1,13 +1,25 @@
-node_modules/
+# Build artifacts
 dist/
+**/coverage/**
+!**/coverage/lcov.info
+.vscode-test/
+*.tsbuildinfo
+
+# Node
+node_modules/
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Cursor
+.cursor/
+memory-bank/*.md
+**/.log
+docs/devs/
+
+# Others
 out/
 .repomix/
 *.vsix
-.vscode-test/user-data/
-.vscode-test/vscode-darwin-arm64-1.96.2/
-memory-bank/*.md
-.cursor/rules/*.mdc
-!.cursor/rules/memory-bank.mdc
-logs/
-docs/devs/
-coverage/

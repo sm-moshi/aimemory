@@ -12,6 +12,7 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 | `/docs/maybe/`        | Private, unvetted, or personal notes (gitignored) | (not tracked)                                                       |
 
 ## 📚 Main Docs
+
 - [Quickstart Guide](./guides/QUICKSTART.md)
 - [Migration Guide](./guides/MIGRATION_GUIDE.md)
 - [Implementation Guide](./wip/IMPLEMENTATION.md)
@@ -23,6 +24,7 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 - [MCP Server Guide](./wip/MCP_SERVER.md)
 
 ## 🛠️ Migration Checklist
+
 - [x] Move user guides to `/docs/guides/`
 - [x] Move experimental docs to `/docs/experimental/`
 - [x] Move WIP docs to `/docs/wip/`
@@ -31,6 +33,7 @@ Welcome to the AI Memory documentation! This index explains the new folder struc
 - [x] Move advanced/experimental docs to `/docs/wip/` as they stabilise
 
 ## 📝 Notes
+
 - Each folder contains a `README.md` or `index.md` for navigation.
 - `/docs/maybe/` is for private notes and is not tracked in git.
 - This index is up to date as of the latest restructure. 🐹
