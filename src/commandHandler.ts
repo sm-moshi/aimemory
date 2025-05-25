@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import type { MemoryBankMCPServer } from "./mcp/mcpServer.js";
+import type { MCPServerInterface } from "./types/mcpTypes.js";
 import type { MemoryBankFile } from "./types/types.js";
 
 export class CommandHandler {
-	constructor(private mcpServer: MemoryBankMCPServer) {}
+	constructor(private mcpServer: MCPServerInterface) {}
 
 	/**
 	 * Process a /memory command sent in the Cursor AI input

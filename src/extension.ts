@@ -4,6 +4,8 @@ import * as http from "node:http";
 import * as vscode from "vscode";
 import { CommandHandler } from "./commandHandler.js";
 import { MemoryBankMCPServer } from "./mcp/mcpServer.js";
+import { MemoryBankMCPAdapter } from "./mcp/mcpAdapter.js";
+import type { MCPServerInterface } from "./types/mcpTypes.js";
 import { updateCursorMCPConfig } from "./utils/cursor-config.js";
 import { LogLevel, Logger } from "./utils/log.js";
 import { WebviewManager } from "./webview/webviewManager.js";
@@ -93,8 +95,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	console.log("Registering open webview command");
 
-	// Create MCP server instance first
-	const mcpServer = new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
+		// Create MCP server instance - choose between Express and STDIO based on config
+	const useStdioTransport = config.get<boolean>("useStdioTransport") || false;
+	const mcpServer: MCPServerInterface = useStdioTransport
+		? new MemoryBankMCPAdapter(context, DEFAULT_MCP_PORT)
+		: new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
 
 	// Create webview manager
 	const webviewManager = new WebviewManager(context, mcpServer);
