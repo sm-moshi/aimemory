@@ -1,6 +1,7 @@
 # Source code (only dist/ is needed)
 src/
 src/webview/src/
+!dist/**
 
 # Tests and coverage
 **/*.test.*
