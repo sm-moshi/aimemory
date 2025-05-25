@@ -1,6 +1,6 @@
 # AI Memory Extension Guides Index
 
-_Last updated: 2025-05-17 🐹_
+> _Last updated: 2025-05-25 🐹_
 
 This folder contains user-facing guides for AI Memory:
 

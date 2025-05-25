@@ -1,6 +1,6 @@
 # AI Memory Extension Troubleshooting Guide
 
-_Last updated: 2025-05-17 🐹_
+> _Last updated: 2025-05-25 🐹_
 
 This guide helps you diagnose and resolve common issues with the AI Memory extension for Cursor and VS Code, focusing on MCP, webview, and modular memory bank workflows.
 
@@ -11,6 +11,7 @@ _For setup, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IM
 ## 🛠️ Common Issues & Solutions
 
 ### 1. MCP Server Connection Problems
+
 - **Check if the MCP server is running**:
   Run `AI Memory: Start MCP` from the Command Palette.
   Visit `http://localhost:7331/health` (or fallback port) in your browser.
@@ -20,6 +21,7 @@ _For setup, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IM
   Ensure your firewall allows local connections.
 
 ### 2. Webview UI Issues
+
 - **Blank dashboard**:
   Caused by Content Security Policy (CSP) or asset loading issues.
   Ensure you are using the latest version of the extension.
@@ -27,6 +29,7 @@ _For setup, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IM
   Ensure the MCP server is running. Reload the webview or restart Cursor/VS Code.
 
 ### 3. Memory Bank Migration & Self-Healing
+
 - **Migration prompt not appearing**:
   Ensure you have a flat memory bank structure and no modular folders. Restart the extension to trigger migration detection.
 - **Files not migrated or missing**:
@@ -35,10 +38,12 @@ _For setup, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IM
   Missing or incomplete files are auto-created and logged in the Output Channel and webview.
 
 ### 4. SSE/Streaming Errors
+
 - **"Client closed" or dropped connections**:
   Ensure keepalive pings are being sent (see extension output).
 
 ### 5. Debugging Tips
+
 - Use "Developer: Toggle Developer Tools" in Cursor/VS Code to inspect console logs.
 - Check the extension output panel for detailed logs.
 
@@ -68,4 +73,4 @@ _For setup, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IM
 - [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
 
 How Cursor rules work?
-https://forum.cursor.com/t/my-best-practices-for-mdc-rules-and-troubleshooting/50526
+<https://forum.cursor.com/t/my-best-practices-for-mdc-rules-and-troubleshooting/50526>

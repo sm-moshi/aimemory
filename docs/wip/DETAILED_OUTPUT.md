@@ -1,7 +1,7 @@
 # 📝 AI Memory Extension: Logging & Output Channel (Advanced Guide)
 
 > **Status:** Experimental features. For maintainers and advanced users.
-> _Last updated: 2025-05-17 🐹_
+> _Last updated: 2025-05-25 🐹_
 
 ## Purpose
 
@@ -45,6 +45,7 @@ This document describes the advanced logging system for the AI Memory extension,
 - **Logger Singleton:**
   Ensures only one Output Channel is used.
   Example usage:
+
   ```ts
   import { Logger, LogLevel } from "./utils/log";
   const logger = Logger.getInstance();
@@ -53,10 +54,13 @@ This document describes the advanced logging system for the AI Memory extension,
 
 - **Webview Log Forwarding:**
   In the webview:
+
   ```ts
   sendLog("Initialise failed", "error", { tool: "initialize-memory-bank" });
   ```
+
   In the extension:
+
   ```ts
   case "logMessage":
     logger.log(level, message.text, message.meta);

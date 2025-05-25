@@ -4,9 +4,9 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "build:extension",
+			"label": "build",
 			"type": "shell",
-			"command": "pnpm build",
+			"command": "pnpm run build",
 			"group": "build",
 			"presentation": {
 				"reveal": "always"
@@ -14,9 +14,9 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "build:cli",
+			"label": "build:full",
 			"type": "shell",
-			"command": "pnpm build",
+			"command": "pnpm run build:full",
 			"group": "build",
 			"presentation": {
 				"reveal": "always"
@@ -24,9 +24,9 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "watch",
+			"label": "watch:rollup",
 			"type": "shell",
-			"command": "pnpm dev",
+			"command": "pnpm run watch:rollup",
 			"group": "build",
 			"isBackground": true,
 			"presentation": {
@@ -35,9 +35,111 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "dev",
+			"type": "shell",
+			"command": "pnpm run dev",
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "webview:dev",
+			"type": "shell",
+			"command": "cd src/webview && pnpm run dev",
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "webview:build",
+			"type": "shell",
+			"command": "cd src/webview && pnpm run build",
+			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "pnpm run lint",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "lint:fix",
+			"type": "shell",
+			"command": "pnpm run lint:fix",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "format",
+			"type": "shell",
+			"command": "pnpm run format",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "check-types",
+			"type": "shell",
+			"command": "pnpm run check-types",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": ["$tsc"]
+		},
+		{
 			"label": "test",
 			"type": "shell",
-			"command": "pnpm test",
+			"command": "pnpm run test",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "test:coverage",
+			"type": "shell",
+			"command": "pnpm run test:coverage",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "webview:test",
+			"type": "shell",
+			"command": "cd src/webview && pnpm run test",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "webview:test:coverage",
+			"type": "shell",
+			"command": "cd src/webview && pnpm run test:coverage",
 			"group": "test",
 			"presentation": {
 				"reveal": "always"
@@ -47,7 +149,27 @@
 		{
 			"label": "package",
 			"type": "shell",
-			"command": "pnpm package",
+			"command": "pnpm run package",
+			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "build-check",
+			"type": "shell",
+			"command": "pnpm run build-check",
+			"group": "test",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "update-docs-date",
+			"type": "shell",
+			"command": "pnpm run update-docs-date",
 			"group": "build",
 			"presentation": {
 				"reveal": "always"

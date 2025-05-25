@@ -2,5 +2,31 @@
 	"sonarlint.connectedMode.project": {
 		"connectionId": "sm-moshi-org",
 		"projectKey": "sm-moshi_aimemory"
-	}
+	},
+	"editor.wordWrap": "wordWrapColumn",
+	"editor.wordWrapColumn": 100,
+	"dependi.rust.enabled": false,
+	"dependi.npm.unstableFilter": "IncludeAlways",
+	"dependi.npm.informPatchUpdates": true,
+	"dependi.go.enabled": false,
+	"dependi.python.enabled": false,
+	"dependi.php.enabled": false,
+	"dependi.dart.enabled": false,
+	"dependi.vulnerability.ghsa.enabled": true,
+	"cursorStats.currency": "EUR",
+	"cursorStats.enableLogging": true,
+	"eslint.enable": true,
+	"biome.rename": true,
+	"vitest.experimentalStaticAstCollect": true,
+	"javascript.referencesCodeLens.enabled": true,
+	"javascript.updateImportsOnPaste.enabled": true,
+	"js/ts.implicitProjectConfig.checkJs": true,
+	"typescript.implementationsCodeLens.enabled": true,
+	"typescript.implementationsCodeLens.showOnInterfaceMethods": true,
+	"typescript.preferences.preferTypeOnlyAutoImports": true,
+	"typescript.referencesCodeLens.enabled": true,
+	"typescript.suggest.completeFunctionCalls": true,
+	"typescript.tsserver.experimental.enableProjectDiagnostics": true,
+	"typescript.updateImportsOnPaste.enabled": true,
+	"typescript.workspaceSymbols.scope": "currentProject"
 }

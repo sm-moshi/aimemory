@@ -12,16 +12,14 @@
       "outFiles": [
         "${workspaceFolder}/dist/**/*.js"
       ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Debug MCP CLI Server",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/dist/index.js",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Attach to Process",

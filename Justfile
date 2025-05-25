@@ -148,7 +148,6 @@ ready: pre-commit build-check
 
 # Quick development commands
 quick-build: typecheck build
-quick-test: lint test-unit
 quick-fix: lint-fix format
 
 # Restore pnpm environment after packaging

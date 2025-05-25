@@ -6,7 +6,7 @@
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"engines": {
 		"vscode": "^1.96.2"
 	},
@@ -98,7 +98,6 @@
 		"rollup": "4.41.1",
 		"rollup-plugin-copy": "3.5.0",
 		"rollup-plugin-dts": "6.2.1",
-		"rollup-plugin-esbuild": "6.2.1",
 		"tsx": "4.19.4",
 		"typescript": "5.8.3",
 		"undici-types": "7.10.0",
@@ -116,13 +115,7 @@
 			"jwa": "2.0.1"
 		},
 		"ignoredBuiltDependencies": ["keytar"],
-		"onlyBuiltDependencies": [
-			"@biomejs/biome",
-			"@swc/core",
-			"@vscode/vsce-sign",
-			"esbuild",
-			"keytar"
-		]
+		"onlyBuiltDependencies": ["@biomejs/biome", "@swc/core", "@vscode/vsce-sign", "keytar"]
 	},
 	"type": "module"
 }

@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 
 function checkPathExists(relativePath: string, name: string) {
@@ -16,11 +16,18 @@ function checkFileExists(relativePath: string) {
 	return existsSync(fullPath);
 }
 
-function runCommand(command: string) {
+function runCommand(command: string, args: string[]) {
 	try {
-		execSync(command, { stdio: "inherit" });
+		const result = spawnSync(command, args, {
+			stdio: "inherit",
+			shell: false, // Explicitly disable shell to prevent injection
+		});
+		if (result.status !== 0) {
+			console.error(`❌ Command failed: ${command} ${args.join(" ")}`);
+			process.exit(1);
+		}
 	} catch (err) {
-		console.error(`❌ Command failed: ${command}`);
+		console.error(`❌ Command failed: ${command} ${args.join(" ")}`);
 		process.exit(1);
 	}
 }
@@ -45,7 +52,7 @@ console.log("✅ Found: Webview JS assets");
 
 // 3. Check TypeScript configs compile
 console.log("🔧 Validating TypeScript configs...");
-runCommand("pnpm tsc --noEmit -p tsconfig.json");
-runCommand("pnpm tsc --noEmit -p src/webview/tsconfig.json");
+runCommand("pnpm", ["tsc", "--noEmit", "-p", "tsconfig.json"]);
+runCommand("pnpm", ["tsc", "--noEmit", "-p", "src/webview/tsconfig.json"]);
 
 console.log("🎉 Build check passed. You're ready to package.");

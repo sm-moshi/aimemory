@@ -1,6 +1,6 @@
 # AI Memory Extension TODO
 
-> _Up to date as of 2025-05-17. See ROADMAP.md for milestone planning. Last major refactor in progress: Express removal._
+> _Up to date as of 2025-05-25. See ROADMAP.md for milestone planning. Last major refactor in progress: Express removal._
 
 ## Core Features
 
@@ -88,4 +88,4 @@
 
 For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 
-_Last updated: 2025-05-25 🐹_
+> _Last updated: 2025-05-25 🐹_

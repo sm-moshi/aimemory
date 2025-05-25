@@ -26,15 +26,7 @@ const getCurrentDate = () => {
 };
 
 // Directories to exclude from date updates
-const EXCLUDED_DIRS = [
-	"memory-bank",
-	"src/lib/rules",
-	"node_modules",
-	".git",
-	"dist",
-	".vscode-test",
-	"coverage",
-];
+const EXCLUDED_DIRS = ["src/lib/rules", "node_modules", ".git", "dist", ".vscode-test", "coverage"];
 
 // Patterns to match and update
 const DATE_PATTERNS = [

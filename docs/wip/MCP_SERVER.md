@@ -58,6 +58,7 @@ With Cursor 0.50+, MCP servers must launch via a CLI entrypoint (stdio transport
 ## 🔍 Codebase Assessment
 
 **Strengths:**
+
 - Stdio CLI entrypoint and Cursor 0.50+ compatibility
 - Modular memory bank logic
 - Zod validation and JSON-RPC compliance
@@ -65,6 +66,7 @@ With Cursor 0.50+, MCP servers must launch via a CLI entrypoint (stdio transport
 - Webview UI for diagnostics and management
 
 **Areas to Improve:**
+
 - Full modularity (align with `create-typescript-server`)
 - Session/state management
 - Security/consent for all sensitive actions
@@ -74,10 +76,11 @@ With Cursor 0.50+, MCP servers must launch via a CLI entrypoint (stdio transport
 ---
 
 ## References
+
 - [MCP Docs](https://github.com/modelcontextprotocol/modelcontextprotocol)
 - [Cursor Docs](https://docs.cursor.com/context/model-context-protocol)
 - [create-typescript-server](https://github.com/modelcontextprotocol/create-typescript-server)
 
 ---
 
-_Last updated: 2025-05-17 🐹_
+_Last updated: 2025-05-25 🐹_

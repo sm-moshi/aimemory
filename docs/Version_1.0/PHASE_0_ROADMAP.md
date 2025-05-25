@@ -99,7 +99,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - **✅ Phase 2 Complete**: Build system modernization (Rollup + SWC) successfully implemented.
 - Express removal is the last major refactor in progress.
 - Docs, rules, and packaging are up-to-date.
-- Automated tests and advanced UI features are the next priorities.
+- Automated tests, advanced UI features are the next priorities.
 
 For a detailed, step-by-step experimental plan to safely prototype advanced MCP features (chunked file access, metadata, planner tools), see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).
 

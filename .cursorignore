@@ -2,3 +2,10 @@ archive/
 docs/maybe/
 .vscode-test/user-data/
 .vscode-test/vscode-darwin-arm64-1.96.2/
+**/node_modules/**
+memory-bank/activeContext.md
+memory-bank/productContext.md
+memory-bank/techContext.md
+memory-bank/systemPatterns.md
+memory-bank/progress.md
+memory-bank/projectbrief.md
