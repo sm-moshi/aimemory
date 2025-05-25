@@ -53,7 +53,7 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 - **Self-Healing**: Auto-creates missing files/folders from templates. Manual repair available via webview.
 - **Migration Logic**: Detects and migrates flat memory banks to modular structure with user consent.
 - **/memory Commands**: Interact directly with the memory bank from Cursor chat (e.g., `/memory status`, `/memory list`, `/memory read <filename>`).
-- **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, ESBuild for compilation.
+- **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, SWC for compilation.
 - **Version Control Ready**: Modular structure supports future versioning, remote/cloud, and visualisation features.
 
 ---
