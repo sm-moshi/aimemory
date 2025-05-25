@@ -18,7 +18,7 @@ _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabli
 	3. [✨ Features](#-features)
 	4. [🖼 Visuals](#-visuals)
 	5. [🛠 Installation](#-installation)
-		1. [**WiP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
+		1. [**WIP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		2. [From VSIX File](#from-vsix-file)
 	6. [⚡ Quick Start](#-quick-start)
 		1. [Development Commands](#development-commands)
