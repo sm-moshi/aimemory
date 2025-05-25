@@ -11,9 +11,7 @@
 		"vscode": "^1.96.2"
 	},
 	"icon": "dist/assets/icon.png",
-	"categories": [
-		"Other"
-	],
+	"categories": ["Other"],
 	"main": "./dist/extension.cjs",
 	"activationEvents": [
 		"onCommand:aimemory.startMCP",
@@ -53,14 +51,7 @@
 			"properties": {
 				"aimemory.logLevel": {
 					"type": "string",
-					"enum": [
-						"trace",
-						"debug",
-						"info",
-						"warning",
-						"error",
-						"off"
-					],
+					"enum": ["trace", "debug", "info", "warning", "error", "off"],
 					"default": "info",
 					"description": "Controls the verbosity of the AI Memory Output Channel."
 				}
@@ -69,6 +60,7 @@
 	},
 	"scripts": {
 		"build": "pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
+		"build:prod": "pnpm run check-types && NODE_ENV=production rollup -c && cd src/webview && pnpm run build",
 		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
 		"dev": "npm-run-all -p watch:rollup webview:dev",
 		"watch:rollup": "rollup -c --watch",
@@ -82,7 +74,7 @@
 		"test:unit:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:all": "pnpm run test:coverage && cd src/webview && pnpm run test:coverage && cd ../..",
-		"package": "pnpm run build && pnpm vsce package --no-dependencies",
+		"package": "pnpm run build:prod && pnpm vsce package --no-dependencies",
 		"update-docs-date": "node scripts/update-docs-date.js",
 		"build-check": "tsx scripts/build-check.ts"
 	},
@@ -118,16 +110,8 @@
 		"overrides": {
 			"jwa": "2.0.1"
 		},
-		"ignoredBuiltDependencies": [
-			"keytar"
-		],
-		"onlyBuiltDependencies": [
-			"@biomejs/biome",
-			"@swc/core",
-			"@vscode/vsce-sign",
-			"keytar"
-		]
+		"ignoredBuiltDependencies": ["keytar"],
+		"onlyBuiltDependencies": ["@biomejs/biome", "@swc/core", "@vscode/vsce-sign", "keytar"]
 	},
 	"type": "module"
-    ],
 }

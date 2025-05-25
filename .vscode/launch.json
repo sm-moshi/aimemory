@@ -10,16 +10,15 @@
         "--extensionDevelopmentPath=${workspaceFolder}"
       ],
       "outFiles": [
-        "${workspaceFolder}/dist/**/*.js"
+        "${workspaceFolder}/dist/**/*.{js,cjs}"
       ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Debug MCP CLI Server",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/index.js",
+      "program": "${workspaceFolder}/dist/index.cjs",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },

@@ -1,10 +1,10 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import * as path from "node:path";
 import type * as vscode from "vscode";
 import { MemoryBankService } from "../core/memoryBank.js";
-import { Logger } from "../utils/log.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
 import type { MemoryBankFileType } from "../types/types.js";
+import { Logger } from "../utils/log.js";
 
 /**
  * Adapter that provides the same interface as MemoryBankMCPServer

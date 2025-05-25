@@ -1,5 +1,5 @@
-import * as path from "node:path";
 import * as fs from "node:fs";
+import * as path from "node:path";
 
 // Read the markdown file content
 const memoryBankRulesContent = fs.readFileSync(

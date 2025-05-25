@@ -1,5 +1,11 @@
 {
 	"recommendations": [
-		"biomejs.biome"
+		"biomejs.biome",
+		"ms-vscode.vscode-typescript-next",
+		"bradlc.vscode-tailwindcss",
+		"esbenp.prettier-vscode",
+		"ms-vscode.test-adapter-converter",
+		"formulahendry.auto-rename-tag",
+		"christian-kohler.path-intellisense"
 	]
 }

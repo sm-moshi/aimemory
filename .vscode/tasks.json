@@ -4,7 +4,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "build:extension",
+			"label": "build:dev",
 			"type": "shell",
 			"command": "pnpm build",
 			"group": "build",
@@ -14,9 +14,19 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "build:cli",
+			"label": "build:prod",
 			"type": "shell",
-			"command": "pnpm build",
+			"command": "pnpm build:prod",
+			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": [ ]
+		},
+		{
+			"label": "build:full",
+			"type": "shell",
+			"command": "pnpm build:full",
 			"group": "build",
 			"presentation": {
 				"reveal": "always"
@@ -53,6 +63,26 @@
 				"reveal": "always"
 			},
 			"problemMatcher": []
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "pnpm lint",
+			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": [ ]
+		},
+		{
+			"label": "lint:fix",
+			"type": "shell",
+			"command": "pnpm lint:fix",
+			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": [ ]
 		}
 	]
 }

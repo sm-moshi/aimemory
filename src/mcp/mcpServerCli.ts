@@ -1,18 +1,18 @@
+import * as path from "node:path";
 // @ts-ignore
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 // @ts-ignore
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { readMemoryBankFile, updateMemoryBankFile } from "../core/memoryBankCore.js";
-import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import type { MemoryBankFileType } from "../core/memoryBankCore.js";
+import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 import {
 	INITIALIZE_MEMORY_BANK_PROMPT,
 	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
 } from "../lib/mcp-prompts.js";
-import * as path from "node:path";
 
 // Initialize memory bank service core for advanced operations
 // Note: Using process.cwd() since we're building to CommonJS and import.meta.url isn't available

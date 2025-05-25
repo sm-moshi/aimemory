@@ -51,12 +51,33 @@
 			}
 		},
 		{
-			"include": ["src/webview/**/*.{ts,tsx}"],
+			"include": ["src/webview/**/*"],
 			"javascript": {
 				"formatter": {
 					"quoteStyle": "double",
 					"jsxQuoteStyle": "double",
 					"lineWidth": 100
+				}
+			},
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
+					}
+				}
+			}
+		},
+		{
+			"include": [
+				"**/*.config.{js,ts}",
+				"**/vite.config.{js,ts}",
+				"**/rollup.config.{js,ts}"
+			],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
+					}
 				}
 			}
 		}
