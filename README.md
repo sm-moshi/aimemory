@@ -157,7 +157,7 @@ pnpm run test:unit
 | `biome.json`      | Biome linting and formatting configuration   |
 | `package.json`    | Dependencies and build scripts               |
 | `tsconfig.json`   | TypeScript compiler configuration           |
-| `esbuild.js`      | Extension and MCP server build configuration |
+| `rollup.config.js`| Extension and MCP server build configuration |
 
 See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 
