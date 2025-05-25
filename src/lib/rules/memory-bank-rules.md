@@ -11,13 +11,13 @@ Welcome to the AI Memory system. This file acts as the blueprint for how Cursor 
 
 ## Reset & Load
 
--   On every session reset, run `read-memory-bank-files()`
--   Always load:
-    -   `core/*.md`
-    -   `progress/current.md`, `progress/history.md`
-    -   `systemPatterns/index.md`
-    -   `techContext/index.md`
--   Other files are loaded lazily when contextually required
+- On every session reset, run `read-memory-bank-files()`
+- Always load:
+  - `core/*.md`
+  - `progress/current.md`, `progress/history.md`
+  - `systemPatterns/index.md`
+  - `techContext/index.md`
+- Other files are loaded lazily when contextually required
 
 ## Memory Tiering
 
@@ -29,16 +29,16 @@ Welcome to the AI Memory system. This file acts as the blueprint for how Cursor 
 
 ## File Size Guidelines
 
--   `< 15KB`: Load freely
--   `15–30KB`: Warn, consider chunking
--   `> 30KB`: Chunked access required via `chunkIndex`
--   Limit to 5 parallel loads
+- `< 15KB`: Load freely
+- `15–30KB`: Warn, consider chunking
+- `> 30KB`: Chunked access required via `chunkIndex`
+- Limit to 5 parallel loads
 
 ## Safety Rules
 
--   Never overwrite `projectBrief.md` or `productContext.md`
--   Always prompt before modifying `progress/current.md`
--   Chunk read >30KB files
+- Never overwrite `projectBrief.md` or `productContext.md`
+- Always prompt before modifying `progress/current.md`
+- Chunk read >30KB files
 
 ## Memory Bank Flow
 
@@ -98,7 +98,7 @@ flowchart TD
 | `initialize-memory-bank`   | Initial scaffolding       |
 | `update-current-plan`      | Modify current roadmap    |
 
-# Implementation Notes & Best Practices
+## Implementation Notes & Best Practices
 
 - Self-healing: The extension will auto-create any missing required files/folders on startup or access, using templates. This is considered safe and does not require user consent.
 - Shared core logic: Both CLI and extension/server must use the same context-agnostic core logic for all memory bank operations.
@@ -109,4 +109,4 @@ This file will be read by `cursor-rules-service.ts` and compiled into a `.mdc` f
 
 Cursor agents should regularly check the .cursor/rules/ directory for other rulesets that may affect project behaviour.
 
-_Last updated: 2025-05-18_
+>_Last updated: 2025-05-18_

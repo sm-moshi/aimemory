@@ -92,7 +92,7 @@ export default [
 	{
 		input: "src/mcp/mcpServerCli.ts",
 		output: {
-			file: path.join(outDir, "index.js"),
+			file: path.join(outDir, "index.cjs"),
 			format: "cjs",
 			sourcemap: !isProduction,
 			exports: "auto",

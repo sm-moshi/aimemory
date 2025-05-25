@@ -25,6 +25,7 @@
 		"**/node_modules/**",
 		"**/dist",
 		"**/coverage",
-		"**/out"
+		"**/out",
+		"**/node_modules/**",
 	]
 }
