@@ -13,11 +13,10 @@ import {
 	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
 } from "../lib/mcp-prompts.js";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 
 // Initialize memory bank service core for advanced operations
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const MEMORY_BANK_DIR = path.resolve(__dirname, "../memory-bank");
+// Note: Using process.cwd() since we're building to CommonJS and import.meta.url isn't available
+const MEMORY_BANK_DIR = path.resolve(process.cwd(), "memory-bank");
 const memoryBankCore = new MemoryBankServiceCore(MEMORY_BANK_DIR);
 
 const server = new McpServer({

@@ -47,51 +47,29 @@ export function registerMemoryBankPrompts(server: McpServer) {
 		],
 	}));
 
-	server.prompt("memory-bank-file-missing", (extra) => {
-		const fileType =
-			typeof extra === "object" &&
-			extra &&
-			"params" in extra &&
-			typeof extra.params === "object" &&
-			extra.params &&
-			"fileType" in extra.params
-				? (extra.params as { fileType?: string }).fileType || "(unknown file)"
-				: "(unknown file)";
-		return {
-			messages: [
-				{
-					role: "user",
-					content: {
-						type: "text",
-						text: MEMORY_BANK_FILE_MISSING_PROMPT(fileType),
-					},
+	server.prompt("memory-bank-file-missing", () => ({
+		messages: [
+			{
+				role: "user",
+				content: {
+					type: "text",
+					text: MEMORY_BANK_FILE_MISSING_PROMPT("(unknown file)"),
 				},
-			],
-		};
-	});
+			},
+		],
+	}));
 
-	server.prompt("memory-bank-update-confirmation", (extra) => {
-		const fileType =
-			typeof extra === "object" &&
-			extra &&
-			"params" in extra &&
-			typeof extra.params === "object" &&
-			extra.params &&
-			"fileType" in extra.params
-				? (extra.params as { fileType?: string }).fileType || "(unknown file)"
-				: "(unknown file)";
-		return {
-			messages: [
-				{
-					role: "user",
-					content: {
-						type: "text",
-						text: MEMORY_BANK_UPDATE_CONFIRMATION_PROMPT(fileType),
-					},
+	server.prompt("memory-bank-update-confirmation", () => ({
+		messages: [
+			{
+				role: "user",
+				content: {
+					type: "text",
+					text: MEMORY_BANK_UPDATE_CONFIRMATION_PROMPT("(unknown file)"),
 				},
-			],
-		};
-	});
+			},
+		],
+	}));
 
 	server.prompt("memory-bank-structure-guide", () => ({
 		messages: [

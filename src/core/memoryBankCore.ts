@@ -1,14 +1,12 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import type { MemoryBankFileType } from "../types/types.js";
 import { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
 export { MemoryBankFileType } from "../types/types.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const MEMORY_BANK_DIR = path.resolve(__dirname, "../memory-bank");
+// Note: Using process.cwd() since we're building to CommonJS and import.meta.url isn't available
+const MEMORY_BANK_DIR = path.resolve(process.cwd(), "memory-bank");
 
 const memoryBankServiceCore = new MemoryBankServiceCore(MEMORY_BANK_DIR);
 
