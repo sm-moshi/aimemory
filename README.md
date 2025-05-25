@@ -18,7 +18,6 @@ _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabli
 	3. [✨ Features](#-features)
 	4. [🖼 Visuals](#-visuals)
 	5. [🛠 Installation](#-installation)
-		1. [**WiP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		1. [**WIP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		2. [From VSIX File](#from-vsix-file)
 	6. [⚡ Quick Start](#-quick-start)
@@ -54,7 +53,6 @@ AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) a
 - **Self-Healing**: Auto-creates missing files/folders from templates. Manual repair available via webview.
 - **Migration Logic**: Detects and migrates flat memory banks to modular structure with user consent.
 - **/memory Commands**: Interact directly with the memory bank from Cursor chat (e.g., `/memory status`, `/memory list`, `/memory read <filename>`).
-- **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, ESBuild for compilation.
 - **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, SWC for compilation.
 - **Version Control Ready**: Modular structure supports future versioning, remote/cloud, and visualisation features.
 
@@ -159,7 +157,7 @@ pnpm run test:unit
 | `biome.json`      | Biome linting and formatting configuration   |
 | `package.json`    | Dependencies and build scripts               |
 | `tsconfig.json`   | TypeScript compiler configuration           |
-| `esbuild.js`      | Extension and MCP server build configuration |
+| `rollup.config.js`| Extension and MCP server build configuration |
 
 ### Key Configuration Files
 
@@ -185,7 +183,7 @@ See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 - **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
 - **Type Safety**: Strict TypeScript configuration enforced
 - **VS Code**: Workspace includes recommended extensions (Biome)
-- **Build**: ESBuild for fast compilation
+- **Build**: SWC for fast and efficient compilation
 
 ### Development Configuration
 
