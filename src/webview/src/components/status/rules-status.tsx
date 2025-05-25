@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { RiLoader5Fill } from "react-icons/ri";
-import { cn } from "../../utils/cn.js";
+import { useCallback, useEffect, useState } from 'react';
+import { RiLoader5Fill } from 'react-icons/ri';
+import { cn } from '../../utils/cn.js';
 import { sendLog } from '../../utils/message.js';
 
 export function RulesStatus() {
@@ -13,7 +13,7 @@ export function RulesStatus() {
     setIsLoading(true);
     sendLog('Requesting rules status', 'info', { action: 'requestRulesStatus' });
     window.vscodeApi?.postMessage({
-      command: "getRulesStatus",
+      command: 'getRulesStatus',
     });
   }, []);
 
@@ -21,31 +21,36 @@ export function RulesStatus() {
     // Setup message listener
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
-      sendLog(`Received message in rules-status: ${message.type}`, 'info', { action: 'handleMessage', messageType: message.type });
+      sendLog(`Received message in rules-status: ${message.type}`, 'info', {
+        action: 'handleMessage',
+        messageType: message.type,
+      });
       switch (message.type) {
-        case "rulesStatus":
+        case 'rulesStatus':
           setRulesInitialized(message.initialized);
           setIsLoading(false);
           break;
-        case "resetRulesResult":
+        case 'resetRulesResult':
           setResetLoading(false);
           if (message.success) {
-            setFeedback("Rules reset successfully.");
+            setFeedback('Rules reset successfully.');
             requestRulesStatus();
           } else {
-            setFeedback(message.error ? `Failed to reset rules: ${message.error}` : "Failed to reset rules.");
+            setFeedback(
+              message.error ? `Failed to reset rules: ${message.error}` : 'Failed to reset rules.'
+            );
           }
           break;
       }
     };
 
-    window.addEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
 
     // Request initial rules status
     requestRulesStatus();
 
     return () => {
-      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('message', handleMessage);
     };
   }, [requestRulesStatus]);
 
@@ -54,7 +59,7 @@ export function RulesStatus() {
     setFeedback(null);
     sendLog('User clicked Reset Rules button', 'info', { action: 'resetRules' });
     window.vscodeApi?.postMessage({
-      command: "resetRules",
+      command: 'resetRules',
     });
   }, []);
 
@@ -70,24 +75,31 @@ export function RulesStatus() {
         {!isLoading && (
           <span
             className={cn(
-              rulesInitialized
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800",
-              "px-2 py-0.5 rounded-full text-xs font-semibold"
+              rulesInitialized ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800',
+              'px-2 py-0.5 rounded-full text-xs font-semibold'
             )}
           >
-            {rulesInitialized ? "Initialized" : "Missing"}
+            {rulesInitialized ? 'Initialized' : 'Missing'}
           </span>
         )}
       </div>
       <div className="w-full">
-        <button className="w-full text-sm text-muted-foreground mt-1" type="button" onClick={resetRules} disabled={resetLoading}>
-          {resetLoading ? <span className="flex items-center gap-1"><RiLoader5Fill className="animate-spin size-4" /> Resetting...</span> : "Reset rules"}
+        <button
+          className="w-full text-sm text-muted-foreground mt-1"
+          type="button"
+          onClick={resetRules}
+          disabled={resetLoading}
+        >
+          {resetLoading ? (
+            <span className="flex items-center gap-1">
+              <RiLoader5Fill className="animate-spin size-4" /> Resetting...
+            </span>
+          ) : (
+            'Reset rules'
+          )}
         </button>
       </div>
-      {feedback && (
-        <div className="mt-1 text-xs text-gray-700">{feedback}</div>
-      )}
+      {feedback && <div className="mt-1 text-xs text-gray-700">{feedback}</div>}
     </div>
   );
 }

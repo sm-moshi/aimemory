@@ -1,123 +1,128 @@
 {
-  "name": "aimemory",
-  "displayName": "AI Memory",
-  "publisher": "sm-moshi",
-  "repository": {
-    "url": "https://github.com/sm-moshi/aimemory"
-  },
-  "description": "Easily manage AI context for your projects using memory bank technique",
-  "version": "0.5.6",
-  "engines": {
-    "vscode": "^1.96.2"
-  },
-  "icon": "dist/assets/icon.png",
-  "categories": [
-    "Other"
-  ],
-  "main": "./dist/extension.cjs",
-  "activationEvents": [
-    "onCommand:aimemory.startMCP",
-    "onCommand:aimemory.stopServer",
-    "onCommand:aimemory.openWebview",
-    "onCommand:aimemory.updateMCPConfig",
-    "onCommand:aimemory.showOutput"
-  ],
-  "contributes": {
-    "commands": [
-      {
-        "command": "aimemory.startMCP",
-        "title": "AI Memory: Start MCP Server"
-      },
-      {
-        "command": "aimemory.stopServer",
-        "title": "AI Memory: Stop MCP Server"
-      },
-      {
-        "command": "aimemory.openWebview",
-        "title": "AI Memory: Open Dashboard"
-      },
-      {
-        "command": "aimemory.updateMCPConfig",
-        "title": "AI Memory: Update Cursor MCP Config"
-      },
-      {
-        "command": "aimemory.showOutput",
-        "title": "AI Memory: Show Output Channel"
-      },
-      {
-        "command": "aimemory.setLogLevel",
-        "title": "AI Memory: Set Log Level"
-      }
-    ],
-    "configuration": {
-      "properties": {
-        "aimemory.logLevel": {
-          "type": "string",
-          "enum": [
-            "trace",
-            "debug",
-            "info",
-            "warning",
-            "error",
-            "off"
-          ],
-          "default": "info",
-          "description": "Controls the verbosity of the AI Memory Output Channel."
-        }
-      }
-    }
-  },
-  "scripts": {
-    "build": "pnpm run lint && pnpm run check-types && node esbuild.js --production && cd src/webview && pnpm run build",
-    "dev": "npm-run-all -p watch:esbuild webview:dev",
-    "watch:esbuild": "node esbuild.js --watch",
-    "webview:dev": "cd src/webview && pnpm run dev",
-    "lint": "eslint src",
-    "check-types": "tsc --noEmit",
-    "test": "pnpm run build && pnpm exec vscode-test",
-    "test:unit": "vitest run",
-    "test:unit:watch": "vitest",
-    "package": "pnpm run build && pnpm vsce package --no-dependencies"
-  },
-  "devDependencies": {
-    "@types/cors": "2.8.18",
-    "@types/express": "5.0.2",
-    "@types/mocha": "10.0.10",
-    "@types/node": "22.15.21",
-    "@types/vscode": "^1.96.2",
-    "@typescript-eslint/eslint-plugin": "8.32.1",
-    "@typescript-eslint/parser": "8.32.1",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "3.4.2",
-    "chai": "^5.2.0",
-    "esbuild": "^0.25.4",
-    "esbuild-plugin-copy": "^2.1.1",
-    "eslint": "9.27.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.8.3",
-    "undici-types": "7.10.0",
-    "vitest": "3.1.4"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "1.12.0",
-    "cors": "^2.8.5",
-    "express": "5.1.0",
-    "zod": "3.25.27"
-  },
-  "packageManager": "pnpm@10.11.0",
-  "pnpm": {
-    "overrides": {
-      "jwa": "^2.0.1"
-    },
-    "ignoredBuiltDependencies": [
-      "keytar"
-    ],
-    "onlyBuiltDependencies": [
-      "@vscode/vsce-sign",
-      "esbuild",
-      "keytar"
-    ]
-  },
-  "type": "module"
+	"name": "aimemory",
+	"displayName": "AI Memory",
+	"publisher": "sm-moshi",
+	"repository": {
+		"url": "https://github.com/sm-moshi/aimemory"
+	},
+	"description": "Easily manage AI context for your projects using memory bank technique",
+	"version": "0.6.0",
+	"engines": {
+		"vscode": "^1.96.2"
+	},
+	"icon": "dist/assets/icon.png",
+	"categories": ["Other"],
+	"main": "./dist/extension.cjs",
+	"activationEvents": [
+		"onCommand:aimemory.startMCP",
+		"onCommand:aimemory.stopServer",
+		"onCommand:aimemory.openWebview",
+		"onCommand:aimemory.updateMCPConfig",
+		"onCommand:aimemory.showOutput"
+	],
+	"contributes": {
+		"commands": [
+			{
+				"command": "aimemory.startMCP",
+				"title": "AI Memory: Start MCP Server"
+			},
+			{
+				"command": "aimemory.stopServer",
+				"title": "AI Memory: Stop MCP Server"
+			},
+			{
+				"command": "aimemory.openWebview",
+				"title": "AI Memory: Open Dashboard"
+			},
+			{
+				"command": "aimemory.updateMCPConfig",
+				"title": "AI Memory: Update Cursor MCP Config"
+			},
+			{
+				"command": "aimemory.showOutput",
+				"title": "AI Memory: Show Output Channel"
+			},
+			{
+				"command": "aimemory.setLogLevel",
+				"title": "AI Memory: Set Log Level"
+			}
+		],
+		"configuration": {
+			"properties": {
+				"aimemory.logLevel": {
+					"type": "string",
+					"enum": ["trace", "debug", "info", "warning", "error", "off"],
+					"default": "info",
+					"description": "Controls the verbosity of the AI Memory Output Channel."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"build": "pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
+		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
+		"dev": "npm-run-all -p watch:rollup webview:dev",
+		"watch:rollup": "rollup -c --watch",
+		"webview:dev": "cd src/webview && pnpm run dev",
+		"lint": "biome check src",
+		"lint:fix": "biome check src --write",
+		"format": "biome format src --write",
+		"check-types": "tsc --noEmit",
+		"test": "pnpm run build && pnpm exec vscode-test",
+		"test:unit": "vitest run",
+		"test:unit:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"test:coverage:all": "pnpm run test:coverage && cd src/webview && pnpm run test:coverage && cd ../..",
+		"package": "pnpm run build && pnpm vsce package --no-dependencies",
+		"update-docs-date": "node scripts/update-docs-date.js",
+		"build-check": "tsx scripts/build-check.ts"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@rollup/plugin-commonjs": "28.0.3",
+		"@rollup/plugin-json": "6.1.0",
+		"@rollup/plugin-node-resolve": "16.0.1",
+		"@rollup/plugin-swc": "0.4.0",
+		"@rollup/plugin-virtual": "3.0.2",
+		"@swc/core": "1.11.29",
+		"@types/cors": "2.8.18",
+		"@types/express": "5.0.2",
+		"@types/mocha": "10.0.10",
+		"@types/node": "20.17.50",
+		"@types/vscode": "1.96.0",
+		"@vitest/coverage-v8": "3.1.4",
+		"@vscode/test-cli": "0.0.10",
+		"@vscode/test-electron": "2.5.2",
+		"@vscode/vsce": "3.4.2",
+		"npm-run-all": "4.1.5",
+		"rollup": "4.41.1",
+		"rollup-plugin-copy": "3.5.0",
+		"rollup-plugin-dts": "6.2.1",
+		"rollup-plugin-esbuild": "6.2.1",
+		"tsx": "4.19.4",
+		"typescript": "5.8.3",
+		"undici-types": "7.10.0",
+		"vitest": "3.1.4"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "1.12.0",
+		"cors": "2.8.5",
+		"express": "5.1.0",
+		"zod": "3.25.28"
+	},
+	"packageManager": "pnpm@10.11.0",
+	"pnpm": {
+		"overrides": {
+			"jwa": "2.0.1"
+		},
+		"ignoredBuiltDependencies": ["keytar"],
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"@swc/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar"
+		]
+	},
+	"type": "module"
 }

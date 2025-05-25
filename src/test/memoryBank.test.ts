@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { EnvironmentVariableMutatorOptions, EnvironmentVariableMutatorType } from 'vscode';
 import { MemoryBankService } from '../core/memoryBank.js';
 import { MemoryBankFileType } from '../types/types.js';
-import type { EnvironmentVariableMutatorType, EnvironmentVariableMutatorOptions } from 'vscode';
 
 // Mock Markdown import to avoid Rollup parse errors
 vi.mock('../lib/rules/memory-bank-rules.md', () => ({ default: 'Mocked Markdown Content' }));
@@ -13,7 +13,9 @@ vi.mock('vscode', () => ({
   ExtensionContext: class {},
 }));
 vi.mock('node:fs/promises', () => ({
-  stat: vi.fn().mockResolvedValue({ isDirectory: () => true, isFile: () => true, mtime: new Date() }),
+  stat: vi
+    .fn()
+    .mockResolvedValue({ isDirectory: () => true, isFile: () => true, mtime: new Date() }),
   mkdir: vi.fn().mockResolvedValue(undefined),
   readFile: vi.fn().mockResolvedValue('mock content'),
   writeFile: vi.fn().mockResolvedValue(undefined),
@@ -26,11 +28,11 @@ vi.mock('node:path', async () => {
 vi.mock('../lib/cursor-rules-service.js', () => ({
   CursorRulesService: class {
     createRulesFile = vi.fn().mockResolvedValue(undefined);
-  }
+  },
 }));
 vi.mock('../utils/log.js', () => ({
   Logger: { getInstance: () => ({ info: vi.fn() }) },
-  LogLevel: { Info: 'info' }
+  LogLevel: { Info: 'info' },
 }));
 vi.mock('../lib/memoryBankTemplates.js', () => ({
   getTemplateForFileType: () => 'template content',
@@ -62,7 +64,11 @@ const uriMock = {
 };
 
 // Minimal EnvironmentVariableMutator mock type
-type EnvironmentVariableMutator = { type: EnvironmentVariableMutatorType; value: string; options?: object };
+type EnvironmentVariableMutator = {
+  type: EnvironmentVariableMutatorType;
+  value: string;
+  options?: object;
+};
 const envVarCollectionMock = {
   persistent: true,
   description: '',
@@ -79,7 +85,11 @@ const envVarCollectionMock = {
     const options: EnvironmentVariableMutatorOptions = {};
     yield [
       'MOCK_VAR',
-      { type: 'replace' as unknown as import('vscode').EnvironmentVariableMutatorType, value: 'mock', options }
+      {
+        type: 'replace' as unknown as import('vscode').EnvironmentVariableMutatorType,
+        value: 'mock',
+        options,
+      },
     ];
   },
 };
@@ -122,19 +132,25 @@ describe('MemoryBankService', () => {
     const vscode = await import('vscode');
     const original = vscode.workspace.workspaceFolders;
     vi.spyOn(vscode.workspace, 'workspaceFolders', 'get').mockReturnValue(undefined);
-    expect(() => new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext)).toThrow('No workspace folder found');
+    expect(
+      () => new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext)
+    ).toThrow('No workspace folder found');
     vi.spyOn(vscode.workspace, 'workspaceFolders', 'get').mockReturnValue(original);
   });
 
   it('isReady returns false before loadFiles, true after', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     expect(service.isReady()).toBe(false);
     await service.loadFiles();
     expect(service.isReady()).toBe(true);
   });
 
   it('getFile returns undefined if not loaded, then returns file after loadFiles', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     expect(service.getFile(MemoryBankFileType.ProjectBrief)).toBeUndefined();
     await service.loadFiles();
     const file = service.getFile(MemoryBankFileType.ProjectBrief);
@@ -143,7 +159,9 @@ describe('MemoryBankService', () => {
   });
 
   it('getAllFiles returns all loaded files', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     await service.loadFiles();
     const files = service.getAllFiles();
     expect(Array.isArray(files)).toBe(true);
@@ -151,7 +169,9 @@ describe('MemoryBankService', () => {
   });
 
   it('updateFile updates the file content and lastUpdated', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     await service.loadFiles();
     await service.updateFile(MemoryBankFileType.ProjectBrief, 'new content');
     const file = service.getFile(MemoryBankFileType.ProjectBrief);
@@ -160,7 +180,9 @@ describe('MemoryBankService', () => {
   });
 
   it('getFilesWithFilenames returns a string with file info', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     await service.loadFiles();
     const result = service.getFilesWithFilenames();
     expect(typeof result).toBe('string');
@@ -168,14 +190,18 @@ describe('MemoryBankService', () => {
   });
 
   it('checkHealth returns healthy message if all files/folders exist', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     await service.loadFiles();
     const health = await service.checkHealth();
     expect(health).toContain('All files and folders are present');
   });
 
   it('getIsMemoryBankInitialized returns true if all files exist', async () => {
-    const service = new MemoryBankService(mockContext as unknown as import('vscode').ExtensionContext);
+    const service = new MemoryBankService(
+      mockContext as unknown as import('vscode').ExtensionContext
+    );
     await service.loadFiles();
     const isInit = await service.getIsMemoryBankInitialized();
     expect(isInit).toBe(true);

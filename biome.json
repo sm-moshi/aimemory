@@ -1,0 +1,64 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignore": [
+			"**/dist/**",
+			"**/out/**",
+			"**/node_modules/**",
+			"**/coverage/**",
+			".vscode-test/**",
+			".cursor/**",
+			".repomix/**"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"indentWidth": 4,
+		"lineWidth": 100
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"jsxQuoteStyle": "double",
+			"trailingCommas": "all",
+			"semicolons": "always"
+		}
+	},
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"overrides": [
+		{
+			"include": ["**/*.test.ts", "**/*.test.tsx"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
+					}
+				}
+			}
+		},
+		{
+			"include": ["src/webview/**/*.{ts,tsx}"],
+			"javascript": {
+				"formatter": {
+					"quoteStyle": "double",
+					"jsxQuoteStyle": "double",
+					"lineWidth": 100
+				}
+			}
+		}
+	]
+}

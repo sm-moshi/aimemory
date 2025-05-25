@@ -1,10 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryBankServiceCore } from '../core/memoryBankServiceCore.js';
 import { MemoryBankFileType } from '../types/types.js';
 
 // Mock fs and path modules
 vi.mock('node:fs/promises', () => ({
-  stat: vi.fn().mockResolvedValue({ isDirectory: () => true, isFile: () => true, mtime: new Date() }),
+  stat: vi
+    .fn()
+    .mockResolvedValue({ isDirectory: () => true, isFile: () => true, mtime: new Date() }),
   mkdir: vi.fn().mockResolvedValue(undefined),
   readFile: vi.fn().mockResolvedValue('mock content'),
   writeFile: vi.fn().mockResolvedValue(undefined),

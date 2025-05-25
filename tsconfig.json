@@ -2,28 +2,29 @@
 	"compilerOptions": {
 		"module": "NodeNext",
 		"target": "ES2022",
-		"lib": [
-			"ES2022"
-		],
+		"lib": ["ES2022"],
 		"sourceMap": true,
-		"rootDir": "src",
 		"moduleResolution": "nodenext",
-		"strict": true,   /* enable all strict type-checking options */
+		"strict": true /* enable all strict type-checking options */,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
 		/* Additional Checks */
-		"noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		"types": ["node", "mocha", "vscode"],
-		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
+		"noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
+		"typeRoots": ["./node_modules/@types"],
+		"types": ["node", "vscode"],
+		"noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
+		"noUnusedParameters": false /* Report errors on unused parameters. */
 	},
-  "exclude": [
-    "src/webview/src",
-    "vitest.config.ts",
-    "esbuild.js",
-    "src/webview/vitest.config.ts",
-    "src/webview/vitest.setup.ts",
-    "node_modules",
-    "dist"
-  ]
+	"include": ["src/**/*", "rollup.config.js", "vitest.config.ts", "scripts/build-check.ts"],
+	"exclude": [
+		"src/webview/src",
+		"src/webview/vitest.config.ts",
+		"src/webview/vitest.setup.ts",
+		"**/node_modules/**",
+		"**/dist",
+		"**/coverage",
+		"**/out"
+	]
 }

@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
-import type { MemoryBankMCPServer } from "./mcp/mcpServer.js";
-import type { MemoryBankFile } from "./types/types.js";
+import * as vscode from 'vscode';
+import type { MemoryBankMCPServer } from './mcp/mcpServer.js';
+import type { MemoryBankFile } from './types/types.js';
 
 export class CommandHandler {
   constructor(private mcpServer: MemoryBankMCPServer) {}
@@ -11,12 +11,12 @@ export class CommandHandler {
    */
   async processMemoryCommand(text: string): Promise<string | undefined> {
     // Check if text starts with /memory
-    if (!text.trim().startsWith("/memory")) {
+    if (!text.trim().startsWith('/memory')) {
       return undefined;
     }
 
     // Extract the command and args
-    const parts = text.trim().split(" ");
+    const parts = text.trim().split(' ');
 
     // Ensure we have at least "/memory" and a command
     if (parts.length < 2) {
@@ -37,22 +37,22 @@ export class CommandHandler {
 
     try {
       switch (command) {
-        case "help": {
+        case 'help': {
           return this.getHelpText();
         }
 
-        case "status": {
+        case 'status': {
           const memoryBank = this.mcpServer.getMemoryBank();
           const isInitialized = await memoryBank.getIsMemoryBankInitialized();
           if (!isInitialized) {
-            return "Memory Bank Status: Not initialized\nUse the initialize-memory-bank tool to set up the memory bank.";
+            return 'Memory Bank Status: Not initialized\nUse the initialize-memory-bank tool to set up the memory bank.';
           }
 
           // Ensure the in-memory file list is up-to-date and all files are loaded/created
           const createdFiles = await memoryBank.loadFiles();
-          let selfHealingMsg = "";
+          let selfHealingMsg = '';
           if (createdFiles.length > 0) {
-            selfHealingMsg = `\n[Self-healing] Created missing files: ${createdFiles.join(", ")}`;
+            selfHealingMsg = `\n[Self-healing] Created missing files: ${createdFiles.join(', ')}`;
           }
 
           // Get all files and their status
@@ -64,18 +64,18 @@ export class CommandHandler {
             systemPatterns: [] as string[],
             techContext: [] as string[],
             progress: [] as string[],
-            legacy: [] as string[]
+            legacy: [] as string[],
           };
 
           for (const file of files) {
-            const status = `${file.type}: Last updated ${file.lastUpdated ? new Date(file.lastUpdated).toLocaleString() : "never"}`;
-            if (file.type.startsWith("core/")) {
+            const status = `${file.type}: Last updated ${file.lastUpdated ? new Date(file.lastUpdated).toLocaleString() : 'never'}`;
+            if (file.type.startsWith('core/')) {
               categories.core.push(status);
-            } else if (file.type.startsWith("systemPatterns/")) {
+            } else if (file.type.startsWith('systemPatterns/')) {
               categories.systemPatterns.push(status);
-            } else if (file.type.startsWith("techContext/")) {
+            } else if (file.type.startsWith('techContext/')) {
               categories.techContext.push(status);
-            } else if (file.type.startsWith("progress/")) {
+            } else if (file.type.startsWith('progress/')) {
               categories.progress.push(status);
             } else {
               categories.legacy.push(status);
@@ -83,38 +83,40 @@ export class CommandHandler {
           }
 
           // Build status output
-          let output = "Memory Bank Status: Initialized\n\n";
-          if (selfHealingMsg) {output = `${output}${selfHealingMsg}\n\n`;}
+          let output = 'Memory Bank Status: Initialized\n\n';
+          if (selfHealingMsg) {
+            output = `${output}${selfHealingMsg}\n\n`;
+          }
 
           if (categories.core.length) {
-            output += `Core Files:\n${categories.core.join("\n")}\n\n`;
+            output += `Core Files:\n${categories.core.join('\n')}\n\n`;
           }
           if (categories.systemPatterns.length) {
-            output += `System Patterns:\n${categories.systemPatterns.join("\n")}\n\n`;
+            output += `System Patterns:\n${categories.systemPatterns.join('\n')}\n\n`;
           }
           if (categories.techContext.length) {
-            output += `Tech Context:\n${categories.techContext.join("\n")}\n\n`;
+            output += `Tech Context:\n${categories.techContext.join('\n')}\n\n`;
           }
           if (categories.progress.length) {
-            output += `Progress:\n${categories.progress.join("\n")}\n\n`;
+            output += `Progress:\n${categories.progress.join('\n')}\n\n`;
           }
           if (categories.legacy.length) {
-            output += `Legacy Files:\n${categories.legacy.join("\n")}`;
+            output += `Legacy Files:\n${categories.legacy.join('\n')}`;
           }
 
           return output.trim();
         }
 
-        case "update": {
+        case 'update': {
           if (!args.length) {
-            return "Error: /memory update requires a file type argument\nUsage: /memory update <fileType> <content>";
+            return 'Error: /memory update requires a file type argument\nUsage: /memory update <fileType> <content>';
           }
 
           const fileType = args[0];
-          const content = args.slice(1).join(" ");
+          const content = args.slice(1).join(' ');
 
           if (!content) {
-            return "Error: /memory update requires content\nUsage: /memory update <fileType> <content>";
+            return 'Error: /memory update requires content\nUsage: /memory update <fileType> <content>';
           }
 
           try {
@@ -125,18 +127,18 @@ export class CommandHandler {
           }
         }
 
-        case "initialize":
-        case "init": {
+        case 'initialize':
+        case 'init': {
           try {
             await this.mcpServer.getMemoryBank().initializeFolders();
             await this.mcpServer.getMemoryBank().loadFiles();
-            return "Memory bank initialised successfully.";
+            return 'Memory bank initialised successfully.';
           } catch (error) {
             return `Error initialising memory bank: ${error instanceof Error ? error.message : String(error)}`;
           }
         }
 
-        case "health": {
+        case 'health': {
           const healthReport = await this.mcpServer.getMemoryBank().checkHealth();
           return healthReport;
         }
@@ -146,7 +148,7 @@ export class CommandHandler {
         }
       }
     } catch (error) {
-      console.error("Error processing command:", error);
+      console.error('Error processing command:', error);
       return `Error processing command: ${error instanceof Error ? error.message : String(error)}`;
     }
   }
@@ -154,11 +156,11 @@ export class CommandHandler {
   //TODO: Think about if it's worth adding a /plan command or let that be handled by rules
   async processModesCommand(text: string): Promise<string | undefined> {
     // Check if text starts with /modes
-    if (!text.trim().startsWith("/plan")) {
+    if (!text.trim().startsWith('/plan')) {
       return undefined;
     }
 
-    return "";
+    return '';
   }
 
   /**

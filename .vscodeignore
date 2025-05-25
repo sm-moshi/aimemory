@@ -1,40 +1,49 @@
-# Exclude source, dev, and local files not needed for VSIX
+# Source code (only dist/ is needed)
 src/
-out/
-test/
-memory-bank/
-.cursor/
-.repomix/
+src/webview/src/
+!dist/**
+
+# Tests and coverage
+**/*.test.*
+**/*.spec.*
+**/*.snap
+**/test/
+**/coverage/
+vitest.config.*
+vitest.setup.*
+tsconfig.test.json
+
+# Build scripts and configs
+esbuild.js
+rollup.config.ts
+vite.config.ts
+tsconfig.*
+pnpm-lock.yaml
+.npmrc
+.npmignore
+.vscodeignore
+
+# Dev-only dirs
 node_modules/
 .vscode/
+.idea/
+
+# Local output
+.vscode-test/
+*.tsbuildinfo
+**/logs/
+*.log
+
+# Optional: local memory and artifacts
+.cursor/
+memory-bank/
+
+# Exclude local files and docs as they are not needed for VSIX
+out/
 .git/
 .github/
-.vscode-test/
-*.test.*
-*.log
-logs/
-*.DS_Store
+.repomix/
+docs/
+**/.DS_Store
 *.env
 Thumbs.db
-npm-debug.log
-
-# Exclude docs except main ones
-!README.md
-!CHANGELOG.md
-!LICENSE.md
-
-docs/
-
-# Allow built extension and assets
-!dist/extension.cjs
-!dist/assets/**
-!dist/webview/**
-!dist/core/**
-!dist/lib/**
-!dist/mcp/**
-!dist/types/**
-!dist/utils/**
-!dist/*.js.map
-
-dist/test/
-dist/.DS_Store

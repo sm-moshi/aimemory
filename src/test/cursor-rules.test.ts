@@ -1,14 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // Mock the Markdown import to avoid Rollup parse errors
 vi.mock('../lib/rules/memory-bank-rules.md', () => ({
-  default: 'Mocked Markdown Content'
+  default: 'Mocked Markdown Content',
 }));
 
 import {
-  CURSOR_RULES_PATH,
   CURSOR_MEMORY_BANK_FILENAME,
-  CURSOR_MEMORY_BANK_RULES_FILE
+  CURSOR_MEMORY_BANK_RULES_FILE,
+  CURSOR_RULES_PATH,
 } from '../lib/cursor-rules.js';
 
 // Unit tests for cursor-rules.ts

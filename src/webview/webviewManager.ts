@@ -1,14 +1,14 @@
-import * as vscode from "vscode";
-import * as path from "node:path";
-import * as fs from "node:fs";
-import { CURSOR_MEMORY_BANK_RULES_FILE } from "../lib/cursor-rules.js";
-import { CursorRulesService } from "../lib/cursor-rules-service.js";
-import { MemoryBankService } from "../core/memoryBank.js";
-import type { MemoryBankMCPServer } from "../mcp/mcpServer.js";
-import * as http from "node:http";
-import * as crypto from "node:crypto";
+import * as crypto from 'node:crypto';
+import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
-import { Logger, LogLevel } from '../utils/log.js';
+import * as http from 'node:http';
+import * as path from 'node:path';
+import * as vscode from 'vscode';
+import { MemoryBankService } from '../core/memoryBank.js';
+import { CursorRulesService } from '../lib/cursor-rules-service.js';
+import { CURSOR_MEMORY_BANK_RULES_FILE } from '../lib/cursor-rules.js';
+import type { MemoryBankMCPServer } from '../mcp/mcpServer.js';
+import { LogLevel, Logger } from '../utils/log.js';
 
 // Utility to extract MCP server ports from .cursor/mcp.json
 async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
@@ -17,7 +17,9 @@ async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
     const configRaw = await fsPromises.readFile(configPath, 'utf-8');
     const config = JSON.parse(configRaw);
     const ports: number[] = [];
-    if (!config || !config.mcpServers) {return ports;}
+    if (!config || !config.mcpServers) {
+      return ports;
+    }
     for (const key of Object.keys(config.mcpServers)) {
       const server = config.mcpServers[key];
       if (server && typeof server.url === 'string') {
@@ -63,19 +65,19 @@ export class WebviewManager {
   private async checkServerHealth(port: number): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       const request = http.get(`http://localhost:${port}/health`, (res) => {
-        let data = "";
+        let data = '';
 
         // A chunk of data has been received
-        res.on("data", (chunk) => {
+        res.on('data', (chunk) => {
           data += chunk;
         });
 
         // The whole response has been received
-        res.on("end", () => {
+        res.on('end', () => {
           try {
             if (res.statusCode === 200) {
               const parsedData = JSON.parse(data);
-              if (parsedData.status === "ok ok") {
+              if (parsedData.status === 'ok ok') {
                 console.log(`Server found running on port ${port}`);
                 resolve(true);
                 return;
@@ -83,13 +85,13 @@ export class WebviewManager {
             }
             resolve(false);
           } catch (e) {
-            console.error("Error parsing JSON:", e);
+            console.error('Error parsing JSON:', e);
             resolve(false);
           }
         });
       });
 
-      request.on("error", (error) => {
+      request.on('error', (error) => {
         console.log(`No server running on port ${port}: ${error.message}`);
         resolve(false);
       });
@@ -123,8 +125,8 @@ export class WebviewManager {
         setTimeout(() => {
           if (this.panel) {
             this.panel.webview.postMessage({
-              type: "MCPServerStatus",
-              status: "started",
+              type: 'MCPServerStatus',
+              status: 'started',
               port,
             });
           }
@@ -149,8 +151,8 @@ export class WebviewManager {
 
     // Create and show a new webview panel
     this.panel = vscode.window.createWebviewPanel(
-      "aiMemoryWebview", // Identifies the type of the webview
-      "AI Memory", // Title displayed in the UI
+      'aiMemoryWebview', // Identifies the type of the webview
+      'AI Memory', // Title displayed in the UI
       vscode.ViewColumn.One, // Editor column to show the webview in
       {
         // Enable scripts in the webview
@@ -159,7 +161,7 @@ export class WebviewManager {
         localResourceRoots: [
           vscode.Uri.joinPath(this.extensionUri, 'dist'), // Allow access to the main dist folder
           vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'), // Explicitly allow webview assets
-          vscode.Uri.parse("http://localhost:5173"), // Allow Vite dev server (HMR)
+          vscode.Uri.parse('http://localhost:5173'), // Allow Vite dev server (HMR)
         ],
         // Retain the webview when it becomes hidden
         retainContextWhenHidden: true,
@@ -169,51 +171,51 @@ export class WebviewManager {
     // Set the webview's HTML content
     this.panel.webview.html = this.getWebviewContent(this.panel.webview);
 
-    console.log("Handlig message");
+    console.log('Handlig message');
 
     // Handle messages from the webview
     this.panel.webview.onDidReceiveMessage(
       async (message) => {
-        console.log("Received message in extension:", message);
+        console.log('Received message in extension:', message);
         switch (message.command) {
-          case "getRulesStatus":
+          case 'getRulesStatus':
             await this.getRulesStatus();
             break;
-          case "resetRules":
+          case 'resetRules':
             await this.resetRules();
             break;
-          case "requestMemoryBankStatus":
-            console.log("Requesting...");
+          case 'requestMemoryBankStatus':
+            console.log('Requesting...');
             await this.getMemoryBankStatus();
             break;
-          case "serverAlreadyRunning":
+          case 'serverAlreadyRunning':
             // Update our internal tracking that a server is already running
             console.log(`Server already running on port ${message.port}`);
             this.mcpServer.setExternalServerRunning(message.port);
             this.panel?.webview.postMessage({
-              type: "MCPServerStatus",
-              status: "started",
+              type: 'MCPServerStatus',
+              status: 'started',
               port: message.port,
             });
             break;
-          case "startMCPServer":
+          case 'startMCPServer':
             await this.mcpServer.start();
             this.panel?.webview.postMessage({
-              type: "MCPServerStatus",
-              status: "started",
+              type: 'MCPServerStatus',
+              status: 'started',
               port: this.mcpServer.getPort(),
             });
             break;
-          case "stopMCPServer":
+          case 'stopMCPServer':
             await this.mcpServer.stop();
             this.panel?.webview.postMessage({
-              type: "MCPServerStatus",
-              status: "stopped",
+              type: 'MCPServerStatus',
+              status: 'stopped',
             });
             break;
-          case "logMessage": {
+          case 'logMessage': {
             // Route webview log messages to the Output Channel via Logger
-            const level = message.level === "error" ? LogLevel.Error : LogLevel.Info;
+            const level = message.level === 'error' ? LogLevel.Error : LogLevel.Info;
             Logger.getInstance().log(level, message.text, message.meta);
             break;
           }
@@ -245,10 +247,10 @@ export class WebviewManager {
 
     // Check if Cursor rules file exists in workspace
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    console.log("Getting rules status for workspace", workspaceFolders);
+    console.log('Getting rules status for workspace', workspaceFolders);
     if (!workspaceFolders) {
       this.panel.webview.postMessage({
-        type: "rulesStatus",
+        type: 'rulesStatus',
         initialized: false,
       });
       return;
@@ -256,7 +258,7 @@ export class WebviewManager {
 
     const cursorRulesPath = path.join(
       workspaceFolders[0].uri.fsPath,
-      ".cursor/rules/memory-bank.mdc"
+      '.cursor/rules/memory-bank.mdc'
     );
 
     let initialized = false;
@@ -268,27 +270,26 @@ export class WebviewManager {
       initialized = false;
     }
 
-    console.log("Sending rules status:", initialized);
+    console.log('Sending rules status:', initialized);
     // Send status to webview
     this.panel.webview.postMessage({
-      type: "rulesStatus",
+      type: 'rulesStatus',
       initialized,
     });
   }
 
   private async getMemoryBankStatus() {
-    console.log("Here1");
+    console.log('Here1');
     if (!this.panel) {
       return;
     }
 
-    const isInitialized =
-      await this.memoryBankService.getIsMemoryBankInitialized();
+    const isInitialized = await this.memoryBankService.getIsMemoryBankInitialized();
 
-    console.log("Sending memory bank status:", isInitialized);
+    console.log('Sending memory bank status:', isInitialized);
 
     this.panel.webview.postMessage({
-      type: "memoryBankStatus",
+      type: 'memoryBankStatus',
       initialized: isInitialized,
     });
   }
@@ -302,53 +303,63 @@ export class WebviewManager {
       // Reset rules by overwriting with original content
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders) {
-        vscode.window.showErrorMessage("No workspace folder found");
+        vscode.window.showErrorMessage('No workspace folder found');
         this.panel.webview.postMessage({
-          type: "resetRulesResult",
+          type: 'resetRulesResult',
           success: false,
-          error: "No workspace folder found"
+          error: 'No workspace folder found',
         });
-        Logger.getInstance().error("Reset rules failed: No workspace folder found");
+        Logger.getInstance().error('Reset rules failed: No workspace folder found');
         return;
       }
 
       // Create rules file with original content (overwriting existing if it exists)
       let overwriteResult = true;
       try {
-      await this.cursorRulesService.createRulesFile(
-        "memory-bank.mdc",
-        CURSOR_MEMORY_BANK_RULES_FILE
-      );
-        vscode.window.showInformationMessage("Memory bank rules have been reset.");
-        Logger.getInstance().info("Memory bank rules reset successfully.");
+        await this.cursorRulesService.createRulesFile(
+          'memory-bank.mdc',
+          CURSOR_MEMORY_BANK_RULES_FILE
+        );
+        vscode.window.showInformationMessage('Memory bank rules have been reset.');
+        Logger.getInstance().info('Memory bank rules reset successfully.');
       } catch (error: unknown) {
         // If user cancels overwrite, treat as not successful
-        if (typeof error === "object" && error && "message" in error && typeof (error as { message: string }).message === "string" && (error as { message: string }).message.includes("overwrite")) {
+        if (
+          typeof error === 'object' &&
+          error &&
+          'message' in error &&
+          typeof (error as { message: string }).message === 'string' &&
+          (error as { message: string }).message.includes('overwrite')
+        ) {
           overwriteResult = false;
-          Logger.getInstance().info("User cancelled rules overwrite.");
+          Logger.getInstance().info('User cancelled rules overwrite.');
         } else {
-          Logger.getInstance().error(`Error resetting rules: ${error instanceof Error ? error.message : String(error)}`);
+          Logger.getInstance().error(
+            `Error resetting rules: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
         this.panel.webview.postMessage({
-          type: "resetRulesResult",
+          type: 'resetRulesResult',
           success: false,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
         return;
       }
 
       // Send success message
       this.panel.webview.postMessage({
-        type: "resetRulesResult",
+        type: 'resetRulesResult',
         success: overwriteResult,
       });
     } catch (error) {
-      Logger.getInstance().error(`Error resetting rules: ${error instanceof Error ? error.message : String(error)}`);
+      Logger.getInstance().error(
+        `Error resetting rules: ${error instanceof Error ? error.message : String(error)}`
+      );
       // Send error message
       this.panel.webview.postMessage({
-        type: "resetRulesResult",
+        type: 'resetRulesResult',
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -366,11 +377,11 @@ export class WebviewManager {
     const nonce = crypto.randomBytes(16).toString('base64');
 
     // Get path to dist folder for webview assets
-    const distPath = path.join(this.extensionUri.fsPath, "dist", "webview");
+    const distPath = path.join(this.extensionUri.fsPath, 'dist', 'webview');
 
     // Get paths to JS & CSS files
-    const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
-    const stylePathOnDisk = path.join(distPath, "assets", "index.css");
+    const scriptPathOnDisk = path.join(distPath, 'assets', 'index.js');
+    const stylePathOnDisk = path.join(distPath, 'assets', 'index.css');
 
     // Convert paths to webview URIs
     const scriptUri = webview.asWebviewUri(vscode.Uri.file(scriptPathOnDisk));
@@ -386,7 +397,7 @@ export class WebviewManager {
       `script-src 'nonce-${nonce}'`, // Only allow scripts with this nonce
       `connect-src http://localhost:${mcpPort}`, // Only allow connecting to MCP server
       `img-src ${webview.cspSource} data:`, // Allow images from webview and data URIs
-      `font-src ${webview.cspSource}` // Allow fonts from webview
+      `font-src ${webview.cspSource}`, // Allow fonts from webview
     ].join('; ');
 
     // Return HTML with strict CSP and correct asset URIs

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommandHandler } from '../commandHandler.js';
 
 const mockMemoryBank = {
@@ -23,7 +23,7 @@ describe('CommandHandler', () => {
   let handler: CommandHandler;
   beforeEach(() => {
     vi.clearAllMocks();
-     
+
     handler = new CommandHandler(mockMcpServer as any);
   });
 

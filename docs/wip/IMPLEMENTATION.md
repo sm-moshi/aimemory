@@ -31,6 +31,143 @@ The AI Memory extension is now fully modular and Cursor-first, with VS Code comp
 
 ---
 
+## Build Tool Alternatives & SWC Integration Plan
+
+### Current Analysis (2025-05-24)
+
+After comprehensive research and documentation analysis, we've evaluated modern JavaScript/TypeScript build tools as alternatives to ESBuild:
+
+#### **Tool Comparison Matrix**
+
+| Tool | Language | Primary Strength | Speed | Ecosystem | Recommended Use |
+|------|----------|------------------|--------|-----------|-----------------|
+| **ESBuild** | Go | Bundling Speed | ⚡⚡⚡ | Mature | Current (stable) |
+| **SWC** | Rust | Compilation Speed | ⚡⚡⚡⚡ | Growing | **Recommended** |
+| **Bun Build** | Zig | All-in-One | ⚡⚡⚡⚡ | Emerging | Future consideration |
+| **Turbo** | Rust | Monorepo Orchestration | ⚡⚡⚡ | Vercel-backed | Complementary tool |
+
+#### **SWC + Biome: Perfect Compatibility ✅**
+
+**Why this combination works exceptionally well:**
+
+1. **Non-overlapping responsibilities:**
+   - **Biome**: Code quality (linting, formatting, static analysis)
+   - **SWC**: Build performance (compilation, bundling, transpilation)
+
+2. **Shared philosophy:**
+   - Both Rust-based for maximum performance
+   - Both aim to replace slower JavaScript-based tools
+   - Both support modern TypeScript/JavaScript features
+
+3. **Complementary strengths:**
+   - Biome excels at development-time developer experience
+   - SWC excels at production build performance
+
+#### **Architecture Flow**
+
+```
+Current:  Source Code → Biome (lint/format) → ESBuild (compile/bundle) → Output
+Proposed: Source Code → Biome (lint/format) → SWC (compile/bundle) → Output
+```
+
+#### **Performance Benefits**
+
+- **SWC**: 20x faster than Babel, 2-3x faster than ESBuild for TypeScript compilation
+- **Biome**: 10x faster than ESLint + Prettier combination
+- **Combined**: Significant improvement in both development and production build times
+
+### Migration Plan to SWC
+
+#### **Phase 1: Preparation**
+
+1. Install SWC dependencies:
+
+   ```bash
+   pnpm add -D @swc/core @swc/cli
+   pnpm remove esbuild esbuild-plugin-copy
+   ```
+
+2. Create SWC configuration (`swc.config.js`):
+
+   ```javascript
+   module.exports = {
+     jsc: {
+       parser: {
+         syntax: "typescript",
+         tsx: true,
+         decorators: true,
+       },
+       target: "es2022",
+       loose: false,
+       externalHelpers: false,
+     },
+     module: {
+       type: "commonjs",
+     },
+     minify: true,
+   };
+   ```
+
+#### **Phase 2: Build Script Migration**
+
+1. Replace `esbuild.js` with `swc.config.js`
+2. Update package.json scripts:
+
+   ```json
+   {
+     "scripts": {
+       "build": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && swc src --out-dir dist && cd src/webview && pnpm run build",
+       "watch:swc": "swc src --out-dir dist --watch"
+     }
+   }
+   ```
+
+#### **Phase 3: Integration Testing**
+
+1. Verify extension builds correctly with SWC
+2. Test webview compilation (keep Vite for React)
+3. Validate MCP server functionality
+4. Performance benchmarking vs current ESBuild setup
+
+#### **Phase 4: Optimization**
+
+1. Fine-tune SWC configuration for VSCode extension requirements
+2. Optimize build pipeline for development workflow
+3. Update CI/CD pipeline accordingly
+
+### Alternative Considerations
+
+#### **Bun Build (Future Option)**
+
+- **Pros**: Fastest overall, all-in-one solution, growing ecosystem
+- **Cons**: Still emerging, potential stability concerns for production
+- **Recommendation**: Monitor for future adoption when ecosystem matures
+
+#### **Turbo Integration (Complementary)**
+
+- **Use case**: If project grows into monorepo structure
+- **Integration**: Can orchestrate multiple SWC builds across packages
+- **Timeline**: Consider for v0.4.0+ if repository structure evolves
+
+### Implementation Priority
+
+**Immediate (v0.3.1)**:
+
+- ✅ Keep current ESBuild + Biome setup (stable, working)
+- ✅ Document SWC migration path
+
+**Next Phase (v0.3.2)**:
+
+- 🎯 Implement SWC migration following the plan above
+- 🎯 Performance benchmarking and optimization
+
+**Future (v0.4.0+)**:
+
+- 🔮 Evaluate Bun build integration
+- 🔮 Consider Turbo for monorepo orchestration if needed
+
+---
+
 ## Webview UI Controls (as of 2025-05-13)
 
 - **Initialise Memory Bank**: Button in the webview to initialise the memory bank, creating all required files and structure. Calls the `initialize-memory-bank` MCP tool and displays feedback.
