@@ -6,12 +6,14 @@
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"engines": {
 		"vscode": "^1.96.2"
 	},
 	"icon": "dist/assets/icon.png",
-	"categories": ["Other"],
+	"categories": [
+		"Other"
+	],
 	"main": "./dist/extension.cjs",
 	"activationEvents": [
 		"onCommand:aimemory.startMCP",
@@ -51,7 +53,14 @@
 			"properties": {
 				"aimemory.logLevel": {
 					"type": "string",
-					"enum": ["trace", "debug", "info", "warning", "error", "off"],
+					"enum": [
+						"trace",
+						"debug",
+						"info",
+						"warning",
+						"error",
+						"off"
+					],
 					"default": "info",
 					"description": "Controls the verbosity of the AI Memory Output Channel."
 				}
@@ -115,7 +124,9 @@
 		"overrides": {
 			"jwa": "2.0.1"
 		},
-		"ignoredBuiltDependencies": ["keytar"],
+		"ignoredBuiltDependencies": [
+			"keytar"
+		],
 		"onlyBuiltDependencies": [
 			"@biomejs/biome",
 			"@swc/core",
