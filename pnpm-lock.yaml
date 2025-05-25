@@ -58,8 +58,8 @@ importers:
         specifier: 20.17.50
         version: 20.17.50
       '@types/vscode':
-        specifier: 1.96.0
-        version: 1.96.0
+        specifier: 1.100.0
+        version: 1.100.0
       '@vitest/coverage-v8':
         specifier: 3.1.4
         version: 3.1.4(vitest@3.1.4(@types/node@20.17.50)(tsx@4.19.4))
@@ -793,8 +793,8 @@ packages:
   '@types/serve-static@1.15.7':
     resolution: {integrity: sha512-W8Ym+h8nhuRwaKPaDw34QUkwsGi6Rc4yYqvKFo5rm2FUEhCFbzVWrxXUxuKK8TASjWsysJY0nsmNCGhCOIsrOw==}
 
-  '@types/vscode@1.96.0':
-    resolution: {integrity: sha512-qvZbSZo+K4ZYmmDuaodMbAa67Pl6VDQzLKFka6rq+3WUTY4Kro7Bwoi0CuZLO/wema0ygcmpwow7zZfPJTs5jg==}
+  '@types/vscode@1.100.0':
+    resolution: {integrity: sha512-4uNyvzHoraXEeCamR3+fzcBlh7Afs4Ifjs4epINyUX/jvdk0uzLnwiDY35UKDKnkCHP5Nu3dljl2H8lR6s+rQw==}
 
   '@typespec/ts-http-runtime@0.2.2':
     resolution: {integrity: sha512-Gz/Sm64+Sq/vklJu1tt9t+4R2lvnud8NbTD/ZfpZtMiUX7YeVpCA8j6NSW8ptwcoLL+NmYANwqP8DV0q/bwl2w==}
@@ -3710,7 +3710,7 @@ snapshots:
       '@types/node': 22.15.21
       '@types/send': 0.17.4
 
-  '@types/vscode@1.96.0': {}
+  '@types/vscode@1.100.0': {}
 
   '@typespec/ts-http-runtime@0.2.2':
     dependencies:
