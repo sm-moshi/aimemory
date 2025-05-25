@@ -1,8 +1,8 @@
 # AI Memory MCP Implementation Guide (v0.3.1 Target)
 
-_Last updated: 2025-05-18_
+> _Last updated: 2025-05-18_
 
-*For a high-level overview, see [ROADMAP.md](./ROADMAP.md). For setup, see [QUICKSTART.md](../guides/QUICKSTART.md). For actionable tasks, see [TODO.md](./TODO.md). For troubleshooting, see [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). For experimental features, see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md).*
+_For a high-level overview, see [ROADMAP.md](./ROADMAP.md). For setup, see [QUICKSTART.md](../guides/QUICKSTART.md). For actionable tasks, see [TODO.md](./TODO.md). For troubleshooting, see [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). For experimental features, see [EXPERIMENTAL-MCP-PLAN.md](../experimental/EXPERIMENTAL-MCP-PLAN.md)._
 
 ---
 
@@ -10,14 +10,14 @@ _Last updated: 2025-05-18_
 
 The AI Memory extension is now fully modular and Cursor-first, with VS Code compatibility as a bonus. It consists of the following core components:
 
-1. **MemoryBankService (`src/core/memoryBank.ts`)**: Manages the *modular* memory bank files (`core/`, `systemPatterns/`, `techContext/`, `progress/` subfolders) on disk. All file operations are async and robust, with explicit readiness checks, error handling, and self-healing (auto-creation of missing files/folders). Migration from legacy flat structures is complete.
+1. **MemoryBankService (`src/core/memoryBank.ts`)**: Manages the _modular_ memory bank files (`core/`, `systemPatterns/`, `techContext/`, `progress/` subfolders) on disk. All file operations are async and robust, with explicit readiness checks, error handling, and self-healing (auto-creation of missing files/folders). Migration from legacy flat structures is complete.
 2. **MemoryBankMCPServer (`src/mcp/mcpServer.ts`)**: Implements the MCP server using the MCP SDK. Exposes the modular memory bank via resources and tools. All endpoints/tools check memory-bank readiness and fail gracefully if not initialised. Automatic port failover and robust error handling are included. (Express removal is in progress; MCP SDK/Node APIs are the target.)
 3. **CommandHandler (`src/commandHandler.ts`)**: Processes direct `/memory` commands in Cursor, primarily providing status and delegating actions to MCP tools.
 4. **WebviewManager (`src/webview/webviewManager.ts`)**: Manages the dashboard webview. Features "Initialise Memory Bank" and "Update Memory Bank" buttons for direct user interaction, with clear feedback and error handling. CSP and asset loading issues have been addressed.
 5. **Extension (`src/extension.ts`)**: The main VSCode/Cursor extension entry point. Handles activation, initiates memory bank checks, starts the MCP server, registers commands, and manages the webview.
 6. **MCP CLI/stdio Entrypoint (`src/cli.ts`, `src/mcp/coreMemoryBankMCP.ts`, `src/mcp/mcpServerCli.ts`)**: Provides a Cursor-first, dependency-light CLI for MCP server operation, supporting both HTTP/SSE and stdio transports.
 
-*For more on the tech stack, see: [Vite Guide](https://vitejs.dev/guide/), [React Docs](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), [Model Context Protocol](https://modelcontextprotocol.org)*
+_For more on the tech stack, see: [Vite Guide](https://vitejs.dev/guide/), [React Docs](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), [Model Context Protocol](https://modelcontextprotocol.org)_
 
 ---
 
@@ -65,7 +65,7 @@ After comprehensive research and documentation analysis, we've evaluated modern 
 
 #### **Architecture Flow**
 
-```
+```text
 Current:  Source Code → Biome (lint/format) → ESBuild (compile/bundle) → Output
 Proposed: Source Code → Biome (lint/format) → SWC (compile/bundle) → Output
 ```
@@ -187,14 +187,17 @@ pnpm add -D @types/express @types/cors
 ```
 
 ### 2. Define Types (`src/types/types.ts`)
+
 - Define core types like `MemoryBankFileType` (for modular files), `MemoryBankFile`, and the `MemoryBank` interface.
 
 ### 3. Implement MemoryBankService (`src/core/memoryBank.ts`)
+
 - Manages files within the modular structure (`memory-bank/core/`, `memory-bank/systemPatterns/`, etc.).
 - All file operations are async and robust, with readiness checks, error handling, and self-healing.
 - Provides methods like `getFile`, `updateFile`, `getAllFiles`, `loadFiles`.
 
 ### 4. Implement MemoryBankMCPServer (`src/mcp/mcpServer.ts`)
+
 - Creates an MCP server instance.
 - Registers resources mapping to the modular memory bank structure (e.g., `memory-bank://core/projectbrief.md`).
 - Registers MCP tools (`initialize-memory-bank`, `list-memory-bank-files`, `get-memory-bank-file`, `update-memory-bank-file`) for the modular structure.
@@ -203,22 +206,26 @@ pnpm add -D @types/express @types/cors
 - Automatic port failover and robust error handling.
 
 ### 5. Implement CommandHandler (`src/commandHandler.ts`)
+
 - Handles `/memory` commands, primarily providing help/status or deferring to MCP tools.
 - Provides robust feedback when MCP tools fail.
 
 ### 6. Implement Extension Entry Point (`src/extension.ts`)
+
 - Activates the extension.
 - Instantiates `MemoryBankMCPServer` and `WebviewManager`.
 - Registers all commands (`aimemory.startMCP`, `aimemory.openWebview`, etc.).
 - Handles cleanup on deactivation.
 
 ### 7. Implement WebviewManager (`src/webview/webviewManager.ts`)
+
 - Creates and manages the webview panel.
 - Handles communication between the extension and the webview UI.
 - Features "Initialise Memory Bank", "Update Memory Bank", and "Reset Rules" buttons for direct user interaction.
 - CSP and asset loading issues have been addressed.
 
 ### 8. Configure Build System (`esbuild.js`)
+
 - Ensures correct bundling, external dependencies, and asset copying.
 
 ```javascript

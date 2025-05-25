@@ -25,7 +25,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [x] Webview UI overhaul (React/Tailwind, status, repair, management)
 - [x] Self-healing memory bank and rules management
 - [x] MCP tools exposed and robust
-- [~] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication (**last major refactor in progress**)
+- [x] Refactor extension to remove Express and use Cursor/VS Code APIs for all communication (**completed in Phase 1d**)
 - [~] User-configurable log levels for Output Channel (**basic support present, advanced features pending**)
 - [~] Webview error and event reporting to Output Channel (**basic support present, advanced features pending**)
 - [ ] Add 'AI Memory: Create Memory Bank Rule' command to create/restore memory-bank.mdc from template or rules source (**logic present, not yet exposed as command**)
@@ -47,7 +47,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
   - [x] Streamline build scripts (esbuild for Node/extension/server, vite for webview)
   - [x] Rationalise ignore files (.npmignore/.vscodeignore minimal, only allow built assets)
   - [ ] Use official test tools (@vscode/test-cli, MCP Inspector)
-  - [ ] Remove Express/HTTP from extension/server path (stdio only)
+  - [x] Remove Express/HTTP from extension/server path (stdio only) (**completed in Phase 1d**)
   - [ ] Clarify and flatten folder structure
   - [ ] Document all build/test/dev commands in README
   - [ ] Only use monorepo/workspaces if webview is a separate package
@@ -81,7 +81,7 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 - [x] Add MCP CLI/stdio entrypoint for Cursor-first operation
 - [x] Webview UI overhaul and robust feedback
 - [x] Self-healing memory bank and rules management
-- [~] Remove Express and use Cursor/VS Code APIs for all communication (**last major refactor in progress**)
+- [x] Remove Express and use Cursor/VS Code APIs for all communication (**completed in Phase 1d**)
 - [~] User-configurable log levels and webview error/event reporting (**basic support present, advanced features pending**)
 - [ ] Version control integration, advanced UI, and chunked file access (future)
 - [ ] Test activation, command registration, and MCP tool operation in Cursor (and optionally VS Code)
@@ -92,11 +92,11 @@ Empower Cursor and VS Code users with a robust, modular, and user-editable memor
 
 ---
 
-**Notes (2025-05-17):**
+> **Notes (2025-05-17, updated 2025-05-25):**
 
 - The codebase is now Cursor-first, with VS Code compatibility as a bonus.
 - Modularisation, webview overhaul, MCP CLI/stdio, and self-healing are complete.
-- Express removal is the last major refactor in progress.
+- Express removal completed in Phase 1d - extension now uses STDIO transport exclusively.
 - Docs, rules, and packaging are up-to-date.
 - Automated tests, advanced UI features, and build/workspace simplification are the next priorities.
 

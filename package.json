@@ -63,11 +63,6 @@
 					],
 					"default": "info",
 					"description": "Controls the verbosity of the AI Memory Output Channel."
-				},
-				"aimemory.useStdioTransport": {
-					"type": "boolean",
-					"default": false,
-					"description": "Use STDIO transport for MCP communication (recommended for Cursor 0.50+). When disabled, uses Express HTTP transport."
 				}
 			}
 		}

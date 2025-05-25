@@ -18,7 +18,7 @@ _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabli
 	3. [✨ Features](#-features)
 	4. [🖼 Visuals](#-visuals)
 	5. [🛠 Installation](#-installation)
-		1. [**WIP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
+		1. [**WiP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
 		2. [From VSIX File](#from-vsix-file)
 	6. [⚡ Quick Start](#-quick-start)
 		1. [Development Commands](#development-commands)
@@ -41,7 +41,7 @@ _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabli
 
 AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) and VS Code, providing persistent, context-aware memory for LLMs and agents. It features a modern webview, a robust MCP server (CLI/stdio-only), and a fully modular, self-healing memory bank system. Designed Cursor-first, it ensures seamless context retention, robust error handling, and a smooth developer experience.
 
-> **Note:** This extension uses **stdio transport only** for MCP server communication. No HTTP/Express endpoints are used or required.
+> **Note:** This extension uses **STDIO transport exclusively** for MCP server communication. As of v0.6.0, Express/HTTP transport has been completely removed in favor of STDIO-only design.
 
 ---
 

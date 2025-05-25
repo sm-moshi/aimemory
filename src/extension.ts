@@ -1,58 +1,15 @@
-import * as http from "node:http";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { CommandHandler } from "./commandHandler.js";
-import { MemoryBankMCPServer } from "./mcp/mcpServer.js";
 import { MemoryBankMCPAdapter } from "./mcp/mcpAdapter.js";
 import type { MCPServerInterface } from "./types/mcpTypes.js";
 import { updateCursorMCPConfig } from "./utils/cursor-config.js";
 import { LogLevel, Logger } from "./utils/log.js";
 import { WebviewManager } from "./webview/webviewManager.js";
 
-// Default MCP server options
+// Default MCP server options (for compatibility with existing interface)
 const DEFAULT_MCP_PORT = 7331;
-const ALTERNATIVE_MCP_PORT = 7332;
-
-// Helper function to check if a server is running on the given port
-async function isServerRunning(port: number): Promise<boolean> {
-	return new Promise<boolean>((resolve) => {
-		const request = http.get(`http://localhost:${port}/health`, (res) => {
-			let data = "";
-
-			res.on("data", (chunk) => {
-				data += chunk;
-			});
-
-			res.on("end", () => {
-				try {
-					if (res.statusCode === 200) {
-						const parsedData = JSON.parse(data);
-						if (parsedData.status === "ok ok") {
-							console.log(`Server found running on port ${port}`);
-							resolve(true);
-							return;
-						}
-					}
-					resolve(false);
-				} catch (e) {
-					console.error("Error parsing JSON:", e);
-					resolve(false);
-				}
-			});
-		});
-
-		request.on("error", () => {
-			resolve(false);
-		});
-
-		// Set timeout to avoid hanging
-		request.setTimeout(1000, () => {
-			request.destroy();
-			resolve(false);
-		});
-	});
-}
 
 // Helper to parse log level string from config
 function parseLogLevel(levelStr: string): LogLevel {
@@ -95,11 +52,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	console.log("Registering open webview command");
 
-		// Create MCP server instance - choose between Express and STDIO based on config
-	const useStdioTransport = config.get<boolean>("useStdioTransport") || false;
-	const mcpServer: MCPServerInterface = useStdioTransport
-		? new MemoryBankMCPAdapter(context, DEFAULT_MCP_PORT)
-		: new MemoryBankMCPServer(context, DEFAULT_MCP_PORT);
+	// Create MCP server instance - using STDIO transport only
+	const mcpServer: MCPServerInterface = new MemoryBankMCPAdapter(context, DEFAULT_MCP_PORT);
 
 	// Create webview manager
 	const webviewManager = new WebviewManager(context, mcpServer);
@@ -139,62 +93,17 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register a command that starts the MCP server
 	const startMCPCommand = vscode.commands.registerCommand("aimemory.startMCP", async () => {
 		try {
-			// First check if there's already a server running on the default port
-			const defaultServerRunning = await isServerRunning(DEFAULT_MCP_PORT);
-			if (defaultServerRunning) {
-				mcpServer.setExternalServerRunning(DEFAULT_MCP_PORT);
-				vscode.window.showInformationMessage(
-					`AI Memory MCP server already running on port ${DEFAULT_MCP_PORT}. Connecting to existing server.`,
-				);
-				return;
-			}
-
-			// Check alternative port too
-			const alternativeServerRunning = await isServerRunning(ALTERNATIVE_MCP_PORT);
-			if (alternativeServerRunning) {
-				mcpServer.setExternalServerRunning(ALTERNATIVE_MCP_PORT);
-				vscode.window.showInformationMessage(
-					`AI Memory MCP server already running on port ${ALTERNATIVE_MCP_PORT}. Connecting to existing server.`,
-				);
-				return;
-			}
-
-			// No existing server found, try to start a new one
-			// Try to start the server with the default port
+			// Start the STDIO MCP server
 			await mcpServer.start();
 
-			// Show information about how to connect to the MCP server
+			// Show information about the MCP server
 			vscode.window.showInformationMessage(
-				`AI Memory MCP server started on port ${DEFAULT_MCP_PORT}. You can connect to it through Cursor's MCP integration.`,
+				"AI Memory MCP server started using STDIO transport. Ready for Cursor MCP integration.",
 			);
 		} catch (error) {
-			// If the default port is in use, try the alternative port
-			if (error instanceof Error && error.message.includes("EADDRINUSE")) {
-				try {
-					// Create a new server with the alternative port
-					const alternativeServer = new MemoryBankMCPServer(
-						context,
-						ALTERNATIVE_MCP_PORT,
-					);
-					await alternativeServer.start();
-
-					// Show information about how to connect to the MCP server
-					vscode.window.showInformationMessage(
-						`AI Memory MCP server started on port ${ALTERNATIVE_MCP_PORT}.
-                You can connect to it through Cursor's MCP integration.`,
-					);
-				} catch (innerError) {
-					vscode.window.showErrorMessage(
-						`Failed to start MCP server: ${
-							innerError instanceof Error ? innerError.message : String(innerError)
-						}`,
-					);
-				}
-			} else {
-				vscode.window.showErrorMessage(
-					`Failed to start MCP server: ${error instanceof Error ? error.message : String(error)}`,
-				);
-			}
+			vscode.window.showErrorMessage(
+				`Failed to start MCP server: ${error instanceof Error ? error.message : String(error)}`,
+			);
 		}
 	});
 

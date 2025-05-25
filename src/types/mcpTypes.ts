@@ -2,8 +2,8 @@ import type { MemoryBankService } from "../core/memoryBank.js";
 
 /**
  * Common interface for MCP server implementations.
- * This allows the extension to use either Express or STDIO transport
- * without changing the extension code.
+ * As of Phase 1d, the extension uses STDIO transport exclusively.
+ * This interface maintains compatibility with existing extension code.
  */
 export interface MCPServerInterface {
 	/**
