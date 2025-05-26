@@ -4,6 +4,7 @@ dist/
 !**/coverage/lcov.info
 .vscode-test/
 *.tsbuildinfo
+*.d.ts.map
 
 # Node
 node_modules/
