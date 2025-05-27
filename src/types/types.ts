@@ -26,12 +26,12 @@ export enum MemoryBankFileType {
 	ProgressHistory = "progress/history.md",
 
 	// Legacy flat files (for migration/compatibility)
-	ProjectBriefFlat = "projectbrief.md",
-	ProductContextFlat = "productContext.md",
-	ActiveContextFlat = "activeContext.md",
-	SystemPatternsFlat = "systemPatterns.md",
-	TechContextFlat = "techContext.md",
-	ProgressFlat = "progress.md",
+	// ProjectBriefFlat = "projectbrief.md",
+	// ProductContextFlat = "productContext.md",
+	// ActiveContextFlat = "activeContext.md",
+	// SystemPatternsFlat = "systemPatterns.md",
+	// TechContextFlat = "techContext.md",
+	// ProgressFlat = "progress.md",
 }
 
 export interface MemoryBankFile {

@@ -51,7 +51,7 @@ const getPlugins = () => [
 	copyPlugin({
 		targets: [
 			{ src: "src/assets/*", dest: "dist/assets" },
-			{ src: "src/lib/rules/*.md", dest: "dist/lib/rules" },
+			{ src: "src/lib/rules/*.md", dest: "dist/rules" },
 		],
 		verbose: true,
 		hook: "buildStart",

@@ -17,12 +17,6 @@ describe("getTemplateForFileType", () => {
 		expect(result).toContain("user experience goals");
 	});
 
-	it("returns the correct template for ProgressFlat", () => {
-		const result = getTemplateForFileType(MemoryBankFileType.ProgressFlat);
-		expect(result).toContain("Progress");
-		expect(result).toContain("What works");
-	});
-
 	it("returns the default template for unknown type", () => {
 		// @ts-expect-error: purposely passing an invalid value
 		const result = getTemplateForFileType("not-a-real-type");

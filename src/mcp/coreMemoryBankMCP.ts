@@ -5,15 +5,15 @@ import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 import type { MemoryBankFileType } from "../types/types.js";
 
 export class CoreMemoryBankMCP {
-	private server: McpServer;
-	private memoryBank: MemoryBankServiceCore;
+	private readonly server: McpServer;
+	private readonly memoryBank: MemoryBankServiceCore;
 
 	constructor(config: { memoryBankPath: string; logger?: Console }) {
 		this.memoryBank = new MemoryBankServiceCore(config.memoryBankPath, config.logger);
 		this.server = new McpServer(
 			{
 				name: "AI Memory MCP Server",
-				version: "0.3.0",
+				version: "0.7.1",
 			},
 			{
 				capabilities: {

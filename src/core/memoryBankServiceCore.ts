@@ -5,6 +5,44 @@ import { getTemplateForFileType } from "../lib/memoryBankTemplates.js";
 import type { MemoryBank, MemoryBankFile } from "../types/types.js";
 import { MemoryBankFileType } from "../types/types.js";
 
+// A simple logger that writes all levels to stderr
+const createStderrLogger = (): Console => {
+	const writer = (level: string, ...args: unknown[]) => {
+		process.stderr.write(`[${level.toUpperCase()}] ${args.map(String).join(" ")}\n`);
+	};
+	return {
+		log: (...args: unknown[]) => writer("log", ...args),
+		info: (...args: unknown[]) => writer("info", ...args),
+		warn: (...args: unknown[]) => writer("warn", ...args),
+		error: (...args: unknown[]) => writer("error", ...args),
+		debug: (...args: unknown[]) => writer("debug", ...args),
+		table: (tabularData: unknown, properties?: string[]) =>
+			process.stderr.write(`${JSON.stringify(tabularData, properties, 2)}\n`),
+		time: (label?: string) => console.time(label),
+		timeEnd: (label?: string) => console.timeEnd(label),
+		timeLog: (label?: string, ...data: unknown[]) => console.timeLog(label, ...data),
+		assert: (condition?: boolean, ...data: unknown[]) => {
+			if (!condition) {
+				writer("assert", ...data);
+			}
+		},
+		clear: () => {},
+		count: (label?: string) => console.count(label),
+		countReset: (label?: string) => console.countReset(label),
+		dir: (item: unknown, options?: unknown) =>
+			process.stderr.write(`${JSON.stringify(item, null, 2)}\n`),
+		dirxml: (...data: unknown[]) => writer("dirxml", ...data),
+		group: (...label: unknown[]) => console.group(...label),
+		groupCollapsed: (...label: unknown[]) => console.groupCollapsed(...label),
+		groupEnd: () => console.groupEnd(),
+		profile: (label?: string) => console.profile(label),
+		profileEnd: (label?: string) => console.profileEnd(label),
+		timeStamp: (label?: string) => console.timeStamp(label),
+		trace: (...data: unknown[]) => writer("trace", ...data),
+		Console: console.Console,
+	} as Console;
+};
+
 export class MemoryBankServiceCore implements MemoryBank {
 	private _memoryBankFolder: string;
 	files: Map<MemoryBankFileType, MemoryBankFile> = new Map();
@@ -17,7 +55,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 
 	constructor(memoryBankPath: string, logger?: Console) {
 		this._memoryBankFolder = memoryBankPath;
-		this.logger = logger || console;
+		this.logger = logger || createStderrLogger(); // Use custom stderr logger if none provided
 	}
 
 	async getIsMemoryBankInitialized(): Promise<boolean> {
@@ -28,7 +66,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 				.then((stat) => stat.isDirectory())
 				.catch(() => false);
 			if (!isDirectoryExists) {
-				this.logger.info("Memory bank folder does not exist.");
+				this.logger.error("Memory bank folder does not exist.");
 				return false;
 			}
 			for (const fileType of Object.values(MemoryBankFileType)) {
@@ -38,7 +76,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 						.stat(filePath)
 						.then((stat) => stat.isFile())
 						.catch(() => false);
-					this.logger.info(`Checked file: ${fileType} - Exists: ${exists}`);
+					this.logger.error(`Checked file: ${fileType} - Exists: ${exists}`);
 					if (!exists) {
 						return false;
 					}
@@ -47,7 +85,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 			this.logger.info("Memory bank is initialised.");
 			return true;
 		} catch (err) {
-			this.logger.info(
+			this.logger.error(
 				`Error checking memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`,
 			);
 			return false;
@@ -115,7 +153,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 			return createdFiles;
 		} catch (err) {
 			this.ready = false;
-			this.logger.info(
+			this.logger.error(
 				`Error loading memory bank files: ${err instanceof Error ? err.message : String(err)}`,
 			);
 			throw err;
@@ -143,6 +181,16 @@ export class MemoryBankServiceCore implements MemoryBank {
 		// Update cache after write
 		this._fileCache.set(filePath, { content, mtimeMs: stats.mtimeMs });
 		this.logger.info(`Updated file: ${type}`);
+	}
+
+	async writeFileByPath(relativePath: string, content: string): Promise<void> {
+		const fullPath = path.join(this._memoryBankFolder, relativePath);
+		await fs.mkdir(path.dirname(fullPath), { recursive: true }); // Ensure directory exists
+		await fs.writeFile(fullPath, content);
+		const stats = await fs.stat(fullPath);
+		// Update cache after write
+		this._fileCache.set(fullPath, { content, mtimeMs: stats.mtimeMs });
+		this.logger.info(`Written file by path: ${relativePath}`);
 	}
 
 	getAllFiles(): MemoryBankFile[] {

@@ -1,6 +1,6 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import * as path from "node:path";
-import type * as vscode from "vscode";
+import * as vscode from "vscode";
 import { MemoryBankService } from "../core/memoryBank.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
 import type { MemoryBankFileType } from "../types/types.js";
@@ -41,10 +41,24 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 			// Get the path to the compiled STDIO server
 			const serverPath = path.join(this.context.extensionPath, "dist", "index.cjs");
 
-			this.logger.info(`Starting MCP STDIO server: ${serverPath}`);
+			// Get the workspace path
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders || workspaceFolders.length === 0) {
+				this.logger.error("AI Memory: No workspace folder found. Cannot start MCP server.");
+				throw new Error("No workspace folder found to start MCP server.");
+			}
+			const workspacePath = workspaceFolders[0].uri.fsPath;
+
+			this.logger.info(
+				`Starting MCP STDIO server: ${serverPath} with workspace: ${workspacePath}`,
+			);
+
+			// Use process.execPath for the node command if available and makes sense for the context
+			// This assumes the node running the extension is the desired node for the child process.
+			const nodeExecutable = process.execPath || "node";
 
 			// Spawn the STDIO server process
-			this.childProcess = spawn("node", [serverPath], {
+			this.childProcess = spawn(nodeExecutable, [serverPath, workspacePath], {
 				stdio: "pipe", // We'll manage stdio ourselves for MCP communication
 				cwd: this.context.extensionPath,
 				env: {

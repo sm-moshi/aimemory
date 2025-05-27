@@ -1,4 +1,6 @@
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+/**
+ * TODO: check why it's not used -> import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+ */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 import { CoreMemoryBankMCP } from "../mcp/coreMemoryBankMCP.js";
@@ -27,24 +29,23 @@ const mockMcpServerInstance = {
 };
 
 vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => {
+	// This function will be used as the constructor for ResourceTemplate
+	const MockResourceTemplateConstructor = vi.fn((uriPattern, options) => {
+		return {
+			// Return the instance directly
+			uriPattern,
+			options, // Key: options should be here
+			// If the ResourceTemplate instance is expected to have a 'list' method itself
+			// (e.g., if options.list was copied to 'this.list' in a real class)
+			// you might need to add it here based on how the actual SDK class behaves
+			// For now, the test expects options.list, so having 'options' is primary.
+			// list: options && options.list ? options.list : vi.fn() // Example if .list was direct
+		};
+	});
+
 	return {
 		McpServer: vi.fn(() => mockMcpServerInstance),
-		ResourceTemplate: vi.fn().mockImplementation((uriPattern, options) => {
-			const newInstance = {
-				uriPattern,
-				options,
-				handlers: { list: null as any, uri: null as any },
-				list: vi.fn().mockImplementation(function (this: any, handlerFn: any) {
-					this.handlers.list = handlerFn;
-					return this;
-				}),
-				uri: vi.fn().mockImplementation(function (this: any, handlerFn: any) {
-					this.handlers.uri = handlerFn;
-					return this;
-				}),
-			};
-			return newInstance;
-		}),
+		ResourceTemplate: MockResourceTemplateConstructor, // Assign the mock constructor
 	};
 });
 
@@ -142,14 +143,31 @@ describe("CoreMemoryBankMCP", () => {
 				const resourceCall = mockMcpServerInstance.resource.mock.calls.find(
 					(c) => c[0] === "memory-bank-files",
 				);
-				const templateInstance = resourceCall?.[1] as any;
+				expect(
+					resourceCall,
+					"resourceCall for 'memory-bank-files' should be defined",
+				).toBeDefined();
+
+				if (!resourceCall) {
+					throw new Error(
+						"Test logic error: resourceCall is undefined after expect().toBeDefined()",
+					);
+				}
+
+				const templateInstance = resourceCall[1] as any;
 				console.log(
 					"[Test Debug] templateInstance for memory-bank-files list:",
 					templateInstance,
 				);
 				expect(templateInstance).toBeDefined();
-				expect(templateInstance.options).toBeDefined();
-				expect(typeof templateInstance.options.list).toBe("function");
+				expect(
+					templateInstance.options,
+					"templateInstance.options should be defined",
+				).toBeDefined();
+				expect(
+					typeof templateInstance.options.list,
+					"templateInstance.options.list should be a function",
+				).toBe("function");
 
 				const listHandler = templateInstance.options.list;
 				const result = await listHandler("memory-bank://files", {});

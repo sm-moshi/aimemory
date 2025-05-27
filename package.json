@@ -6,13 +6,14 @@
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.7.1",
+	"version": "0.7.2",
 	"engines": {
 		"vscode": "^1.96.2"
 	},
 	"icon": "dist/assets/icon.png",
 	"categories": ["Other"],
 	"main": "./dist/extension.cjs",
+	"extensionTestsPath": "./out/test/suite/index.cjs",
 	"activationEvents": [
 		"onCommand:aimemory.startMCP",
 		"onCommand:aimemory.stopServer",
@@ -59,7 +60,7 @@
 		}
 	},
 	"scripts": {
-		"build": "pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
+		"build": "pnpm run build:extension && pnpm run build:webview && pnpm run build:mcp-server",
 		"build:prod": "pnpm run check-types && NODE_ENV=production rollup -c && cd src/webview && pnpm run build",
 		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
 		"dev": "npm-run-all -p watch:rollup webview:dev",
@@ -69,14 +70,21 @@
 		"lint:fix": "biome check src --write",
 		"format": "biome format src --write",
 		"check-types": "tsc --noEmit",
-		"test": "pnpm run build && pnpm exec vscode-test",
+		"test": "pnpm build:tests && cross-env NODE_ENV=test node ./node_modules/@vscode/test-cli/out/cli.js --extensions-dir .vscode-test/extensions --user-data-dir .vscode-test/user-data .",
 		"test:unit": "vitest run",
 		"test:unit:watch": "vitest",
+		"test:watch": "vitest watch",
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:all": "pnpm run test:coverage && cd src/webview && pnpm run test:coverage && cd ../..",
 		"package": "pnpm run build:prod && pnpm vsce package --no-dependencies",
 		"update-docs-date": "node scripts/update-docs-date.js",
-		"build-check": "tsx scripts/build-check.ts"
+		"build-check": "tsx scripts/build-check.ts",
+		"build:webview": "cd src/webview && vite build --config ./vite.config.ts",
+		"deploy": "pnpm package && vsce publish",
+		"vscode:prepublish": "pnpm run build",
+		"build:mcp-server": "rollup -c rollup.config.js --configMCP",
+		"build:tests": "rollup -c rollup.config.js --configTests",
+		"build:extension": "rollup -c rollup.config.js --configExtension"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
@@ -89,9 +97,9 @@
 		"@types/node": "20.17.51",
 		"@types/vscode": "1.96.0",
 		"@vitest/coverage-v8": "3.1.4",
-		"@vscode/test-cli": "0.0.10",
+		"@vscode/test-cli": "0.0.11",
 		"@vscode/test-electron": "2.5.2",
-		"@vscode/vsce": "3.4.2",
+		"@vscode/vsce": "3.4.3-0",
 		"npm-run-all": "4.1.5",
 		"rollup": "4.41.1",
 		"rollup-plugin-copy": "3.5.0",
@@ -103,7 +111,7 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "1.12.0",
-		"zod": "3.25.30"
+		"zod": "3.25.31"
 	},
 	"packageManager": "pnpm@10.11.0",
 	"pnpm": {

@@ -7,19 +7,19 @@ import { CURSOR_MEMORY_BANK_FILENAME, CURSOR_MEMORY_BANK_RULES_FILE } from "../l
 import { getTemplateForFileType } from "../lib/memoryBankTemplates.js";
 import type { MemoryBank, MemoryBankFile } from "../types/types.js";
 import { MemoryBankFileType } from "../types/types.js";
-import { LogLevel, Logger } from "../utils/log.js";
+import { Logger } from "../utils/log.js";
 
 export class MemoryBankService implements MemoryBank {
-	private _memoryBankFolder: string;
+	private readonly _memoryBankFolder: string;
 	files: Map<MemoryBankFileType, MemoryBankFile> = new Map();
-	private cursorRulesService: CursorRulesService;
+	private readonly cursorRulesService: CursorRulesService;
 	private ready = false;
 
 	// In-memory cache: key is file path, value is { content, mtimeMs }
-	private _fileCache: Map<string, { content: string; mtimeMs: number }> = new Map();
+	private readonly _fileCache: Map<string, { content: string; mtimeMs: number }> = new Map();
 	private _cacheStats = { hits: 0, misses: 0, reloads: 0 };
 
-	constructor(private context: vscode.ExtensionContext) {
+	constructor(private readonly context: vscode.ExtensionContext) {
 		const workspaceFolders = vscode.workspace.workspaceFolders;
 		if (!workspaceFolders) {
 			throw new Error("No workspace folder found");
@@ -330,5 +330,17 @@ ${issues.join("\n")}`;
 	// Reset cache stats
 	resetCacheStats() {
 		this._cacheStats = { hits: 0, misses: 0, reloads: 0 };
+	}
+
+	async writeFileByPath(relativePath: string, content: string): Promise<void> {
+		const fullPath = path.join(this._memoryBankFolder, relativePath);
+		await fs.mkdir(path.dirname(fullPath), { recursive: true }); // Ensure directory exists
+		await fs.writeFile(fullPath, content);
+		const stats = await fs.stat(fullPath);
+		// Update cache after write
+		this._fileCache.set(fullPath, { content, mtimeMs: stats.mtimeMs });
+		Logger.getInstance().info(`Written file by path: ${relativePath}`);
+		// Note: This does not update the this.files map which is keyed by MemoryBankFileType
+		// For arbitrary paths, direct cache update and disk write is performed.
 	}
 }

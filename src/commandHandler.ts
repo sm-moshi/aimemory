@@ -1,14 +1,14 @@
-import * as vscode from "vscode";
 import type { MCPServerInterface } from "./types/mcpTypes.js";
 import type { MemoryBankFile } from "./types/types.js";
 
 export class CommandHandler {
-	constructor(private mcpServer: MCPServerInterface) {}
+	constructor(private readonly mcpServer: MCPServerInterface) {}
 
 	/**
 	 * Process a /memory command sent in the Cursor AI input
 	 * Format: /memory <command> [args...]
 	 */
+
 	async processMemoryCommand(text: string): Promise<string | undefined> {
 		if (!text.trim().startsWith("/memory")) {
 			return undefined;
@@ -32,6 +32,8 @@ export class CommandHandler {
 					return await this.handleInitializeCommand();
 				case "health":
 					return await this.mcpServer.getMemoryBank().checkHealth();
+				case "write":
+					return await this.handleWriteFileByPathCommand(args);
 				default:
 					return `Command "${command}" is not supported.\n\n${this.getHelpText()}`;
 			}
@@ -180,7 +182,28 @@ export class CommandHandler {
 		}
 	}
 
+	/**
+	 * Handle the write file by path command
+	 * Usage: /memory write <relativePath> <content>
+	 */
+	private async handleWriteFileByPathCommand(args: string[]): Promise<string> {
+		if (args.length < 2) {
+			return "Error: /memory write requires a relative path and content.\nUsage: /memory write <relativePath> <content>";
+		}
+
+		const relativePath = args[0];
+		const content = args.slice(1).join(" ");
+
+		try {
+			await this.mcpServer.getMemoryBank().writeFileByPath(relativePath, content);
+			return `Successfully wrote to ${relativePath}`;
+		} catch (error) {
+			return `Error writing to ${relativePath}: ${error instanceof Error ? error.message : String(error)}`;
+		}
+	}
+
 	//TODO: Think about if it's worth adding a /plan command or let that be handled by rules
+
 	async processModesCommand(text: string): Promise<string | undefined> {
 		// Check if text starts with /modes
 		if (!text.trim().startsWith("/plan")) {
@@ -201,6 +224,7 @@ AI Memory Bank Commands:
 /memory update <fileType> <content> - Update a specific memory bank file
 /memory initialize - Initialise the memory bank
 /memory init - Alias for /memory initialize
+/memory write <relativePath> <content> - Write content to a specific file path in the memory bank
 /memory health - Check the health of the memory bank
 /memory help - Show this help text
 

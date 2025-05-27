@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Initialise the singleton Logger and set log level from config
 	const logger = Logger.getInstance();
 	const config = vscode.workspace.getConfiguration("aimemory");
-	const initialLevel = parseLogLevel(config.get<string>("logLevel") || "info");
+	const initialLevel = parseLogLevel(config.get<string>("logLevel") ?? "info");
 	logger.setLevel(initialLevel);
 
 	// Listen for changes to the log level config and update logger dynamically
@@ -43,7 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration("aimemory.logLevel")) {
 				const newLevel =
-					vscode.workspace.getConfiguration("aimemory").get<string>("logLevel") || "info";
+					vscode.workspace.getConfiguration("aimemory").get<string>("logLevel") ?? "info";
 				logger.setLevel(parseLogLevel(newLevel));
 				logger.info(`Log level changed to: ${newLevel}`);
 			}
@@ -69,9 +69,9 @@ export function activate(context: vscode.ExtensionContext) {
 		"aimemory.updateMCPConfig",
 		async () => {
 			try {
-				await updateCursorMCPConfig(mcpServer.getPort());
+				await updateCursorMCPConfig(context.extensionPath);
 				vscode.window.showInformationMessage(
-					`Cursor MCP config has been updated to use AI Memory server on port ${mcpServer.getPort()}`,
+					"Cursor MCP config (mcp.json) has been configured for AI Memory (STDIO).",
 				);
 			} catch (error) {
 				vscode.window.showErrorMessage(
@@ -96,6 +96,9 @@ export function activate(context: vscode.ExtensionContext) {
 			// Start the STDIO MCP server
 			await mcpServer.start();
 
+			// Ensure the .cursor/rules/memory-bank.mdc file exists
+			await mcpServer.getMemoryBank().createMemoryBankRulesIfNotExists();
+
 			// Show information about the MCP server
 			vscode.window.showInformationMessage(
 				"AI Memory MCP server started using STDIO transport. Ready for Cursor MCP integration.",
@@ -107,8 +110,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const stopServerCommand = vscode.commands.registerCommand("aimemory.stopServer", async () => {
-		await mcpServer.stop();
+	const stopServerCommand = vscode.commands.registerCommand("aimemory.stopServer", () => {
+		mcpServer.stop();
 	});
 
 	// Register the Cursor AI command interceptor

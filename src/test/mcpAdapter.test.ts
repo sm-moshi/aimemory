@@ -1,6 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
 import { MemoryBankMCPAdapter } from "../mcp/mcpAdapter.js";
 
+// Mock vscode API
+vi.mock("vscode", () => ({
+	workspace: {
+		workspaceFolders: [
+			{
+				uri: { fsPath: "/mock/workspace" },
+				name: "Mock Workspace",
+				index: 0,
+			},
+		],
+	},
+	// TODO: Add other vscode parts if needed by the adapter, e.g., window for messages
+	window: {
+		showInformationMessage: vi.fn(),
+		showErrorMessage: vi.fn(),
+		// ... any other window properties used
+	},
+}));
+
 // Mock dependencies
 vi.mock("node:child_process", () => ({
 	spawn: vi.fn(() => ({

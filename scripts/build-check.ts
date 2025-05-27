@@ -32,7 +32,7 @@ console.log("🔍 Checking build environment...");
 
 // 1. Check key build outputs
 checkPathExists("dist/extension.cjs", "Extension backend");
-checkPathExists("dist/index.js", "MCP stdio server");
+checkPathExists("dist/index.cjs", "MCP stdio server");
 checkPathExists("dist/webview/index.html", "Webview build output");
 
 // 2. Check for webview assets

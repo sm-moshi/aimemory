@@ -1,12 +1,10 @@
 import * as path from "node:path";
 // @ts-ignore
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-// @ts-ignore
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { readMemoryBankFile, updateMemoryBankFile } from "../core/memoryBankCore.js";
 import type { MemoryBankFileType } from "../core/memoryBankCore.js";
+// @ts-ignore
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 import {
@@ -15,14 +13,34 @@ import {
 } from "../lib/mcp-prompts.js";
 
 // Initialize memory bank service core for advanced operations
-// Note: Using process.cwd() since we're building to CommonJS and import.meta.url isn't available
-const MEMORY_BANK_DIR = path.resolve(process.cwd(), "memory-bank");
+
+// Expect workspace path as the first argument (index 2 in process.argv)
+// process.argv[0] is node executable, process.argv[1] is the script path
+const workspaceArg = process.argv[2];
+
+if (!workspaceArg) {
+	console.error(
+		"[mcpServerCli] Error: Workspace path argument not provided. MCP server cannot start without a workspace path.",
+	);
+	// Optional: Exit if critical, or attempt a default (though risky for pathing)
+	process.exit(1); // Exit if workspace path is mandatory
+}
+
+// Resolve the memory bank directory relative to the provided workspace path
+const MEMORY_BANK_DIR = path.resolve(workspaceArg, "memory-bank");
+console.error(`[mcpServerCli] Workspace argument: ${workspaceArg}`);
+console.error(`[mcpServerCli] MEMORY_BANK_DIR resolved to: ${MEMORY_BANK_DIR}`);
+
 const memoryBankCore = new MemoryBankServiceCore(MEMORY_BANK_DIR);
 
 const server = new McpServer({
 	name: "AI Memory MCP Server",
-	version: "0.6.1",
+	version: "0.7.1",
 });
+
+// Define Zod schemas for tool parameters
+const readMemoryBankFileSchema = z.object({ fileType: z.string() });
+const updateMemoryBankFileSchema = z.object({ fileType: z.string(), content: z.string() });
 
 // Register MCP prompts
 registerMemoryBankPrompts(server);
@@ -106,28 +124,84 @@ server.resource("memory-bank-root", "memory-bank://", async () => {
 });
 
 // Existing tools
-server.tool("read-memory-bank-file", { fileType: z.string() }, async ({ fileType }) => {
-	const content = await readMemoryBankFile(fileType as MemoryBankFileType);
-	return { content: [{ type: "text", text: content }] };
-});
+server.tool(
+	"read-memory-bank-file",
+	readMemoryBankFileSchema.shape,
+	async (args: z.infer<typeof readMemoryBankFileSchema>, extra) => {
+		const { fileType } = args;
+		// Ensure files are loaded in the correct instance
+		if (!memoryBankCore.isReady()) {
+			try {
+				await memoryBankCore.loadFiles();
+			} catch (err) {
+				const errorMessage = err instanceof Error ? err.message : String(err);
+				console.error(
+					`[mcpServerCli] Error loading files for read-memory-bank-file: ${errorMessage}`,
+				);
+				return {
+					content: [
+						{
+							type: "text" as const,
+							text: `Error loading memory bank: ${errorMessage}`,
+						},
+					],
+					isError: true,
+				};
+			}
+		}
+		const file = memoryBankCore.getFile(fileType as MemoryBankFileType);
+		if (!file) {
+			return {
+				content: [
+					{
+						type: "text" as const,
+						text: `File ${fileType} not found.`,
+					},
+				],
+				isError: true,
+			};
+		}
+		return { content: [{ type: "text", text: file.content }] };
+	},
+);
 
 server.tool(
 	"update-memory-bank-file",
-	{ fileType: z.string(), content: z.string() },
-	async ({ fileType, content }) => {
-		await updateMemoryBankFile(fileType as MemoryBankFileType, content);
-		return { content: [{ type: "text", text: "success" }] };
+	updateMemoryBankFileSchema.shape,
+	async (args: z.infer<typeof updateMemoryBankFileSchema>, extra) => {
+		const { fileType, content } = args;
+		try {
+			// Ensure files are loaded in the correct instance if not ready,
+			// though updateFile itself should handle necessary loading/checks.
+			if (!memoryBankCore.isReady()) {
+				await memoryBankCore.loadFiles();
+			}
+			await memoryBankCore.updateFile(fileType as MemoryBankFileType, content);
+			return { content: [{ type: "text", text: "success" }] };
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.error(`[mcpServerCli] Error in update-memory-bank-file: ${errorMessage}`);
+			return {
+				content: [
+					{
+						type: "text" as const,
+						text: `Error updating file ${fileType}: ${errorMessage}`,
+					},
+				],
+				isError: true,
+			};
+		}
 	},
 );
 
 // NEW TOOL 1: Initialize memory bank
 server.tool("init-memory-bank", {}, async () => {
-	console.log("Initializing memory bank");
+	console.error("Initializing memory bank");
 	try {
 		const isInitialized = await memoryBankCore.getIsMemoryBankInitialized();
 		if (!isInitialized) {
 			await memoryBankCore.initializeFolders();
-			console.log("Memory bank not initialized, sending initialization prompt");
+			console.error("Memory bank not initialized, sending initialization prompt");
 			return {
 				content: [
 					{
@@ -163,7 +237,7 @@ server.tool("init-memory-bank", {}, async () => {
 
 // NEW TOOL 2: Read all memory bank files (plural)
 server.tool("read-memory-bank-files", {}, async () => {
-	console.log("Reading memory bank files");
+	console.error("Reading memory bank files");
 	try {
 		// Memory bank readiness check
 		if (!memoryBankCore.isReady()) {
@@ -196,7 +270,7 @@ server.tool("read-memory-bank-files", {}, async () => {
 		// Ensure files are loaded (or reloaded) before getting content
 		await memoryBankCore.loadFiles();
 		const files = memoryBankCore.getFilesWithFilenames();
-		console.log("Memory Bank Files Read Successfully.");
+		console.error("Memory Bank Files Read Successfully.");
 		return {
 			content: [
 				{
@@ -226,36 +300,46 @@ server.tool("read-memory-bank-files", {}, async () => {
 
 // NEW TOOL 3: List memory bank files with metadata
 server.tool("list-memory-bank-files", {}, async () => {
-	console.log("Listing memory bank files");
+	console.error("Listing memory bank files");
 	try {
 		// Memory bank readiness check
 		if (!memoryBankCore.isReady()) {
+			console.error(
+				"Memory bank not ready. Attempting to load files for 'list-memory-bank-files'...",
+			);
 			try {
 				await memoryBankCore.loadFiles();
+				// If loadFiles succeeds, check readiness again
+				if (!memoryBankCore.isReady()) {
+					console.error("Memory bank still not ready after load attempt.");
+					return {
+						content: [
+							{
+								type: "text" as const,
+								text: "Memory bank is not ready and could not be loaded. Please initialise it first.",
+							},
+						],
+						isError: true,
+					};
+				}
 			} catch (err) {
-				console.error("Memory bank not ready and failed to load:", err);
+				console.error(
+					"Memory bank not ready and failed to load files during 'list-memory-bank-files':",
+					err,
+				);
 				return {
 					content: [
 						{
 							type: "text" as const,
-							text: "Memory bank is not ready. Please initialise it first.",
-						},
-					],
-					isError: true,
-				};
-			}
-			if (!memoryBankCore.isReady()) {
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: "Memory bank is not ready. Please initialise it first.",
+							text: "Error attempting to load memory bank. Please initialise it first.",
 						},
 					],
 					isError: true,
 				};
 			}
 		}
+
+		// If we reach here, either the memory bank was ready initially, or it became ready after the load attempt.
 		const files = memoryBankCore.getAllFiles();
 		const fileListText = files
 			.map(
@@ -266,7 +350,7 @@ server.tool("list-memory-bank-files", {}, async () => {
 			)
 			.join("\n");
 
-		console.log("Memory Bank Files Listed Successfully.");
+		console.error("Memory Bank Files Listed Successfully.");
 		return {
 			content: [
 				{
@@ -302,21 +386,45 @@ server.tool("health-check-memory-bank", {}, async () => {
 server.tool("review-and-update-memory-bank", {}, async () => {
 	// Memory bank readiness check
 	if (!memoryBankCore.isReady()) {
+		console.error(
+			"Memory bank not ready. Attempting to load files for 'review-and-update-memory-bank'...",
+		);
 		try {
 			await memoryBankCore.loadFiles();
+			if (!memoryBankCore.isReady()) {
+				// If loadFiles succeeds, check readiness again
+				console.error(
+					"Memory bank still not ready after load attempt for 'review-and-update-memory-bank'.",
+				);
+				return {
+					content: [
+						{
+							type: "text" as const,
+							text: "Memory bank is not ready and could not be loaded. Please initialise it first.",
+						},
+					],
+					isError: true,
+				};
+			}
 		} catch (err) {
+			console.error(
+				"Memory bank not ready and failed to load files during 'review-and-update-memory-bank':",
+				err,
+			);
 			return {
 				content: [
 					{
 						type: "text" as const,
-						text: "Memory bank is not ready. Please initialise it first.",
+						text: "Error attempting to load memory bank. Please initialise it first.",
 					},
 				],
 				isError: true,
 			};
 		}
 	}
-	await memoryBankCore.loadFiles();
+
+	// If we reach here, the memory bank is ready (either initially or after a successful load attempt).
+	// No need to call memoryBankCore.loadFiles() again if the above block handled it.
 	const files = memoryBankCore.getAllFiles();
 	const reviewMessages = files.map((file) => ({
 		type: "text" as const,

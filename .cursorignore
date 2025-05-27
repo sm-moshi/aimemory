@@ -2,3 +2,4 @@ archive/
 docs/maybe/
 .vscode-test/user-data/
 .vscode-test/vscode-darwin-arm64-1.96.2/
+node_modules/
