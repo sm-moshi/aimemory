@@ -17,6 +17,7 @@ import {
 	performHealthCheck,
 	updateMemoryBankFile as updateMemoryBankFileHelper, // Renamed to avoid conflict
 	validateAllMemoryBankFiles,
+	validateAndConstructArbitraryFilePath,
 	validateMemoryBankDirectory,
 } from "../utils/fileOperationHelpers.js";
 
@@ -109,7 +110,10 @@ export class MemoryBankServiceCore implements MemoryBank {
 	}
 
 	async writeFileByPath(relativePath: string, content: string): Promise<void> {
-		const fullPath = path.join(this._memoryBankFolder, relativePath);
+		const fullPath = validateAndConstructArbitraryFilePath(
+			this._memoryBankFolder,
+			relativePath,
+		);
 		await fs.mkdir(path.dirname(fullPath), { recursive: true }); // Ensure directory exists
 		await fs.writeFile(fullPath, content);
 		const stats = await fs.stat(fullPath);

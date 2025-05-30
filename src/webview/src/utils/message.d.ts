@@ -1,9 +1,9 @@
 export type WebviewLogLevel = "info" | "error";
 export interface WebviewLogMessage {
-    command: "logMessage";
-    level: WebviewLogLevel;
-    text: string;
-    meta?: Record<string, unknown>;
+	command: "logMessage";
+	level: WebviewLogLevel;
+	text: string;
+	meta?: Record<string, unknown>;
 }
 export type WebviewMessage = WebviewLogMessage;
 export declare const postMessage: (message: WebviewMessage) => void;
@@ -13,5 +13,9 @@ export declare const postMessage: (message: WebviewMessage) => void;
  * @param level The log level ("info" | "error"). Defaults to "info".
  * @param meta Optional structured metadata for context.
  */
-export declare function sendLog(text: string, level?: WebviewLogLevel, meta?: Record<string, unknown>): void;
+export declare function sendLog(
+	text: string,
+	level?: WebviewLogLevel,
+	meta?: Record<string, unknown>,
+): void;
 //# sourceMappingURL=message.d.ts.map

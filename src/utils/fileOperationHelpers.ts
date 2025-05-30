@@ -7,7 +7,7 @@
 
 import type { Stats } from "node:fs";
 import fs from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { getTemplateForFileType } from "../lib/memoryBankTemplates.js";
 import type {
 	CacheStats,
@@ -18,6 +18,69 @@ import type {
 	MemoryBankFile,
 } from "../types/types.js";
 import { MemoryBankFileType } from "../types/types.js";
+
+/**
+ * Validates and constructs a safe file path within the memory bank directory
+ * Prevents path traversal attacks by ensuring the resolved path stays within the root folder
+ */
+export function validateAndConstructFilePath(memoryBankFolder: string, fileType: string): string {
+	// First validate that the fileType is a known enum value
+	const validFileTypes = Object.values(MemoryBankFileType) as string[];
+	if (!validFileTypes.includes(fileType)) {
+		throw new Error(
+			`Invalid file type: ${fileType}. Must be one of: ${validFileTypes.join(", ")}`,
+		);
+	}
+
+	// Normalize the memory bank folder path
+	const normalizedRoot = resolve(memoryBankFolder);
+
+	// Construct the file path and normalize it to resolve any ".." segments
+	const constructedPath = join(normalizedRoot, fileType);
+	const normalizedPath = resolve(constructedPath);
+
+	// Ensure the normalized path is still within the memory bank directory
+	if (!normalizedPath.startsWith(`${normalizedRoot}/`) && normalizedPath !== normalizedRoot) {
+		throw new Error(`Invalid file path: ${fileType} resolves outside memory bank directory`);
+	}
+
+	return normalizedPath;
+}
+
+/**
+ * Validates and constructs a safe arbitrary file path within the memory bank directory
+ * Similar to validateAndConstructFilePath but allows any relative path (not just enum values)
+ * Used for writeFileByPath operations with user-provided paths
+ */
+export function validateAndConstructArbitraryFilePath(
+	memoryBankFolder: string,
+	relativePath: string,
+): string {
+	// Validate input - reject dangerous sequences
+	if (
+		relativePath.includes("..") ||
+		relativePath.startsWith("/") ||
+		relativePath.includes("\0")
+	) {
+		throw new Error(`Invalid relative path: ${relativePath} contains dangerous sequences`);
+	}
+
+	// Normalize the memory bank folder path
+	const normalizedRoot = resolve(memoryBankFolder);
+
+	// Construct the file path and normalize it to resolve any ".." segments
+	const constructedPath = join(normalizedRoot, relativePath);
+	const normalizedPath = resolve(constructedPath);
+
+	// Ensure the normalized path is still within the memory bank directory
+	if (!normalizedPath.startsWith(`${normalizedRoot}/`) && normalizedPath !== normalizedRoot) {
+		throw new Error(
+			`Invalid file path: ${relativePath} resolves outside memory bank directory`,
+		);
+	}
+
+	return normalizedPath;
+}
 
 /**
  * Cache Manager Class
@@ -114,7 +177,7 @@ export async function validateSingleFile(
 	fileType: MemoryBankFileType,
 	context: FileOperationContext,
 ): Promise<FileValidationResult> {
-	const filePath = join(context.memoryBankFolder, fileType);
+	const filePath = validateAndConstructFilePath(context.memoryBankFolder, fileType);
 
 	try {
 		const stats = await fs.stat(filePath);
@@ -183,7 +246,7 @@ export async function loadFileWithTemplate(
 	context: FileOperationContext,
 	cacheManager: CacheManager,
 ): Promise<{ content: string; stats: Stats; wasCreated: boolean }> {
-	const filePath = join(context.memoryBankFolder, fileType);
+	const filePath = validateAndConstructFilePath(context.memoryBankFolder, fileType);
 
 	// Ensure directory exists
 	await fs.mkdir(dirname(filePath), { recursive: true });
@@ -237,8 +300,8 @@ export async function performHealthCheck(
 	// Check all required files
 	for (const fileType of Object.values(MemoryBankFileType)) {
 		if (fileType.includes("/")) {
-			const filePath = join(context.memoryBankFolder, fileType);
 			try {
+				const filePath = validateAndConstructFilePath(context.memoryBankFolder, fileType);
 				await fs.access(filePath);
 			} catch {
 				issues.push(`Missing or unreadable: ${fileType}`);
@@ -332,7 +395,7 @@ export async function updateMemoryBankFile(
 	context: FileOperationContext,
 	filesMap: Map<MemoryBankFileType, MemoryBankFile>,
 ): Promise<void> {
-	const filePath = join(context.memoryBankFolder, fileType);
+	const filePath = validateAndConstructFilePath(context.memoryBankFolder, fileType);
 
 	await fs.writeFile(filePath, content);
 	const stats = await fs.stat(filePath);

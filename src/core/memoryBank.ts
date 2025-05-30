@@ -9,9 +9,9 @@ import type {
 	FileOperationContext,
 	MemoryBank,
 	MemoryBankFile,
+	MemoryBankFileType,
 	MemoryBankLogger,
 } from "../types/types.js";
-import type { MemoryBankFileType } from "../types/types.js";
 import {
 	CacheManager,
 	ensureMemoryBankFolders,
@@ -19,6 +19,7 @@ import {
 	performHealthCheck,
 	updateMemoryBankFile as updateMemoryBankFileHelper,
 	validateAllMemoryBankFiles,
+	validateAndConstructArbitraryFilePath,
 	validateMemoryBankDirectory,
 } from "../utils/fileOperationHelpers.js";
 import { Logger } from "../utils/log.js";
@@ -208,7 +209,10 @@ export class MemoryBankService implements MemoryBank {
 	}
 
 	async writeFileByPath(relativePath: string, content: string): Promise<void> {
-		const fullPath = path.join(this._memoryBankFolder, relativePath);
+		const fullPath = validateAndConstructArbitraryFilePath(
+			this._memoryBankFolder,
+			relativePath,
+		);
 		await fs.mkdir(path.dirname(fullPath), { recursive: true }); // Ensure directory exists
 		await fs.writeFile(fullPath, content);
 		const stats = await fs.stat(fullPath);

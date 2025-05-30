@@ -38,7 +38,45 @@ pnpm run build-check
 
 This script is particularly useful before running `pnpm run package` to ensure the build is complete and valid.
 
-### `update-docs-date.js`
+### `refactor-imports.ts`
+
+Analyzes TypeScript files for wildcard imports (`import * as moduleName from 'module'`) and suggests specific, named imports. This helps improve code clarity and can reduce bundle sizes by only importing what's necessary.
+
+**Usage:**
+
+```bash
+tsx scripts/refactor-imports.ts
+```
+
+**Features:**
+
+- Processes a predefined list of files.
+- Identifies wildcard imports for `fs`, `path`, and `vscode` modules.
+- Lists the specific functions/methods used from these modules.
+- Suggests the correct named import syntax.
+- Provides a summary of how many files contain wildcard imports.
+
+**Example Output:**
+
+```text
+🔍 Analyzing wildcard import usage...
+
+📁 src/core/memoryBankServiceCore.ts
+   fs: readFile, writeFile, stat, mkdir
+   suggested: import { readFile, writeFile, stat, mkdir } from "node:fs/promises";
+   path: resolve, join, dirname
+   suggested: import { resolve, join, dirname } from "node:path";
+
+...
+
+✅ Analysis complete! Use the suggested imports to refactor manually.
+
+📊 Summary: X/Y files have wildcard imports
+```
+
+This script helps maintain clean import statements and encourages a more explicit style of dependency management within the TypeScript codebase.
+
+### `update-docs-date.ts`
 
 Automatically updates "Last updated" timestamps in markdown documentation files throughout the project.
 

@@ -3,8 +3,9 @@ dist/
 **/coverage/**
 !**/coverage/lcov.info
 .vscode-test/
-*.tsbuildinfo
-*.d.ts.map
+*.tsbuildinfonfo
+**/**/*.d.ts.map
+**/**/*.test.d.ts.map
 
 # Node
 node_modules/
@@ -23,4 +24,5 @@ docs/devs/
 # Others
 out/
 .repomix/
-*.vsix
+.vsix
+archive/
