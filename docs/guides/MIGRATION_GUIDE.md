@@ -1,6 +1,6 @@
 # AI Memory Extension Migration Guide
 
-_Last updated: 2025-05-17 🐹_
+> _Last updated: 2025-05-28 🐹_
 
 This guide helps you upgrade from older versions of AI Memory (0.0.x) to the latest modular, self-healing, and robust 0.1.x+ and 0.2.x+ releases.
 

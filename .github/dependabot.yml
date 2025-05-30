@@ -5,16 +5,75 @@ version: 2
 updates:
   # Enable version updates for npm
   - package-ecosystem: "npm"
-    # Look for `package.json` and `lock` files in the `root` directory
     directory: "/"
-    # Check the npm registry for updates every day (weekdays)
     schedule:
-      interval: "weekly"
+      interval: "weekly"  # Changed from daily - less noise, still responsive
+      day: "monday"       # Consistent weekly schedule
+      time: "00:00"       # UTC timezone (GitHub Actions friendly)
+    # Group related updates to reduce PR noise
+    groups:
+      vscode-types:
+        patterns:
+          - "@types/vscode*"
+          - "@vscode/*"
+        applies-to: version-updates
+      dev-tools:
+        patterns:
+          - "@biomejs/*"
+          - "@rollup/*"
+          - "@swc/*"
+          - "rollup*"
+          - "vite*"
+          - "tsx"
+          - "typescript"
+        applies-to: version-updates
+      testing:
+        patterns:
+          - "@vitest/*"
+          - "vitest"
+          - "cross-env"
+        applies-to: version-updates
+      production:
+        patterns:
+          - "@modelcontextprotocol/*"
+          - "zod"
+        applies-to: version-updates
+    # Limit open PRs to keep things manageable
+    open-pull-requests-limit: 5
+    # Custom labels for better issue tracking
+    labels:
+      - "dependencies"
+      - "npm"
+      - "automerge-candidate"
+    # Consistent commit messages
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Ignore major version updates for stable dependencies
+    ignore:
+      - dependency-name: "@types/vscode"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
-  # Enable version updates for GitHub Actions
+  # GitHub Actions Updates
   - package-ecosystem: "github-actions"
-    # Workflow files stored in the default location of `.github/workflows`
-    # You don't need to specify `/.github/workflows` for `directory`. You can use `directory: "/"`.
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    # Group all action updates together
+    groups:
+      actions:
+        patterns:
+          - "*"
+        applies-to: version-updates
+    open-pull-requests-limit: 2
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automerge-candidate"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
