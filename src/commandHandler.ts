@@ -1,5 +1,6 @@
 import type { MCPServerInterface } from "./types/mcpTypes.js";
 import type { MemoryBankFile } from "./types/types.js";
+import { formatErrorMessage } from "./utils/errorHelpers.js";
 
 export class CommandHandler {
 	constructor(private readonly mcpServer: MCPServerInterface) {}
@@ -39,7 +40,7 @@ export class CommandHandler {
 			}
 		} catch (error) {
 			console.error("Error processing command:", error);
-			return `Error processing command: ${error instanceof Error ? error.message : String(error)}`;
+			return formatErrorMessage("Error processing command", error);
 		}
 	}
 
@@ -165,7 +166,7 @@ export class CommandHandler {
 			await this.mcpServer.updateMemoryBankFile(fileType, content);
 			return `Successfully updated ${fileType}`;
 		} catch (error) {
-			return `Error updating ${fileType}: ${error instanceof Error ? error.message : String(error)}`;
+			return formatErrorMessage(`Error updating ${fileType}`, error);
 		}
 	}
 
@@ -178,7 +179,7 @@ export class CommandHandler {
 			await this.mcpServer.getMemoryBank().loadFiles();
 			return "Memory bank initialised successfully.";
 		} catch (error) {
-			return `Error initialising memory bank: ${error instanceof Error ? error.message : String(error)}`;
+			return formatErrorMessage("Error initialising memory bank", error);
 		}
 	}
 
@@ -198,20 +199,11 @@ export class CommandHandler {
 			await this.mcpServer.getMemoryBank().writeFileByPath(relativePath, content);
 			return `Successfully wrote to ${relativePath}`;
 		} catch (error) {
-			return `Error writing to ${relativePath}: ${error instanceof Error ? error.message : String(error)}`;
+			return formatErrorMessage(`Error writing to ${relativePath}`, error);
 		}
 	}
 
 	//TODO: Think about if it's worth adding a /plan command or let that be handled by rules
-
-	async processModesCommand(text: string): Promise<string | undefined> {
-		// Check if text starts with /modes
-		if (!text.trim().startsWith("/plan")) {
-			return undefined;
-		}
-
-		return "";
-	}
 
 	/**
 	 * Show help text for available commands

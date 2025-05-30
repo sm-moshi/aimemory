@@ -90,7 +90,7 @@ export default [
 
 	// MCP CLI Build
 	{
-		input: "src/mcp/mcpServerCli.ts",
+		input: "src/mcp/mcpServerCliEntry.ts",
 		output: {
 			file: path.join(outDir, "index.cjs"),
 			format: "cjs",

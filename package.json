@@ -6,9 +6,10 @@
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.7.3",
+	"version": "0.8.0-dev.1",
 	"engines": {
-		"vscode": "^1.96.2"
+		"vscode": "^1.96.2",
+		"pnpm": ">=10.11.0"
 	},
 	"icon": "dist/assets/icon.png",
 	"categories": ["Other"],
@@ -60,60 +61,61 @@
 		}
 	},
 	"scripts": {
+		"dev": "npm-run-all -p watch:rollup webview:dev",
 		"build": "pnpm run build:extension && pnpm run build:webview && pnpm run build:mcp-server",
+		"build:extension": "rollup -c rollup.config.js --configExtension",
+		"build:webview": "cd src/webview && vite build --config ./vite.config.ts",
+		"build:mcp-server": "rollup -c rollup.config.js --configMCP",
+		"build:tests": "rollup -c rollup.config.js --configTests",
 		"build:prod": "pnpm run check-types && NODE_ENV=production rollup -c && cd src/webview && pnpm run build",
 		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
-		"dev": "npm-run-all -p watch:rollup webview:dev",
 		"watch:rollup": "rollup -c --watch",
 		"webview:dev": "cd src/webview && pnpm run dev",
-		"lint": "biome check src",
-		"lint:fix": "biome check src --write",
-		"format": "biome format src --write",
-		"check-types": "tsc --noEmit",
-		"test": "pnpm build:tests && cross-env NODE_ENV=test node ./node_modules/@vscode/test-cli/out/cli.js --extensions-dir .vscode-test/extensions --user-data-dir .vscode-test/user-data .",
+		"test": "pnpm build:tests && cross-env NODE_ENV=test npx vscode-test --extensions-dir .vscode-test/extensions --user-data-dir .vscode-test/user-data .",
 		"test:unit": "vitest run",
 		"test:unit:watch": "vitest",
 		"test:watch": "vitest watch",
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:all": "pnpm run test:coverage && cd src/webview && pnpm run test:coverage && cd ../..",
+		"lint": "biome check src",
+		"lint:fix": "biome check src --write",
+		"format": "biome format src --write",
+		"check-types": "tsc --noEmit",
 		"package": "pnpm run build:prod && pnpm vsce package --no-dependencies",
-		"update-docs-date": "tsx scripts/update-docs-date.ts",
-		"build-check": "tsx scripts/build-check.ts",
-		"build:webview": "cd src/webview && vite build --config ./vite.config.ts",
 		"deploy": "pnpm package && vsce publish",
 		"vscode:prepublish": "pnpm run build",
-		"build:mcp-server": "rollup -c rollup.config.js --configMCP",
-		"build:tests": "rollup -c rollup.config.js --configTests",
-		"build:extension": "rollup -c rollup.config.js --configExtension"
+		"update-docs-date": "tsx scripts/update-docs-date.ts",
+		"build-check": "tsx scripts/build-check.ts"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
-		"@rollup/plugin-commonjs": "28.0.3",
-		"@rollup/plugin-json": "6.1.0",
-		"@rollup/plugin-node-resolve": "16.0.1",
-		"@rollup/plugin-swc": "0.4.0",
-		"@swc/core": "1.11.29",
-		"@types/node": "20.17.54",
-		"@types/vscode": "1.96.0",
-		"@vitest/coverage-v8": "3.1.4",
-		"@vscode/test-cli": "0.0.11",
-		"@vscode/vsce": "3.4.3-4",
+		"@biomejs/biome": "^1.9.4",
+		"@rollup/plugin-commonjs": "^28.0.3",
+		"@rollup/plugin-json": "^6.1.0",
+		"@rollup/plugin-node-resolve": "^16.0.1",
+		"@rollup/plugin-swc": "^0.4.0",
+		"@swc/core": "^1.11.29",
+		"@types/node": "^20.17.56",
+		"@types/vscode": "^1.96.0",
+		"@vitest/coverage-v8": "^3.1.4",
+		"@vscode/test-cli": "^0.0.11",
+		"@vscode/test-electron": "^2.5.2",
+		"@vscode/vsce": "^3.4.3-4",
 		"cross-env": "^7.0.3",
-		"npm-run-all": "4.1.5",
-		"rollup": "4.41.1",
-		"rollup-plugin-copy": "3.5.0",
-		"tsx": "4.19.4",
-		"typescript": "5.8.3",
-		"vitest": "3.1.4"
+		"npm-run-all": "^4.1.5",
+		"rollup": "^4.41.1",
+		"rollup-plugin-copy": "^3.5.0",
+		"tsx": "^4.19.4",
+		"typescript": "^5.8.3",
+		"vitest": "^3.1.4"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "1.12.1",
-		"zod": "3.25.41"
+		"@modelcontextprotocol/sdk": "^1.12.1",
+		"zod": "^3.25.42"
 	},
 	"packageManager": "pnpm@10.11.0",
 	"pnpm": {
 		"overrides": {
-			"jwa": "2.0.1"
+			"jwa": "^2.0.1"
 		},
 		"ignoredBuiltDependencies": ["esbuild", "keytar"],
 		"onlyBuiltDependencies": ["@biomejs/biome", "@swc/core", "@vscode/vsce-sign", "keytar"]

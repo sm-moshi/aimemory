@@ -1,4 +1,5 @@
 import type { MemoryBankService } from "../core/memoryBank.js";
+import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 
 /**
  * Common interface for MCP server implementations.
@@ -58,3 +59,42 @@ export interface MCPErrorResponse {
 }
 
 export type MCPResponse = MCPSuccessResponse | MCPErrorResponse;
+
+/**
+ * Configuration for base MCP server implementations
+ */
+export interface MCPServerConfig {
+	name: string;
+	version: string;
+	memoryBank: MemoryBankServiceCore;
+	logger?: Console;
+}
+
+/**
+ * Configuration for CLI-based MCP server
+ */
+export interface CLIServerConfig {
+	workspacePath: string;
+	logger?: Console;
+}
+
+/**
+ * Configuration for Core Memory Bank MCP server
+ */
+export interface CoreMemoryBankConfig {
+	memoryBankPath: string;
+	logger?: Console;
+}
+
+/**
+ * Error wrapper for type validation failures
+ */
+export class TypeValidationError extends Error {
+	constructor(
+		message: string,
+		public readonly value: unknown,
+	) {
+		super(message);
+		this.name = "TypeValidationError";
+	}
+}

@@ -15,7 +15,7 @@ import {
 	ensureMemoryBankFolders,
 	loadAllMemoryBankFiles,
 	performHealthCheck,
-	updateMemoryBankFile as updateMemoryBankFileHelper, // Renamed to avoid conflict
+	updateMemoryBankFile as updateMemoryBankFileHelper,
 	validateAllMemoryBankFiles,
 	validateAndConstructArbitraryFilePath,
 	validateMemoryBankDirectory,
@@ -25,56 +25,36 @@ export class MemoryBankServiceCore implements MemoryBank {
 	private readonly _memoryBankFolder: string;
 	files: Map<MemoryBankFileType, MemoryBankFile> = new Map();
 	private ready = false;
-	private readonly logger: MemoryBankLogger; // Changed to MemoryBankLogger interface
-
-	// In-memory cache and stats are now managed by CacheManager
-	private readonly _fileCache: Map<string, FileCache> = new Map();
-	private readonly _cacheStats: CacheStats = { hits: 0, misses: 0, reloads: 0 };
+	private readonly logger: MemoryBankLogger;
 	private readonly cacheManager: CacheManager;
 
+	// Cache management
+	private readonly _fileCache: Map<string, FileCache> = new Map();
+	private readonly _cacheStats: CacheStats = { hits: 0, misses: 0, reloads: 0 };
+
 	constructor(memoryBankPath: string, logger?: MemoryBankLogger) {
-		// Changed logger type
 		this._memoryBankFolder = memoryBankPath;
-		this.logger = logger || MemoryBankLoggerFactory.createLogger(); // Use factory
+		this.logger = logger || MemoryBankLoggerFactory.createLogger();
 		this.cacheManager = new CacheManager(this._fileCache, this._cacheStats);
 	}
 
-	// Helper to create FileOperationContext
-	private getFileOperationContext(): FileOperationContext {
-		return {
-			memoryBankFolder: this._memoryBankFolder,
-			logger: this.logger,
-			fileCache: this._fileCache, // Pass the actual maps
-			cacheStats: this._cacheStats, // Pass the actual stats object
-		};
-	}
-
 	async getIsMemoryBankInitialized(): Promise<boolean> {
-		this.logger.info("Checking if memory bank is initialised...");
-		const context = this.getFileOperationContext();
-
 		try {
-			const isDirectoryValid = await validateMemoryBankDirectory(context);
-			if (!isDirectoryValid) {
-				return false;
-			}
+			const context = this.createContext();
+			const isValid = await validateMemoryBankDirectory(context);
+			if (!isValid) return false;
 
 			const { missingFiles, filesToInvalidate } = await validateAllMemoryBankFiles(context);
+			this.invalidateFilesInCache(filesToInvalidate);
 
-			// Invalidate cache for missing/invalid files
-			for (const filePath of filesToInvalidate) {
-				this.cacheManager.invalidateCache(filePath);
+			const isInitialized = missingFiles.length === 0;
+			if (isInitialized) {
+				this.logSuccessfulInitialization();
+			} else {
+				this.logFailedInitialization(missingFiles);
 			}
 
-			if (missingFiles.length > 0) {
-				this.logger.info(
-					`Memory bank is NOT initialised. Missing/invalid files: ${missingFiles.join(", ")}`,
-				);
-				return false;
-			}
-
-			this.logger.info("Memory bank is initialised.");
-			return true;
+			return isInitialized;
 		} catch (err) {
 			this.logger.error(
 				`Error checking memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`,
@@ -84,12 +64,11 @@ export class MemoryBankServiceCore implements MemoryBank {
 	}
 
 	async initializeFolders(): Promise<void> {
-		// Delegate to the new utility function
 		await ensureMemoryBankFolders(this._memoryBankFolder);
 	}
 
 	async loadFiles(): Promise<MemoryBankFileType[]> {
-		const context = this.getFileOperationContext();
+		const context = this.createContext();
 		const createdFiles = await loadAllMemoryBankFiles(context, this.files);
 		this.ready = true;
 		return createdFiles;
@@ -105,7 +84,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 	}
 
 	async updateFile(type: MemoryBankFileType, content: string): Promise<void> {
-		const context = this.getFileOperationContext();
+		const context = this.createContext();
 		await updateMemoryBankFileHelper(type, content, context, this.files);
 	}
 
@@ -114,10 +93,10 @@ export class MemoryBankServiceCore implements MemoryBank {
 			this._memoryBankFolder,
 			relativePath,
 		);
-		await fs.mkdir(path.dirname(fullPath), { recursive: true }); // Ensure directory exists
+		await fs.mkdir(path.dirname(fullPath), { recursive: true });
 		await fs.writeFile(fullPath, content);
+
 		const stats = await fs.stat(fullPath);
-		// Update cache after write
 		this._fileCache.set(fullPath, { content, mtimeMs: stats.mtimeMs });
 		this.logger.info(`Written file by path: ${relativePath}`);
 	}
@@ -128,32 +107,60 @@ export class MemoryBankServiceCore implements MemoryBank {
 
 	getFilesWithFilenames(): string {
 		return Array.from(this.files.entries())
-			.map(([type, file]) => `${type}: ${file.content.substring(0, 40)}...`)
+			.map(([type, file]) => {
+				const preview = file.content.substring(0, 40);
+				const lastUpdated = file.lastUpdated
+					? `last updated: ${file.lastUpdated.toISOString().split("T")[0]}`
+					: "last updated: unknown";
+				return `${type}: ${preview}... (${lastUpdated})`;
+			})
 			.join("\n");
 	}
 
 	async checkHealth(): Promise<string> {
-		const context = this.getFileOperationContext();
+		const context = this.createContext();
 		const healthResult = await performHealthCheck(context);
 		return healthResult.summary;
 	}
 
-	// Invalidate cache for a specific file or all files
-	invalidateCache(filePath?: string) {
-		// filePath in CacheManager needs to be absolute, ensure it is if provided
+	invalidateCache(filePath?: string): void {
 		const absoluteFilePath = filePath
 			? path.resolve(this._memoryBankFolder, filePath)
 			: undefined;
 		this.cacheManager.invalidateCache(absoluteFilePath);
 	}
 
-	// Get current cache stats
 	getCacheStats() {
 		return this.cacheManager.getStats();
 	}
 
-	// Reset cache stats
-	resetCacheStats() {
+	resetCacheStats(): void {
 		this.cacheManager.resetStats();
+	}
+
+	// Private helper methods
+	private createContext(): FileOperationContext {
+		return {
+			memoryBankFolder: this._memoryBankFolder,
+			logger: this.logger,
+			fileCache: this._fileCache,
+			cacheStats: this._cacheStats,
+		};
+	}
+
+	private invalidateFilesInCache(filesToInvalidate: string[]): void {
+		for (const filePath of filesToInvalidate) {
+			this.cacheManager.invalidateCache(filePath);
+		}
+	}
+
+	private logSuccessfulInitialization(): void {
+		this.logger.info("Memory bank is initialised.");
+	}
+
+	private logFailedInitialization(missingFiles: string[]): void {
+		this.logger.info(
+			`Memory bank is NOT initialised. Missing/invalid files: ${missingFiles.join(", ")}`,
+		);
 	}
 }

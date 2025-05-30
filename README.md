@@ -6,7 +6,7 @@
 
 _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
 
-> _Last updated: 2025-05-25_
+> _Last updated: 2025-05-28_
 
 ---
 
@@ -25,8 +25,10 @@ _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabli
 	7. [💡 Usage Examples](#-usage-examples)
 	8. [🗂 Project Structure](#-project-structure)
 		1. [Key Configuration Files](#key-configuration-files)
+		2. [Key Configuration Files](#key-configuration-files-1)
 	9. [⚙️ Configuration](#️-configuration)
 		1. [Development Configuration](#development-configuration)
+		2. [Development Configuration](#development-configuration-1)
 	10. [🔄 Migration](#-migration)
 	11. [🛠 Troubleshooting](#-troubleshooting)
 	12. [🤝 Contributing](#-contributing)
@@ -152,21 +154,21 @@ pnpm run test:unit
 
 ### Key Configuration Files
 
-| File              | Purpose                                      |
-| ----------------- | -------------------------------------------- |
-| `biome.json`      | Biome linting and formatting configuration   |
-| `package.json`    | Dependencies and build scripts               |
-| `tsconfig.json`   | TypeScript compiler configuration           |
-| `rollup.config.js`| Extension and MCP server build configuration |
+| File               | Purpose                                      |
+| ------------------ | -------------------------------------------- |
+| `biome.json`       | Biome linting and formatting configuration   |
+| `package.json`     | Dependencies and build scripts               |
+| `tsconfig.json`    | TypeScript compiler configuration            |
+| `rollup.config.js` | Extension and MCP server build configuration |
 
 ### Key Configuration Files
 
-| File              | Purpose                                      |
-| ----------------- | -------------------------------------------- |
-| `biome.json`      | Biome linting and formatting configuration   |
-| `package.json`    | Dependencies and build scripts               |
-| `tsconfig.json`   | TypeScript compiler configuration           |
-| `rollup.config.js`| Extension and MCP server build configuration |
+| File               | Purpose                                      |
+| ------------------ | -------------------------------------------- |
+| `biome.json`       | Biome linting and formatting configuration   |
+| `package.json`     | Dependencies and build scripts               |
+| `tsconfig.json`    | TypeScript compiler configuration            |
+| `rollup.config.js` | Extension and MCP server build configuration |
 
 See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
 

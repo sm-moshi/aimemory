@@ -1,5 +1,7 @@
 /**
- * TODO: check why it's not used -> import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+ * Note: McpServer and ResourceTemplate imports from "@modelcontextprotocol/sdk/server/mcp.js"
+ * are not needed here because the entire module is mocked with vi.mock() below.
+ * The test only uses the mocked versions, not the actual SDK types.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
@@ -54,23 +56,57 @@ vi.mock("../lib/mcp-prompts-registry.js", () => ({
 	registerMemoryBankPrompts: vi.fn(),
 }));
 
+// Helper functions to reduce nesting depth
+const createLoadFilesSuccessImplementation = () => {
+	return async () => {
+		mockMemoryBankService.isReady.mockReturnValue(true);
+		return undefined;
+	};
+};
+
+const createLoadFilesFailureImplementation = (error: Error) => {
+	return async () => {
+		throw error;
+	};
+};
+
+const setupSuccessfulLoadFiles = () => {
+	mockMemoryBankService.loadFiles.mockImplementationOnce(createLoadFilesSuccessImplementation());
+};
+
+const setupFailingLoadFiles = (error: Error) => {
+	mockMemoryBankService.loadFiles.mockImplementationOnce(
+		createLoadFilesFailureImplementation(error),
+	);
+};
+
+// Helper function to create MCP instance for side effects
+const setupMCPInstance = () => {
+	// Create instance for side effects (registers resources, tools, and prompts)
+	// Constructor return value intentionally unused
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const _mcpInstance = new CoreMemoryBankMCP({ memoryBankPath: "/mock/path" });
+};
+
+// Helper functions to find specific mock calls
+const isMemoryBankFilesCall = (call: any[]) => call[0] === "memory-bank-files";
+
 describe("CoreMemoryBankMCP", () => {
-	let mcp: CoreMemoryBankMCP;
 	let getToolHandler: (toolName: string) => (...args: any[]) => Promise<any>;
-	let getResourceListHandler: (resourceName: string) => () => Promise<any>;
-	let getResourceUriHandler: (resourceName: string) => (uri: URL, params: any) => Promise<any>;
 	let getDirectResourceHandler: (resourceName: string) => (...args: any[]) => Promise<any>;
 
 	beforeEach(() => {
 		vi.resetAllMocks();
 
-		mcp = new CoreMemoryBankMCP({ memoryBankPath: "/mock/path" });
+		// Setup MCP instance for side effects (registers resources, tools, and prompts)
+		setupMCPInstance();
 
 		// Setup default mock behaviors for service methods that are commonly called
 		mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValue(true);
 		mockMemoryBankService.checkHealth.mockResolvedValue("Healthy");
 		mockMemoryBankService.loadFiles.mockResolvedValue(undefined);
-		mockMemoryBankService.isReady.mockReturnValue(false);
+		// Set up isReady to return true by default for resource handlers
+		mockMemoryBankService.isReady.mockReturnValue(true);
 
 		// Helper to get tool handlers
 		getToolHandler = (toolName: string) => {
@@ -79,42 +115,6 @@ describe("CoreMemoryBankMCP", () => {
 				throw new Error(`Tool handler for ${toolName} not found or not a function`);
 			}
 			return call[2] as (...args: any[]) => Promise<any>;
-		};
-
-		// Helper to get resource list handlers for ResourceTemplates
-		getResourceListHandler = (resourceName: string) => {
-			const call = mockMcpServerInstance.resource.mock.calls.find(
-				(c) => c[0] === resourceName,
-			);
-			const resourceTemplateInstance = call?.[1];
-			if (
-				!resourceTemplateInstance ||
-				typeof resourceTemplateInstance === "string" ||
-				!(resourceTemplateInstance as any).handlers?.list
-			) {
-				throw new Error(
-					`Resource list handler for ${resourceName} not found or not a function on template instance`,
-				);
-			}
-			return (resourceTemplateInstance as any).handlers.list;
-		};
-
-		// Helper to get resource URI handlers for ResourceTemplates
-		getResourceUriHandler = (resourceName: string) => {
-			const call = mockMcpServerInstance.resource.mock.calls.find(
-				(c) => c[0] === resourceName,
-			);
-			const resourceTemplateInstance = call?.[1];
-			if (
-				!resourceTemplateInstance ||
-				typeof resourceTemplateInstance === "string" ||
-				!(resourceTemplateInstance as any).handlers?.uri
-			) {
-				throw new Error(
-					`Resource URI handler for ${resourceName} not found or not a function on template instance`,
-				);
-			}
-			return (resourceTemplateInstance as any).handlers.uri;
 		};
 
 		// Helper to get direct resource handlers
@@ -142,9 +142,8 @@ describe("CoreMemoryBankMCP", () => {
 	describe("Resources", () => {
 		describe("memory-bank-files (template resource + direct handler)", () => {
 			it("template's list handler (from constructor options) returns static list", async () => {
-				const resourceCall = mockMcpServerInstance.resource.mock.calls.find(
-					(c) => c[0] === "memory-bank-files",
-				);
+				const resourceCall =
+					mockMcpServerInstance.resource.mock.calls.find(isMemoryBankFilesCall);
 				expect(
 					resourceCall,
 					"resourceCall for 'memory-bank-files' should be defined",
@@ -156,7 +155,7 @@ describe("CoreMemoryBankMCP", () => {
 					);
 				}
 
-				const templateInstance = resourceCall[1] as any;
+				const templateInstance = resourceCall[1];
 				console.log(
 					"[Test Debug] templateInstance for memory-bank-files list:",
 					templateInstance,
@@ -204,13 +203,16 @@ describe("CoreMemoryBankMCP", () => {
 
 			it("direct URI handler (3rd arg) throws if file does not exist", async () => {
 				const uriHandler = getDirectResourceHandler("memory-bank-files");
+				// Use a valid file type but mock getFile to return undefined
 				mockMemoryBankService.getFile.mockReturnValueOnce(undefined);
 				await expect(
-					uriHandler(new URL("memory-bank://files/nonexistent.md"), {
-						fileType: "nonexistent.md",
+					uriHandler(new URL(`memory-bank://files/${MemoryBankFileType.ProjectBrief}`), {
+						fileType: MemoryBankFileType.ProjectBrief,
 					}),
-				).rejects.toThrow("File nonexistent.md not found");
-				expect(mockMemoryBankService.getFile).toHaveBeenCalledWith("nonexistent.md");
+				).rejects.toThrow(`File ${MemoryBankFileType.ProjectBrief} not found`);
+				expect(mockMemoryBankService.getFile).toHaveBeenCalledWith(
+					MemoryBankFileType.ProjectBrief,
+				);
 			});
 		});
 
@@ -248,10 +250,7 @@ describe("CoreMemoryBankMCP", () => {
 			it("initializes and loads if not initialized", async () => {
 				const handler = getToolHandler("init-memory-bank");
 				mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValueOnce(false);
-				mockMemoryBankService.loadFiles.mockImplementationOnce(async () => {
-					mockMemoryBankService.isReady.mockReturnValueOnce(true);
-					return undefined;
-				});
+				setupSuccessfulLoadFiles();
 				const result = await handler();
 				expect(mockMemoryBankService.initializeFolders).toHaveBeenCalled();
 				expect(mockMemoryBankService.loadFiles).toHaveBeenCalled();
@@ -261,10 +260,7 @@ describe("CoreMemoryBankMCP", () => {
 			it("loads if already initialized", async () => {
 				const handler = getToolHandler("init-memory-bank");
 				mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValueOnce(true);
-				mockMemoryBankService.loadFiles.mockImplementationOnce(async () => {
-					mockMemoryBankService.isReady.mockReturnValueOnce(true);
-					return undefined;
-				});
+				setupSuccessfulLoadFiles();
 				const result = await handler();
 				expect(mockMemoryBankService.initializeFolders).not.toHaveBeenCalled();
 				expect(mockMemoryBankService.loadFiles).toHaveBeenCalled();
@@ -277,12 +273,12 @@ describe("CoreMemoryBankMCP", () => {
 				mockMemoryBankService.initializeFolders.mockRejectedValueOnce(
 					new Error("Init Error"),
 				);
-				mockMemoryBankService.isReady.mockReturnValueOnce(false);
-
+				// This test should verify the error message, but since init-memory-bank
+				// has its own error handling, we expect the original init error
 				const result = await handler();
 				expect(result.isError).toBe(true);
 				expect(result.content[0].text).toContain(
-					"Error initializing memory bank: Failed to load memory bank: Memory bank could not be initialized. Please run init-memory-bank first.",
+					"Error initializing memory bank: Init Error",
 				);
 			});
 		});
@@ -293,10 +289,12 @@ describe("CoreMemoryBankMCP", () => {
 				mockMemoryBankService.getFilesWithFilenames.mockReturnValueOnce(
 					"file1.md\nfile2.md",
 				);
-				mockMemoryBankService.loadFiles.mockImplementationOnce(async () => {
-					mockMemoryBankService.isReady.mockReturnValueOnce(true);
-					return undefined;
-				});
+				// For tools, we need to simulate memory bank not being ready initially
+				// so ensureMemoryBankReady calls loadFiles
+				mockMemoryBankService.isReady
+					.mockReturnValueOnce(false) // First call in ensureMemoryBankReady
+					.mockReturnValueOnce(true); // Second call after loadFiles
+				setupSuccessfulLoadFiles();
 				const result = await handler();
 				expect(mockMemoryBankService.loadFiles).toHaveBeenCalled();
 				expect(result.content[0].text).toContain("Here are the files in the memory bank:");
@@ -306,18 +304,18 @@ describe("CoreMemoryBankMCP", () => {
 			it("handles empty memory bank", async () => {
 				const handler = getToolHandler("read-memory-bank-files");
 				mockMemoryBankService.getFilesWithFilenames.mockReturnValueOnce("");
-				mockMemoryBankService.loadFiles.mockImplementationOnce(async () => {
-					mockMemoryBankService.isReady.mockReturnValueOnce(true);
-					return undefined;
-				});
+				// Simulate memory bank not ready, then ready after loadFiles
+				mockMemoryBankService.isReady.mockReturnValueOnce(false).mockReturnValueOnce(true);
+				setupSuccessfulLoadFiles();
 				const result = await handler();
 				expect(result.content[0].text).toBe("Memory bank is empty or could not be read.");
 			});
 
 			it("handles errors during read", async () => {
 				const handler = getToolHandler("read-memory-bank-files");
-				mockMemoryBankService.loadFiles.mockRejectedValueOnce(new Error("Read Error"));
+				// Set up a scenario where isReady returns false and loadFiles fails
 				mockMemoryBankService.isReady.mockReturnValueOnce(false);
+				setupFailingLoadFiles(new Error("Read Error"));
 
 				const result = await handler();
 				expect(result.isError).toBe(true);
@@ -334,10 +332,9 @@ describe("CoreMemoryBankMCP", () => {
 					fileType: MemoryBankFileType.ProjectBrief,
 					content: "new content",
 				};
-				mockMemoryBankService.loadFiles.mockImplementationOnce(async () => {
-					mockMemoryBankService.isReady.mockReturnValueOnce(true);
-					return undefined;
-				});
+				// Simulate memory bank not ready, then ready after loadFiles
+				mockMemoryBankService.isReady.mockReturnValueOnce(false).mockReturnValueOnce(true);
+				setupSuccessfulLoadFiles();
 				const result = await handler(args);
 				expect(mockMemoryBankService.loadFiles).toHaveBeenCalled();
 				expect(mockMemoryBankService.updateFile).toHaveBeenCalledWith(
@@ -354,10 +351,7 @@ describe("CoreMemoryBankMCP", () => {
 					content: "new content",
 				};
 				mockMemoryBankService.updateFile.mockRejectedValueOnce(new Error("Update Error"));
-				mockMemoryBankService.loadFiles.mockImplementationOnce(async () => {
-					mockMemoryBankService.isReady.mockReturnValueOnce(true);
-					return undefined;
-				});
+				setupSuccessfulLoadFiles();
 
 				const result = await handler(args);
 				expect(result.isError).toBe(true);

@@ -5,6 +5,7 @@ import { CommandHandler } from "./commandHandler.js";
 import { MemoryBankMCPAdapter } from "./mcp/mcpAdapter.js";
 import type { MCPServerInterface } from "./types/mcpTypes.js";
 import { updateCursorMCPConfig } from "./utils/cursor-config.js";
+import { showVSCodeError } from "./utils/errorHelpers.js";
 import { LogLevel, Logger } from "./utils/log.js";
 import { WebviewManager } from "./webview/webviewManager.js";
 
@@ -74,11 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
 					"Cursor MCP config (mcp.json) has been configured for AI Memory (STDIO).",
 				);
 			} catch (error) {
-				vscode.window.showErrorMessage(
-					`Failed to update Cursor MCP config: ${
-						error instanceof Error ? error.message : String(error)
-					}`,
-				);
+				await showVSCodeError("Failed to update Cursor MCP config", error);
 			}
 		},
 	);
@@ -104,9 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
 				"AI Memory MCP server started using STDIO transport. Ready for Cursor MCP integration.",
 			);
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to start MCP server: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			await showVSCodeError("Failed to start MCP server", error);
 		}
 	});
 

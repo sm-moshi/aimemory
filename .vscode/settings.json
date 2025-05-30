@@ -65,5 +65,6 @@
 		"**/dist/**": true,
 		"**/.vscode-test/**": true,
 		"**/coverage/**": true
-	}
+	},
+	"dependi.npm.lockFileEnabled": true
 }
