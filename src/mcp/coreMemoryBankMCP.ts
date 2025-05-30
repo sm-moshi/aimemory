@@ -9,7 +9,7 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 
 		const serverConfig: MCPServerConfig = {
 			name: "AI Memory MCP Server",
-			version: "0.7.1",
+			version: "0.8.0-dev.1",
 			memoryBank,
 			logger: config.logger,
 		};

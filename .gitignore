@@ -14,12 +14,14 @@ node_modules/
 .vscode/
 .idea/
 .DS_Store
+.secrets
 
 # Cursor
 .cursor/
 memory-bank/*.md
 **/.log
 docs/devs/
+docs/v1.0/
 
 # Others
 out/

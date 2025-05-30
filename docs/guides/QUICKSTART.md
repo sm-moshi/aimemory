@@ -1,6 +1,6 @@
 # AI Memory Extension Quickstart Guide
 
-_Last updated: 2025-05-17 🐹_
+> _Last updated: 2025-05-28 🐹_
 
 Welcome to the AI Memory extension for Cursor and VS Code! This guide will help you install, set up, and use the extension for persistent, context-aware AI workflows.
 
@@ -9,12 +9,14 @@ Welcome to the AI Memory extension for Cursor and VS Code! This guide will help 
 ## 🚀 Installation
 
 ### From Cursor Extension Panel (Recommended)
+
 1. Open Cursor.
 2. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X).
 3. Search for “AI Memory”.
 4. Click **Install**.
 
 ### From VSIX File
+
 1. Download the latest `.vsix` from [GitHub releases](https://github.com/sm-moshi/aimemory/releases).
 2. In Cursor, open the Command Palette (Ctrl+Shift+P / Cmd+Shift+P).
 3. Run “Extensions: Install from VSIX...” and select the file.
@@ -37,11 +39,13 @@ _For troubleshooting installation, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md
 ## 🧠 Using the Memory Bank
 
 ### Webview Dashboard
+
 - Run `AI Memory: Open Dashboard` to launch the UI.
 - Use buttons to initialise, update, or repair the memory bank.
 - Status and error messages are shown in the dashboard.
 
 ### Memory Bank Structure
+
 - Modular folders:
   - `memory-bank/core/`: Project brief, product context, active context
   - `memory-bank/systemPatterns/`: Architecture, patterns, scanning
@@ -49,6 +53,7 @@ _For troubleshooting installation, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md
   - `memory-bank/progress/`: Current status, history
 
 ### MCP Tools & Commands
+
 - Use MCP tools for automation and scripting:
   - `initialize-memory-bank`: Create all required files and structure
   - `list-memory-bank-files`: List all memory bank files
@@ -69,6 +74,7 @@ _For troubleshooting installation, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md
 - For technical details, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md).
 
 > **Tip (May 2025):**
+>
 > - The "AI Memory: Create Memory Bank Rule" command is coming soon (logic present, not yet exposed).
 > - Advanced UI features (refresh, file preview, diff viewer) are planned for future releases.
 > - The extension is currently migrating away from Express for all communication. Some advanced features may be temporarily unavailable.

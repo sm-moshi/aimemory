@@ -1,13 +1,8 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# A sample workflow which sets up periodic OSV-Scanner scanning for vulnerabilities,
-# in addition to a PR check which fails if new vulnerabilities are introduced.
+# OSV Scanner - Vulnerability Detection for Open Source Dependencies
+# Updated to v2.0.2 with current best practices (2024/2025)
 #
-# For more examples and options, including how to ignore specific vulnerabilities,
-# see https://google.github.io/osv-scanner/github-action/
+# For more examples and configuration options:
+# https://google.github.io/osv-scanner/github-action/
 
 name: OSV Scanner Workflow
 
@@ -17,32 +12,60 @@ on:
   merge_group:
     branches: [ "develop", "main" ]
   schedule:
-    - cron: '0 0 * * *'
+    # Run every Monday at 12:30 PM UTC (recommended timing)
+    - cron: '30 12 * * 1'
   push:
     branches: [ "develop", "main" ]
 
 permissions:
-  # Require writing security events to upload SARIF file to security tab
+  # Required to upload SARIF file to CodeQL - see: https://github.com/github/codeql-action/issues/2117
+  actions: read
+  # Required for writing security events to upload SARIF file to security tab
   security-events: write
-  # Read commit contents
+  # Only need to read repository contents
   contents: read
 
 jobs:
   scan-scheduled:
+    # Run full vulnerability scan on push and schedule
     if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@1f1242919d8a60496dd1874b24b62b2370ed4c78" # v1.7.1
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.0.2"
     with:
-      # Example of specifying custom arguments
+      # Scan arguments optimized for VS Code extension project
       scan-args: |-
-        -r
+        --recursive
         --skip-git
         ./
+      # Custom results file name for better identification
+      results-file-name: "osv-scan-results.sarif"
+      # Upload results to GitHub Security tab
+      upload-sarif: true
+      # Fail workflow on vulnerabilities (recommended for security)
+      fail-on-vuln: true
+    permissions:
+      # Required permissions for reusable workflow
+      actions: read
+      security-events: write
+      contents: read
+
   scan-pr:
+    # Compare vulnerabilities between target and feature branch
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@1f1242919d8a60496dd1874b24b62b2370ed4c78" # v1.7.1
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.0.2"
     with:
-      # Example of specifying custom arguments
+      # Same scan arguments for consistency
       scan-args: |-
-        -r
+        --recursive
         --skip-git
         ./
+      # Custom results file name for PR scans
+      results-file-name: "osv-pr-scan-results.sarif"
+      # Upload results for PR analysis
+      upload-sarif: true
+      # Fail on new vulnerabilities introduced in PR
+      fail-on-vuln: true
+    permissions:
+      # Required permissions for reusable workflow
+      actions: read
+      security-events: write
+      contents: read

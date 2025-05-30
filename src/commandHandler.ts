@@ -203,28 +203,29 @@ export class CommandHandler {
 		}
 	}
 
-	//TODO: Think about if it's worth adding a /plan command or let that be handled by rules
-
 	/**
-	 * Show help text for available commands
+	 * Get help text for memory commands
 	 */
 	private getHelpText(): string {
-		return `
-AI Memory Bank Commands:
+		return `AI Memory Bank Commands:
+/memory help         - Show this help
+/memory status       - Check memory bank status
+/memory init         - Initialize memory bank
+/memory health       - Check memory bank health
+/memory update <fileType> <content> - Update a memory bank file
+/memory write <path> <content> - Write content to a file by path`;
+	}
 
-/memory status - Check the status of all memory bank files
-/memory update <fileType> <content> - Update a specific memory bank file
-/memory initialize - Initialise the memory bank
-/memory init - Alias for /memory initialize
-/memory write <relativePath> <content> - Write content to a specific file path in the memory bank
-/memory health - Check the health of the memory bank
-/memory help - Show this help text
+	/**
+	 * Process mode commands like /plan
+	 * This is a placeholder for future plan command functionality
+	 */
+	async processModesCommand(text: string): Promise<string | undefined> {
+		if (!text.trim().startsWith("/plan")) {
+			return undefined;
+		}
 
-For more advanced operations, use the MCP tools:
-- initialize-memory-bank
-- list-memory-bank-files
-- get-memory-bank-file
-- update-memory-bank-file
-`;
+		// Placeholder implementation for /plan command
+		return "";
 	}
 }
