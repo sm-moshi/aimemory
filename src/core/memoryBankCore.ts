@@ -1,11 +1,11 @@
-import * as path from "node:path";
+import { resolve } from "node:path";
 import { z } from "zod";
 import type { MemoryBankFileType } from "../types/types.js";
 import { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
 export { MemoryBankFileType } from "../types/types.js";
 
 // Note: Using process.cwd() since we're building to CommonJS and import.meta.url isn't available
-const MEMORY_BANK_DIR = path.resolve(process.cwd(), "memory-bank");
+const MEMORY_BANK_DIR = resolve(process.cwd(), "memory-bank");
 
 const memoryBankServiceCore = new MemoryBankServiceCore(MEMORY_BANK_DIR);
 

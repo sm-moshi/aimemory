@@ -13,7 +13,8 @@ import { LogLevel, Logger } from "../utils/log.js";
  * Extract port number from a URL string
  */
 function extractPortFromUrl(url: string): number | null {
-	const match = url.match(/:(\d+)(?:\/|$)/);
+	const regex = /:(\d+)(?:\/|$)/;
+	const match = regex.exec(url);
 	return match?.[1] ? Number(match[1]) : null;
 }
 
@@ -82,12 +83,12 @@ async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
 export class WebviewManager {
 	private panel: vscode.WebviewPanel | undefined;
 	private readonly extensionUri: vscode.Uri;
-	private memoryBankService: MemoryBankService;
-	private cursorRulesService: CursorRulesService;
+	private readonly memoryBankService: MemoryBankService;
+	private readonly cursorRulesService: CursorRulesService;
 
 	constructor(
-		private context: vscode.ExtensionContext,
-		private mcpServer: MCPServerInterface,
+		private readonly context: vscode.ExtensionContext,
+		private readonly mcpServer: MCPServerInterface,
 	) {
 		this.extensionUri = context.extensionUri;
 		this.memoryBankService = new MemoryBankService(context);
@@ -141,7 +142,7 @@ export class WebviewManager {
 	// Check standard ports for already running MCP servers
 	private async checkForRunningServers() {
 		// Try to get ports from .cursor/mcp.json, fallback to defaults
-		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
 		let portsToCheck = await getMCPPortsFromConfig(workspaceRoot);
 		if (!portsToCheck.length) {
 			// Fallback to default ports if config not found or empty
@@ -240,7 +241,7 @@ export class WebviewManager {
 						});
 						break;
 					case "stopMCPServer":
-						await this.mcpServer.stop();
+						this.mcpServer.stop();
 						this.panel?.webview.postMessage({
 							type: "MCPServerStatus",
 							status: "stopped",
@@ -338,9 +339,24 @@ export class WebviewManager {
 			}
 
 			const resetResult = await this.performRulesReset();
-			this.sendResetResult(resetResult);
-		} catch (error) {
-			this.handleResetError(error);
+			this.sendResetResult(resetResult); // For the success case
+		} catch (error: unknown) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			let logMessage = `Error resetting rules: ${errorMessage}`;
+			let logLevelToUse = LogLevel.Error; // Renamed to avoid conflict with LogLevel enum itself
+
+			if (this.isUserCancelledOverwrite(error)) {
+				logMessage = `User cancelled rules overwrite: ${errorMessage}`;
+				logLevelToUse = LogLevel.Info;
+			}
+
+			Logger.getInstance().log(logLevelToUse, logMessage);
+
+			this.panel?.webview.postMessage({
+				type: "resetRulesResult",
+				success: false,
+				error: errorMessage, // Send the original error message to the webview
+			});
 		}
 	}
 
@@ -366,32 +382,14 @@ export class WebviewManager {
 	 * Perform the actual rules file reset operation
 	 */
 	private async performRulesReset(): Promise<{ success: boolean; error?: string }> {
-		try {
-			await this.cursorRulesService.createRulesFile(
-				"memory-bank.mdc",
-				CURSOR_MEMORY_BANK_RULES_FILE,
-			);
-			vscode.window.showInformationMessage("Memory bank rules have been reset.");
-			Logger.getInstance().info("Memory bank rules reset successfully.");
-			return { success: true };
-		} catch (error: unknown) {
-			return this.handleRulesCreationError(error);
-		}
-	}
-
-	/**
-	 * Handle errors during rules file creation
-	 */
-	private handleRulesCreationError(error: unknown): { success: boolean; error: string } {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-
-		if (this.isUserCancelledOverwrite(error)) {
-			Logger.getInstance().info("User cancelled rules overwrite.");
-			return { success: false, error: errorMessage };
-		}
-
-		Logger.getInstance().error(`Error resetting rules: ${errorMessage}`);
-		return { success: false, error: errorMessage };
+		await this.cursorRulesService.createRulesFile(
+			"memory-bank.mdc",
+			CURSOR_MEMORY_BANK_RULES_FILE,
+		);
+		vscode.window.showInformationMessage("Memory bank rules have been reset.");
+		Logger.getInstance().info("Memory bank rules reset successfully.");
+		return { success: true };
+		// Errors will propagate to the caller (resetRules)
 	}
 
 	/**
@@ -415,20 +413,6 @@ export class WebviewManager {
 			type: "resetRulesResult",
 			success: result.success,
 			...(result.error && { error: result.error }),
-		});
-	}
-
-	/**
-	 * Handle general reset errors
-	 */
-	private handleResetError(error: unknown): void {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		Logger.getInstance().error(`Error resetting rules: ${errorMessage}`);
-
-		this.panel?.webview.postMessage({
-			type: "resetRulesResult",
-			success: false,
-			error: errorMessage,
 		});
 	}
 

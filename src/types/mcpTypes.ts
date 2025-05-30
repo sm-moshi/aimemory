@@ -41,3 +41,20 @@ export interface MCPServerInterface {
 	 */
 	handleCommand(command: string, args: string[]): Promise<string>;
 }
+
+/**
+ * Standard MCP response types for tool handlers
+ */
+export interface MCPSuccessResponse {
+	[x: string]: unknown;
+	content: Array<{ type: "text"; text: string }>;
+	isError?: false;
+}
+
+export interface MCPErrorResponse {
+	[x: string]: unknown;
+	content: Array<{ type: "text"; text: string }>;
+	isError: true;
+}
+
+export type MCPResponse = MCPSuccessResponse | MCPErrorResponse;

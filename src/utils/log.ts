@@ -17,7 +17,7 @@ export enum LogLevel {
  */
 export class Logger {
 	private static instance: Logger;
-	private output = vscode.window.createOutputChannel("AI Memory");
+	private readonly output = vscode.window.createOutputChannel("AI Memory");
 	private level: LogLevel = LogLevel.Info;
 
 	private constructor() {}

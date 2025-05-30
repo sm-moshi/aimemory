@@ -17,7 +17,14 @@
 		"noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
 		"noUnusedParameters": false /* Report errors on unused parameters. */
 	},
-	"include": ["src/**/*", "rollup.config.js", "vitest.config.ts", "scripts/build-check.ts"],
+	"include": [
+		"src/**/*",
+		"rollup.config.js",
+		"vitest.config.ts",
+		"scripts/build-check.ts",
+		"scripts/update-docs-date.ts",
+		"scripts/refactor-imports.ts"
+	],
 	"exclude": [
 		"src/webview/src",
 		"src/webview/vitest.config.ts",
@@ -26,6 +33,6 @@
 		"**/dist",
 		"**/coverage",
 		"**/out",
-		"**/node_modules/**",
+		"**/node_modules/**"
 	]
 }

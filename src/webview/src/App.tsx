@@ -3,6 +3,7 @@ import "@vscode-elements/elements";
 import { HowDoesItWork } from "./components/how-does-it-work/index.js";
 import { MCPServerManager } from "./components/mcp-server-manager/index.js";
 import { Status } from "./components/status/index.js";
+import { sendLog } from "./utils/message.js";
 
 function App() {
 	const [apiAvailable, setApiAvailable] = useState(!!window.vscodeApi);
@@ -18,7 +19,6 @@ function App() {
 				if (window.vscodeApi) {
 					setApiAvailable(true);
 					clearInterval(checkInterval);
-					// requestRulesStatus();
 				}
 			}, 500);
 
@@ -27,12 +27,38 @@ function App() {
 	}, [apiAvailable]);
 
 	// Handler for Review and Update Memory Bank
-	const handleReviewAndUpdateMemoryBank = useCallback(async () => {
+	const handleReviewAndUpdateMemoryBank = useCallback(() => {
 		setReviewLoading(true);
-		// You may need to call the MCP tool here, or pass this down if needed
-		// For now, just simulate async
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-		setReviewLoading(false);
+		sendLog("User clicked 'Review and Update Memory Bank' button", "info", {
+			action: "reviewAndUpdateMemoryBank",
+		});
+		window.vscodeApi?.postMessage({
+			command: "reviewAndUpdateMemoryBank",
+		});
+		// setReviewLoading(false) will be called when a response is received
+	}, []);
+
+	// Effect to handle messages from the extension
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data;
+			// Ensure message and message.type are defined
+			if (message && typeof message === "object" && message.type) {
+				if (message.type === "reviewAndUpdateMemoryBankComplete") {
+					setReviewLoading(false);
+					sendLog("Review and Update Memory Bank complete.", "info", {
+						action: "reviewAndUpdateMemoryBankComplete",
+						success: message.success,
+						error: message.error,
+					});
+				}
+			}
+		};
+
+		window.addEventListener("message", handleMessage);
+		return () => {
+			window.removeEventListener("message", handleMessage);
+		};
 	}, []);
 
 	if (!apiAvailable) {

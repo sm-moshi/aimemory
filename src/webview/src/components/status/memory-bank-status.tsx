@@ -7,8 +7,8 @@ export function MemoryBankStatus({
 	onReviewAllFiles,
 	reviewLoading,
 }: {
-	onReviewAllFiles: () => void;
-	reviewLoading: boolean;
+	readonly onReviewAllFiles: () => void;
+	readonly reviewLoading: boolean;
 }) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMemoryBankInitialized, setIsMemoryBankInitialized] = useState(false);
@@ -58,11 +58,9 @@ export function MemoryBankStatus({
 				action: "handleMessage",
 				messageType: message.type,
 			});
-			switch (message.type) {
-				case "memoryBankStatus":
-					setIsMemoryBankInitialized(message.initialized);
-					setIsLoading(false);
-					break;
+			if (message.type === "memoryBankStatus") {
+				setIsMemoryBankInitialized(message.initialized);
+				setIsLoading(false);
 			}
 		};
 
