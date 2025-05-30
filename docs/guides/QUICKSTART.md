@@ -1,8 +1,8 @@
 # AI Memory Extension Quickstart Guide
 
-> _Last updated: 2025-05-28 🐹_
+> _Last updated: 2025-05-30_
 
-Welcome to the AI Memory extension for Cursor and VS Code! This guide will help you install, set up, and use the extension for persistent, context-aware AI workflows.
+Welcome to the AI Memory extension for Cursor and VS Code! This guide will help you install, set up, and use the extension for persistent, context-aware AI workflows using the Memory Bank technique.
 
 ---
 
@@ -12,14 +12,14 @@ Welcome to the AI Memory extension for Cursor and VS Code! This guide will help 
 
 1. Open Cursor.
 2. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X).
-3. Search for “AI Memory”.
+3. Search for "AI Memory".
 4. Click **Install**.
 
 ### From VSIX File
 
 1. Download the latest `.vsix` from [GitHub releases](https://github.com/sm-moshi/aimemory/releases).
 2. In Cursor, open the Command Palette (Ctrl+Shift+P / Cmd+Shift+P).
-3. Run “Extensions: Install from VSIX...” and select the file.
+3. Run "Extensions: Install from VSIX..." and select the file.
 
 _For troubleshooting installation, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)._
 
@@ -27,64 +27,132 @@ _For troubleshooting installation, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md
 
 ## 🏗️ Initial Setup
 
-1. Install the extension.
-2. Open or create a workspace folder for your project.
-3. Run `AI Memory: Start MCP` from the Command Palette.
-   - This creates a `memory-bank/` folder if missing.
-   - Starts the MCP server (default port: 7331, fallback: 7332).
-   - Updates your Cursor MCP config to connect to the server.
+### Quick Start
+
+1. **Install the extension** (see above).
+2. **Open your project workspace** in Cursor.
+3. **Run `AI Memory: Start MCP Server`** from the Command Palette.
+   - Creates a `memory-bank/` folder structure if missing
+   - Starts the MCP server using stdio transport
+   - Updates your Cursor MCP config automatically
+
+### Available Commands
+
+Access these via Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
+
+- **`AI Memory: Start MCP Server`** - Initialize and start the MCP server
+- **`AI Memory: Open Dashboard`** - Launch the webview UI
+- **`AI Memory: Update Cursor MCP Config`** - Refresh MCP configuration
+- **`AI Memory: Stop MCP Server`** - Stop the running server
+- **`AI Memory: Show Output Channel`** - View extension logs
 
 ---
 
 ## 🧠 Using the Memory Bank
 
-### Webview Dashboard
-
-- Run `AI Memory: Open Dashboard` to launch the UI.
-- Use buttons to initialise, update, or repair the memory bank.
-- Status and error messages are shown in the dashboard.
-
 ### Memory Bank Structure
 
-- Modular folders:
-  - `memory-bank/core/`: Project brief, product context, active context
-  - `memory-bank/systemPatterns/`: Architecture, patterns, scanning
-  - `memory-bank/techContext/`: Stack, dependencies, environment
-  - `memory-bank/progress/`: Current status, history
+The extension creates a modular folder structure:
 
-### MCP Tools & Commands
+```
+memory-bank/
+├── core/                    # Essential project information
+│   ├── projectBrief.md     # Project overview and goals
+│   ├── productContext.md   # Product requirements and context
+│   └── activeContext.md    # Current focus and priorities
+├── systemPatterns/         # Architecture and design patterns
+│   ├── index.md           # Pattern overview
+│   ├── architecture.md    # System architecture
+│   ├── patterns.md        # Design patterns used
+│   └── scanning.md        # Code analysis patterns
+├── techContext/           # Technical stack and environment
+│   ├── index.md          # Tech stack overview
+│   ├── stack.md          # Technology choices
+│   ├── dependencies.md   # Key dependencies
+│   └── environment.md    # Development environment
+└── progress/             # Project tracking and history
+    ├── index.md         # Progress overview
+    ├── current.md       # Current tasks and status
+    └── history.md       # Completed work history
+```
 
-- Use MCP tools for automation and scripting:
-  - `initialize-memory-bank`: Create all required files and structure
-  - `list-memory-bank-files`: List all memory bank files
-  - `get-memory-bank-file`: Get the content of a specific file
-  - `update-memory-bank-file`: Update a file's content
-- Use `/memory` commands in Cursor chat:
-  - `/memory status`: Check memory bank status
-  - `/memory list`: List all memory bank files
-  - `/memory read <filename>`: Read a specific file
+### Webview Dashboard
+
+- **Launch**: Run `AI Memory: Open Dashboard` from Command Palette
+- **Features**:
+  - Initialize missing memory bank files
+  - View server status and health checks
+  - Monitor MCP server connection
+  - Access extension logs and diagnostics
+
+### MCP Tools (Available to Cursor AI)
+
+The extension provides these MCP tools for Cursor's AI agent:
+
+- **`initialize-memory-bank`** - Create all required files and structure
+- **`list-memory-bank-files`** - List all memory bank files
+- **`read-memory-bank-files`** - Read multiple files at once
+- **`read-memory-bank-file`** - Read a specific file
+- **`update-memory-bank-file`** - Update file content safely
+- **`health-check-memory-bank`** - Check system health
 
 ---
 
 ## 💡 Best Practices & Tips
 
-- Use the webview for all memory bank actions.
-- Keep your extension and dependencies up to date.
-- Review feedback and logs for errors.
-- For technical details, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md).
+### For Users
 
-> **Tip (May 2025):**
->
-> - The "AI Memory: Create Memory Bank Rule" command is coming soon (logic present, not yet exposed).
-> - Advanced UI features (refresh, file preview, diff viewer) are planned for future releases.
-> - The extension is currently migrating away from Express for all communication. Some advanced features may be temporarily unavailable.
-> - For the latest status and limitations, see [ROADMAP.md](../wip/ROADMAP.md).
+- **Use the webview dashboard** for all memory bank management
+- **Let the AI manage files** - the MCP tools handle file operations safely
+- **Check the Output Channel** if you encounter issues (`AI Memory: Show Output Channel`)
+- **Keep your workspace organized** - the memory bank works best with structured projects
+
+### For AI Agents
+
+- **Always check health** before major operations
+- **Use `read-memory-bank-files`** to load context efficiently
+- **Validate before updates** - check file existence and permissions
+- **Log operations** for debugging and audit trails
+
+### Integration with Cursor
+
+- The extension automatically configures Cursor's MCP settings
+- AI agents can access memory bank through MCP tools
+- All communication uses stdio transport (no HTTP endpoints)
+- Persistent context is maintained across Cursor sessions
+
+---
+
+## 🔧 Technical Details
+
+### MCP Implementation
+
+- **Transport**: stdio (not HTTP)
+- **Protocol**: Model Context Protocol (MCP) v1.12+
+- **Communication**: Direct process communication with Cursor
+- **Configuration**: Automatically updates `.cursor/mcp.json`
+
+### File Operations
+
+- **Self-healing**: Missing files auto-created from templates
+- **Validation**: All file operations include safety checks
+- **Logging**: Comprehensive operation logging for debugging
+- **Error handling**: Graceful degradation when files unavailable
 
 ---
 
 ## 📚 More Information
 
-- [ROADMAP.md](../wip/ROADMAP.md) — Milestones and planned features
-- [TODO.md](../wip/TO DO.md) — Detailed task list
 - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) — Common issues and solutions
-- [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md) — Technical deep dive
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) — Upgrading from older versions
+- [Architecture Overview](../devs/architecture-overview.md) — Technical implementation details
+- [GitHub Repository](https://github.com/sm-moshi/aimemory) — Source code and releases
+
+---
+
+## 🐛 Getting Help
+
+1. **Check logs**: Use `AI Memory: Show Output Channel` for detailed error information
+2. **Review health**: Use the webview dashboard to check system status
+3. **Common issues**: See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for solutions
+4. **Report bugs**: Create an issue on the [GitHub repository](https://github.com/sm-moshi/aimemory/issues)

@@ -1,13 +1,8 @@
+import type { StatusProps } from "../../types/components.js";
 import { MemoryBankStatus } from "./memory-bank-status.js";
 import { RulesStatus } from "./rules-status.js";
 
-export function Status({
-	onReviewAllFiles,
-	reviewLoading,
-}: {
-	readonly onReviewAllFiles: () => void;
-	readonly reviewLoading: boolean;
-}) {
+export function Status({ onReviewAllFiles, reviewLoading }: StatusProps) {
 	return (
 		<div className="rounded-xl border border-border bg-muted p-4 shadow-sm space-y-4 mb-6">
 			<h2 className="text-xl font-bold mb-2 border-b border-border pb-1">

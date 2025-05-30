@@ -233,19 +233,53 @@ export class WebviewManager {
 						});
 						break;
 					case "startMCPServer":
-						await this.mcpServer.start();
-						this.panel?.webview.postMessage({
-							type: "MCPServerStatus",
-							status: "started",
-							port: this.mcpServer.getPort(),
-						});
+						try {
+							await this.mcpServer.start();
+							const serverPort = this.mcpServer.getPort();
+							const isStdioMode = !serverPort || serverPort === 0;
+
+							// Send status message with proper port info for different transport modes
+							this.panel?.webview.postMessage({
+								type: "MCPServerStatus",
+								status: "started",
+								port: isStdioMode ? null : serverPort, // null indicates STDIO mode
+								transport: isStdioMode ? "stdio" : "http",
+							});
+
+							Logger.getInstance().info(
+								`MCP Server started successfully in ${isStdioMode ? "STDIO" : "HTTP"} mode`,
+								{ port: serverPort, transport: isStdioMode ? "stdio" : "http" },
+							);
+						} catch (error) {
+							const errorMessage =
+								error instanceof Error ? error.message : String(error);
+							Logger.getInstance().error(
+								`Failed to start MCP server: ${errorMessage}`,
+							);
+
+							this.panel?.webview.postMessage({
+								type: "MCPServerStatus",
+								status: "error",
+								error: errorMessage,
+							});
+						}
 						break;
 					case "stopMCPServer":
-						this.mcpServer.stop();
-						this.panel?.webview.postMessage({
-							type: "MCPServerStatus",
-							status: "stopped",
-						});
+						try {
+							this.mcpServer.stop();
+							this.panel?.webview.postMessage({
+								type: "MCPServerStatus",
+								status: "stopped",
+							});
+
+							Logger.getInstance().info("MCP Server stopped successfully");
+						} catch (error) {
+							const errorMessage =
+								error instanceof Error ? error.message : String(error);
+							Logger.getInstance().error(
+								`Failed to stop MCP server: ${errorMessage}`,
+							);
+						}
 						break;
 					case "logMessage": {
 						// Route webview log messages to the Output Channel via Logger
@@ -271,6 +305,7 @@ export class WebviewManager {
 		// Initial status check
 		setTimeout(async () => {
 			await this.getRulesStatus();
+			await this.sendCurrentMCPServerStatus();
 		}, 500);
 	}
 
@@ -301,7 +336,11 @@ export class WebviewManager {
 			await vscode.workspace.fs.stat(vscode.Uri.file(cursorRulesPath));
 			initialized = true;
 		} catch (error) {
+			// File doesn't exist or access error - both indicate rules not initialized
 			initialized = false;
+			Logger.getInstance().debug(
+				`Cursor rules file not found or inaccessible: ${error instanceof Error ? error.message : String(error)}`,
+			);
 		}
 
 		console.log("Sending rules status:", initialized);
@@ -471,5 +510,59 @@ export class WebviewManager {
 
 	public getWebviewPanel(): vscode.WebviewPanel | undefined {
 		return this.panel;
+	}
+
+	/**
+	 * Send current MCP server status to webview
+	 */
+	private async sendCurrentMCPServerStatus(): Promise<void> {
+		if (!this.panel) {
+			return;
+		}
+
+		try {
+			// Cast to access implementation-specific method
+			const isRunning = (this.mcpServer as any).isServerRunning?.() ?? false;
+			const serverPort = this.mcpServer.getPort();
+			const isStdioMode = !serverPort || serverPort === 0;
+
+			// Extract nested ternary operations for clarity
+			const status = isRunning ? "started" : "stopped";
+			const port = isRunning && !isStdioMode ? serverPort : null;
+			const transport = this.determineTransportType(isRunning, isStdioMode);
+
+			this.panel.webview.postMessage({
+				type: "MCPServerStatus",
+				status,
+				port,
+				transport,
+			});
+
+			const runningStatus = isRunning ? "running" : "stopped";
+			const transportType = this.determineTransportType(isRunning, isStdioMode);
+
+			Logger.getInstance().info(
+				`Initial MCP server status sent to webview: ${runningStatus}`,
+				{
+					port: serverPort,
+					transport: transportType,
+					isStdioMode,
+				},
+			);
+		} catch (error) {
+			Logger.getInstance().error(
+				`Failed to get MCP server status: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	/**
+	 * Determine transport type based on server state
+	 */
+	private determineTransportType(isRunning: boolean, isStdioMode: boolean): string | undefined {
+		if (!isRunning) {
+			return undefined;
+		}
+		return isStdioMode ? "stdio" : "http";
 	}
 }

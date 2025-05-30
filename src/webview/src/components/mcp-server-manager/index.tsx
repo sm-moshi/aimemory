@@ -6,7 +6,7 @@ import { sendLog } from "../../utils/message.js";
 import { RulesStatus } from "../status/rules-status.js";
 
 export function MCPServerManager() {
-	// State from the detection hook
+	// State from the detection hook (for HTTP server detection only)
 	const {
 		isLoading: isDetectingServer,
 		isServerRunning: initiallyDetectedServer,
@@ -15,16 +15,21 @@ export function MCPServerManager() {
 
 	// Component-specific loading state (for start/stop actions)
 	const [isActionLoading, setIsActionLoading] = useState(false);
-	// Overall server running status - initialized by hook, then updated by messages
+	// Overall server running status - prioritize message updates over detection
 	const [isMCPRunning, setIsMCPRunning] = useState(false);
-	// Overall port - initialized by hook, then updated by messages
+	// Overall port - prioritize message updates over detection
 	const [port, setPort] = useState<number | null>(null);
+	// Track if we've received any message-based status updates
+	const [hasReceivedStatusMessage, setHasReceivedStatusMessage] = useState(false);
 
-	// Effect to synchronize state from hook and messages
+	// Effect to synchronize state from hook ONLY if we haven't received message updates
+	// This ensures STDIO servers work correctly while still supporting HTTP detection
 	useEffect(() => {
-		setIsMCPRunning(initiallyDetectedServer);
-		setPort(initialPort);
-	}, [initiallyDetectedServer, initialPort]);
+		if (!hasReceivedStatusMessage) {
+			setIsMCPRunning(initiallyDetectedServer);
+			setPort(initialPort);
+		}
+	}, [initiallyDetectedServer, initialPort, hasReceivedStatusMessage]);
 
 	const handleStartMCPServer = useCallback(() => {
 		setIsActionLoading(true);
@@ -50,9 +55,18 @@ export function MCPServerManager() {
 	const handleMessage = useCallback((event: MessageEvent) => {
 		const message = event.data;
 		if (message.type === "MCPServerStatus") {
+			// Prioritize message-based status updates (for STDIO servers)
+			setHasReceivedStatusMessage(true);
 			setIsMCPRunning(message.status === "started");
-			setPort(message.port ?? null); // Ensure port is null if not provided
-			setIsActionLoading(false); // Stop action loading when status is confirmed
+			setPort(message.port ?? null);
+			setIsActionLoading(false);
+
+			sendLog(`MCP Server status updated via message: ${message.status}`, "info", {
+				action: "statusMessageReceived",
+				status: message.status,
+				port: message.port,
+				transport: message.port ? "HTTP" : "STDIO",
+			});
 		}
 	}, []);
 
@@ -122,14 +136,30 @@ export function MCPServerManager() {
 				</div>
 			</div>
 			<hr className="border-border my-4" />
-			{port && isMCPRunning && (
+			{isMCPRunning && (
 				<p className="text-xs text-muted-foreground mt-2">
-					Server running on{" "}
-					<span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
-					<br />
-					Your Cursor MCP config has been automatically updated.
-					<br />
-					Please check Cursor MCP settings to ensure it is correct.
+					{port ? (
+						<>
+							Server running on{" "}
+							<span className="font-mono text-blue-300">
+								http://localhost:{port}/sse
+							</span>
+							<br />
+							Your Cursor MCP config has been automatically updated.
+							<br />
+							Please check Cursor MCP settings to ensure it is correct.
+						</>
+					) : (
+						<>
+							Server running in{" "}
+							<span className="font-mono text-green-300">STDIO</span> mode
+							<br />
+							Ready for Cursor MCP integration via stdio transport.
+							<br />
+							Check your <span className="font-mono">.cursor/mcp.json</span>{" "}
+							configuration.
+						</>
+					)}
 				</p>
 			)}
 		</div>

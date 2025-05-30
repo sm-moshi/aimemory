@@ -24,7 +24,7 @@ export abstract class BaseMCPServer {
 
 	constructor(config: MCPServerConfig) {
 		this.memoryBank = config.memoryBank;
-		this.logger = config.logger || console;
+		this.logger = config.logger ?? console;
 
 		this.server = new McpServer(
 			{

@@ -1,16 +1,4 @@
-// Type for log levels
-export type WebviewLogLevel = "info" | "error";
-
-// Type for log messages sent from webview to extension
-export interface WebviewLogMessage {
-	command: "logMessage";
-	level: WebviewLogLevel;
-	text: string;
-	meta?: Record<string, unknown>;
-}
-
-// Union type for all allowed webview messages (expand as needed)
-export type WebviewMessage = WebviewLogMessage; // | OtherMessageTypes
+import type { WebviewLogLevel, WebviewLogMessage, WebviewMessage } from "../types/messages.js";
 
 // Create a safe postMessage function
 export const postMessage = (message: WebviewMessage) => {

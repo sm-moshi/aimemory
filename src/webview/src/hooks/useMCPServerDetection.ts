@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import type { UseMCPServerDetectionReturn } from "../types/hooks.js";
 import { sendLog } from "../utils/message.js";
 
 const DEFAULT_PORTS = [7331, 7332]; // Default ports to check
-
-interface UseMCPServerDetectionReturn {
-	isLoading: boolean;
-	isServerRunning: boolean;
-	detectedPort: number | null;
-}
 
 export function useMCPServerDetection(): UseMCPServerDetectionReturn {
 	const [isLoading, setIsLoading] = useState(true); // Start with loading true

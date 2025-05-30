@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
+import type { MemoryBankStatusProps } from "../../types/components.js";
 import { cn } from "../../utils/cn.js";
 import { sendLog } from "../../utils/message.js";
 
-export function MemoryBankStatus({
-	onReviewAllFiles,
-	reviewLoading,
-}: {
-	readonly onReviewAllFiles: () => void;
-	readonly reviewLoading: boolean;
-}) {
+export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBankStatusProps) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMemoryBankInitialized, setIsMemoryBankInitialized] = useState(false);
 	const [updateLoading, setUpdateLoading] = useState(false);
@@ -105,7 +100,7 @@ export function MemoryBankStatus({
 					type="button"
 					className="w-full px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
 					onClick={handleInitializeMemoryBank}
-					disabled={isLoading || initLoading}
+					disabled={isLoading ?? initLoading}
 				>
 					{initLoading ? "Initialising..." : "Initialise Memory Bank"}
 				</button>
@@ -113,7 +108,7 @@ export function MemoryBankStatus({
 					type="button"
 					className="w-full px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
 					onClick={handleRepairMemoryBank}
-					disabled={isLoading || updateLoading}
+					disabled={isLoading ?? updateLoading}
 				>
 					{updateLoading ? "Repairing..." : "Repair Memory Bank"}
 				</button>
@@ -121,7 +116,7 @@ export function MemoryBankStatus({
 					type="button"
 					className="w-full px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
 					onClick={handleUpdateMemoryBank}
-					disabled={isLoading || updateLoading}
+					disabled={isLoading ?? updateLoading}
 				>
 					{updateLoading ? "Updating..." : "Update Memory Bank"}
 				</button>
@@ -129,7 +124,7 @@ export function MemoryBankStatus({
 					type="button"
 					className="w-full px-2 py-1 border border-border text-[var(--vscode-foreground)] bg-muted hover:bg-gray-200 rounded disabled:opacity-50"
 					onClick={onReviewAllFiles}
-					disabled={isLoading || reviewLoading}
+					disabled={isLoading ?? reviewLoading}
 				>
 					{reviewLoading ? "Reviewing..." : "Review All Files"}
 				</button>

@@ -1,76 +1,191 @@
 # AI Memory Extension Troubleshooting Guide
 
-> _Last updated: 2025-05-28 🐹_
+> _Last updated: 2025-05-30_
 
-This guide helps you diagnose and resolve common issues with the AI Memory extension for Cursor and VS Code, focusing on MCP, webview, and modular memory bank workflows.
+This guide helps you diagnose and resolve common issues with the AI Memory extension for Cursor and VS Code. The extension uses stdio transport for MCP communication and provides a modular memory bank system.
 
-_For setup, see [QUICKSTART.md](./QUICKSTART.md). For technical details, see [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md). For the project roadmap, see [ROADMAP.md](../wip/ROADMAP.md)._
+_For setup instructions, see [QUICKSTART.md](./QUICKSTART.md). For upgrade information, see [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)._
 
 ---
 
 ## 🛠️ Common Issues & Solutions
 
-### 1. MCP Server Connection Problems
+### 1. MCP Server Issues
 
-- **Check if the MCP server is running**:
-  Run `AI Memory: Start MCP` from the Command Palette.
-  Visit `http://localhost:7331/health` (or fallback port) in your browser.
-- **Port conflicts**:
-  Default port is 7331; fallback is 7332. Check extension output for which port is used.
-- **Firewall/network issues**:
-  Ensure your firewall allows local connections.
+**Problem**: MCP server won't start or Cursor can't connect
 
-### 2. Webview UI Issues
+- **Check extension status**: Run `AI Memory: Show Output Channel` for detailed logs
+- **Restart the server**: Use `AI Memory: Start MCP Server` from Command Palette
+- **Verify workspace**: Ensure you have an open workspace folder in Cursor
+- **Check Cursor MCP config**: The extension should auto-update `.cursor/mcp.json`
 
-- **Blank dashboard**:
-  Caused by Content Security Policy (CSP) or asset loading issues.
-  Ensure you are using the latest version of the extension.
-- **Buttons not working**:
-  Ensure the MCP server is running. Reload the webview or restart Cursor/VS Code.
+**Problem**: "MCP server process error" in output logs
 
-### 3. Memory Bank Migration & Self-Healing
+- **Check Node.js**: Ensure Node.js is installed and accessible
+- **Workspace permissions**: Verify write permissions for your workspace folder
+- **Extension conflicts**: Temporarily disable other extensions to test
 
-- **Migration prompt not appearing**:
-  Ensure you have a flat memory bank structure and no modular folders. Restart the extension to trigger migration detection.
-- **Files not migrated or missing**:
-  Use the "Repair Memory Bank" button in the webview. Check file permissions in your workspace.
-- **Self-healing actions**:
-  Missing or incomplete files are auto-created and logged in the Output Channel and webview.
+### 2. Memory Bank File Issues
 
-### 4. SSE/Streaming Errors
+**Problem**: Memory bank folder not created
 
-- **"Client closed" or dropped connections**:
-  Ensure keepalive pings are being sent (see extension output).
+- **Manual initialization**: Run `AI Memory: Start MCP Server` to trigger auto-creation
+- **Workspace requirement**: Ensure you have a folder open in Cursor (not just loose files)
+- **Check permissions**: Verify write permissions for your workspace directory
 
-### 5. Debugging Tips
+**Problem**: Files missing or incomplete
 
-- Use "Developer: Toggle Developer Tools" in Cursor/VS Code to inspect console logs.
-- Check the extension output panel for detailed logs.
+- **Self-healing**: The extension auto-creates missing files from templates
+- **Use webview**: Open the dashboard with `AI Memory: Open Dashboard` to check status
+- **Manual repair**: The system automatically detects and repairs missing files
+
+**Problem**: Cannot read/write memory bank files
+
+- **File permissions**: Check that your user has read/write access to the workspace
+- **File locks**: Close any external editors that might have memory bank files open
+- **Antivirus**: Some antivirus software may interfere with file operations
+
+### 3. Webview Dashboard Issues
+
+**Problem**: Dashboard won't open or appears blank
+
+- **CSP issues**: The extension uses strict Content Security Policy - this is normal
+- **Reload webview**: Close and reopen with `AI Memory: Open Dashboard`
+- **Extension restart**: Reload Cursor window (Cmd/Ctrl+R) to restart extension
+
+**Problem**: Server status shows disconnected
+
+- **Start server**: Ensure MCP server is running via `AI Memory: Start MCP Server`
+- **Check output**: View logs with `AI Memory: Show Output Channel`
+- **Webview refresh**: Close and reopen the dashboard to refresh connection status
+
+### 4. Cursor Integration Issues
+
+**Problem**: Cursor AI can't access MCP tools
+
+- **Check MCP config**: Extension should auto-update `.cursor/mcp.json`
+- **Manual config update**: Run `AI Memory: Update Cursor MCP Config`
+- **Restart Cursor**: Close and reopen Cursor to reload MCP configuration
+- **Verify server**: Ensure MCP server is running and shows as connected
+
+**Problem**: Memory bank context not available to AI
+
+- **Initialize memory bank**: Run `AI Memory: Start MCP Server` first
+- **File content**: Ensure memory bank files have actual content (not empty)
+- **Tool usage**: AI agents need to explicitly use MCP tools to access memory bank
+
+### 5. Performance Issues
+
+**Problem**: Extension slow to start or respond
+
+- **Large memory bank**: Files >30KB may cause slower operations
+- **File count**: Too many files in memory bank may impact performance
+- **System resources**: Check available memory and disk space
+
+**Problem**: High CPU usage
+
+- **Restart server**: Use `AI Memory: Stop MCP Server` then start again
+- **Check logs**: Look for error loops in `AI Memory: Show Output Channel`
+- **Extension conflicts**: Disable other extensions temporarily to isolate issue
 
 ---
 
-## ⚠️ Known Limitations (May 2025)
+## 🔍 Debugging Steps
 
-- The extension is currently migrating away from Express for all communication.
-  Some advanced features (e.g., chunked file access, version control integration, advanced UI) are planned but not yet available.
-- For the latest status, see [ROADMAP.md](../wip/ROADMAP.md) and [TODO.md](../wip/TODO.md).
+### 1. Check Extension Status
+
+```bash
+# View detailed logs
+Cmd/Ctrl+Shift+P → "AI Memory: Show Output Channel"
+
+# Check webview dashboard
+Cmd/Ctrl+Shift+P → "AI Memory: Open Dashboard"
+```
+
+### 2. Verify Configuration
+
+- Check that `.cursor/mcp.json` exists and contains AI Memory configuration
+- Verify `memory-bank/` folder exists in your workspace
+- Confirm core files exist: `core/projectBrief.md`, `core/activeContext.md`, etc.
+
+### 3. Test MCP Connection
+
+- Start MCP server: `AI Memory: Start MCP Server`
+- Check webview dashboard for connection status
+- Review output logs for any error messages
+
+### 4. Reset if Needed
+
+```bash
+# Stop server
+Cmd/Ctrl+Shift+P → "AI Memory: Stop MCP Server"
+
+# Update configuration
+Cmd/Ctrl+Shift+P → "AI Memory: Update Cursor MCP Config"
+
+# Restart server
+Cmd/Ctrl+Shift+P → "AI Memory: Start MCP Server"
+```
+
+---
+
+## ⚠️ Known Limitations
+
+### Current Version (v0.8.0-dev.1)
+
+- **Development version**: Some features may be unstable
+- **Large files**: Files >50KB may impact performance
+- **Windows paths**: File path handling may have edge cases on Windows
+- **Extension isolation**: MCP server runs as separate process for stability
+
+### Future Improvements
+
+- Enhanced error recovery and user feedback
+- Better performance for large memory banks
+- Advanced webview features and file management
+- Cross-platform path handling improvements
 
 ---
 
 ## 📝 Reporting Issues
 
-1. Gather logs from the extension output panel.
-2. Note the exact steps to reproduce the issue.
-3. Create an issue on the project repository with this information.
+### Before Reporting
+
+1. **Check this guide** for common solutions
+2. **Gather logs** from `AI Memory: Show Output Channel`
+3. **Note exact steps** to reproduce the issue
+4. **Check version**: Note your Cursor version and extension version
+
+### Issue Report Template
+
+```markdown
+**Environment:**
+- OS: [Windows/macOS/Linux]
+- Cursor version: [version]
+- AI Memory extension version: [version]
+
+**Issue:**
+[Describe the problem]
+
+**Steps to reproduce:**
+1. [Step 1]
+2. [Step 2]
+3. [Result]
+
+**Expected behavior:**
+[What should happen]
+
+**Logs:**
+[Paste relevant logs from Output Channel]
+```
+
+**Submit to**: [GitHub Issues](https://github.com/sm-moshi/aimemory/issues)
 
 ---
 
-## 📚 More Information
+## 📚 Additional Resources
 
-- [QUICKSTART.md](./QUICKSTART.md)
-- [IMPLEMENTATION.md](../wip/IMPLEMENTATION.md)
-- [ROADMAP.md](../wip/ROADMAP.md)
-- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
-
-How Cursor rules work?
-<https://forum.cursor.com/t/my-best-practices-for-mdc-rules-and-troubleshooting/50526>
+- [QUICKSTART.md](./QUICKSTART.md) — Installation and setup guide
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) — Upgrading from older versions
+- [Architecture Overview](../devs/architecture-overview.md) — Technical implementation details
+- [GitHub Repository](https://github.com/sm-moshi/aimemory) — Source code and latest updates

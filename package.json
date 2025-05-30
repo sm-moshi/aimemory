@@ -117,8 +117,14 @@
 		"overrides": {
 			"jwa": "^2.0.1"
 		},
-		"ignoredBuiltDependencies": ["esbuild", "keytar"],
-		"onlyBuiltDependencies": ["@biomejs/biome", "@swc/core", "@vscode/vsce-sign", "keytar"]
+		"ignoredBuiltDependencies": ["keytar"],
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"@swc/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar"
+		]
 	},
 	"type": "module"
 }

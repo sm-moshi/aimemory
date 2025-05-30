@@ -33,7 +33,7 @@ export function createProcessConfig(
 	workspacePath: string,
 ): ProcessSpawnConfig {
 	const serverPath = join(context.extensionPath, "dist", "index.cjs");
-	const nodeExecutable = process.execPath || "node";
+	const nodeExecutable = process.execPath ?? "node";
 
 	return {
 		serverPath,
