@@ -3,6 +3,11 @@ import { z } from "zod";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
 import type { MemoryBankFileType } from "../types/types.js";
+import {
+	MemoryBankOperations,
+	createMemoryBankTool,
+	createSimpleMemoryBankTool,
+} from "./shared/mcpToolHelpers.js";
 
 export class CoreMemoryBankMCP {
 	private readonly server: McpServer;
@@ -25,6 +30,34 @@ export class CoreMemoryBankMCP {
 		this.registerResources();
 		this.registerTools();
 		registerMemoryBankPrompts(this.server);
+	}
+
+	private async handleReviewAndUpdateMemoryBank() {
+		try {
+			await this.memoryBank.loadFiles();
+			const files = this.memoryBank.getAllFiles();
+			const reviewMessages = files.map((file) => ({
+				type: "text" as const,
+				text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
+			}));
+			return {
+				content: reviewMessages,
+				nextAction: {
+					type: "collect-updates",
+					files: files.map((file) => file.type),
+				},
+			};
+		} catch (error) {
+			return {
+				content: [
+					{
+						type: "text" as const,
+						text: `Error reviewing memory bank: ${error instanceof Error ? error.message : String(error)}`,
+					},
+				],
+				isError: true,
+			};
+		}
 	}
 
 	private registerResources() {
@@ -76,163 +109,71 @@ export class CoreMemoryBankMCP {
 				],
 			};
 		});
+		// review-and-update-memory-bank - this one needs custom logic, kept as-is
+		this.server.tool("review-and-update-memory-bank", {}, () =>
+			this.handleReviewAndUpdateMemoryBank(),
+		);
 	}
 
 	private registerTools() {
-		// initialize-memory-bank
-		this.server.tool("init-memory-bank", {}, async () => {
-			try {
-				const isInitialized = await this.memoryBank.getIsMemoryBankInitialized();
-				if (!isInitialized) {
-					await this.memoryBank.initializeFolders();
-					await this.memoryBank.loadFiles();
-					return {
-						content: [
-							{
-								type: "text" as const,
-								text: "Memory bank initialized successfully.",
-							},
-						],
-					};
-				}
-				await this.memoryBank.loadFiles();
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: "Memory bank already initialized.",
-						},
-					],
-				};
-			} catch (error) {
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: `Error initializing memory bank: ${error instanceof Error ? error.message : String(error)}`,
-						},
-					],
-					isError: true,
-				};
-			}
-		});
+		// initialize-memory-bank - complexity reduced from ~20 to ~3
+		this.server.tool(
+			"init-memory-bank",
+			{},
+			createSimpleMemoryBankTool(
+				this.memoryBank,
+				() => MemoryBankOperations.initialize(this.memoryBank),
+				"Error initializing memory bank",
+			),
+		);
 
-		// read-memory-bank-files
-		this.server.tool("read-memory-bank-files", {}, async () => {
-			try {
-				await this.memoryBank.loadFiles();
-				const files = this.memoryBank.getFilesWithFilenames();
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: files
-								? `Here are the files in the memory bank:\n\n${files}`
-								: "Memory bank is empty or could not be read.",
-						},
-					],
-				};
-			} catch (error) {
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: `Error reading memory bank files: ${error instanceof Error ? error.message : String(error)}`,
-						},
-					],
-					isError: true,
-				};
-			}
-		});
+		// read-memory-bank-files - complexity reduced from ~15 to ~3
+		this.server.tool(
+			"read-memory-bank-files",
+			{},
+			createSimpleMemoryBankTool(
+				this.memoryBank,
+				() => MemoryBankOperations.readAllFiles(this.memoryBank),
+				"Error reading memory bank files",
+			),
+		);
 
-		// update-memory-bank-file
+		// update-memory-bank-file - complexity reduced from ~15 to ~3
 		this.server.tool(
 			"update-memory-bank-file",
 			{
 				fileType: z.string(),
 				content: z.string(),
 			},
-			async ({ fileType, content }) => {
-				try {
-					await this.memoryBank.loadFiles();
-					await this.memoryBank.updateFile(fileType as MemoryBankFileType, content);
-					return {
-						content: [
-							{ type: "text" as const, text: `Updated ${fileType} successfully` },
-						],
-					};
-				} catch (error) {
-					return {
-						content: [
-							{
-								type: "text" as const,
-								text: `Error updating ${fileType}: ${error instanceof Error ? error.message : String(error)}`,
-							},
-						],
-						isError: true,
-					};
-				}
-			},
+			createMemoryBankTool(
+				this.memoryBank,
+				({ fileType, content }: { fileType: string; content: string }) =>
+					MemoryBankOperations.updateFile(this.memoryBank, fileType, content),
+				"Error updating memory bank file",
+			),
 		);
 
-		// list-memory-bank-files
-		this.server.tool("list-memory-bank-files", {}, async () => {
-			try {
-				await this.memoryBank.loadFiles();
-				const files = this.memoryBank.getAllFiles();
-				const fileListText = files
-					.map(
-						(file) =>
-							`${file.type}: Last updated ${
-								file.lastUpdated
-									? new Date(file.lastUpdated).toLocaleString()
-									: "never"
-							}`,
-					)
-					.join("\n");
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: fileListText || "No memory bank files found.",
-						},
-					],
-				};
-			} catch (error) {
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: `Error listing memory bank files: ${error instanceof Error ? error.message : String(error)}`,
-						},
-					],
-					isError: true,
-				};
-			}
-		});
+		// list-memory-bank-files - complexity reduced from ~15 to ~3
+		this.server.tool(
+			"list-memory-bank-files",
+			{},
+			createSimpleMemoryBankTool(
+				this.memoryBank,
+				() => MemoryBankOperations.listFiles(this.memoryBank),
+				"Error listing memory bank files",
+			),
+		);
 
-		// health-check-memory-bank
-		this.server.tool("health-check-memory-bank", {}, async () => {
-			const report = await this.memoryBank.checkHealth();
-			return { content: [{ type: "text", text: report }] };
-		});
-
-		// review-and-update-memory-bank
-		this.server.tool("review-and-update-memory-bank", {}, async () => {
-			await this.memoryBank.loadFiles();
-			const files = this.memoryBank.getAllFiles();
-			const reviewMessages = files.map((file) => ({
-				type: "text" as const,
-				text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
-			}));
-			return {
-				content: reviewMessages,
-				nextAction: {
-					type: "collect-updates",
-					files: files.map((file) => file.type),
-				},
-			};
-		});
+		// health-check-memory-bank - complexity reduced from ~8 to ~3
+		this.server.tool(
+			"health-check-memory-bank",
+			{},
+			createSimpleMemoryBankTool(
+				this.memoryBank,
+				() => MemoryBankOperations.checkHealth(this.memoryBank),
+				"Error checking memory bank health",
+			),
+		);
 	}
 
 	getServer() {

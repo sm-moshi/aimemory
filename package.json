@@ -6,7 +6,7 @@
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.7.2",
+	"version": "0.7.3",
 	"engines": {
 		"vscode": "^1.96.2"
 	},
@@ -77,7 +77,7 @@
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:all": "pnpm run test:coverage && cd src/webview && pnpm run test:coverage && cd ../..",
 		"package": "pnpm run build:prod && pnpm vsce package --no-dependencies",
-		"update-docs-date": "node scripts/update-docs-date.js",
+		"update-docs-date": "tsx scripts/update-docs-date.ts",
 		"build-check": "tsx scripts/build-check.ts",
 		"build:webview": "cd src/webview && vite build --config ./vite.config.ts",
 		"deploy": "pnpm package && vsce publish",
@@ -92,33 +92,30 @@
 		"@rollup/plugin-json": "6.1.0",
 		"@rollup/plugin-node-resolve": "16.0.1",
 		"@rollup/plugin-swc": "0.4.0",
-		"@rollup/plugin-virtual": "3.0.2",
 		"@swc/core": "1.11.29",
 		"@types/node": "20.17.51",
 		"@types/vscode": "1.96.0",
 		"@vitest/coverage-v8": "3.1.4",
 		"@vscode/test-cli": "0.0.11",
-		"@vscode/test-electron": "2.5.2",
-		"@vscode/vsce": "3.4.3-0",
+		"@vscode/vsce": "3.4.3-4",
+		"cross-env": "^7.0.3",
 		"npm-run-all": "4.1.5",
 		"rollup": "4.41.1",
 		"rollup-plugin-copy": "3.5.0",
-		"rollup-plugin-dts": "6.2.1",
 		"tsx": "4.19.4",
 		"typescript": "5.8.3",
-		"undici-types": "7.10.0",
 		"vitest": "3.1.4"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "1.12.0",
-		"zod": "3.25.31"
+		"@modelcontextprotocol/sdk": "1.12.1",
+		"zod": "3.25.36"
 	},
 	"packageManager": "pnpm@10.11.0",
 	"pnpm": {
 		"overrides": {
 			"jwa": "2.0.1"
 		},
-		"ignoredBuiltDependencies": ["keytar"],
+		"ignoredBuiltDependencies": ["esbuild", "keytar"],
 		"onlyBuiltDependencies": ["@biomejs/biome", "@swc/core", "@vscode/vsce-sign", "keytar"]
 	},
 	"type": "module"

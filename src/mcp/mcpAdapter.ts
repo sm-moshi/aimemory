@@ -1,10 +1,10 @@
-import { type ChildProcess, spawn } from "node:child_process";
-import * as path from "node:path";
-import * as vscode from "vscode";
+import type { ChildProcess } from "node:child_process";
+import type { ExtensionContext } from "vscode";
 import { MemoryBankService } from "../core/memoryBank.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
 import type { MemoryBankFileType } from "../types/types.js";
 import { Logger } from "../utils/log.js";
+import { launchMCPServerProcess } from "./shared/processHelpers.js";
 
 /**
  * Adapter that provides the same interface as MemoryBankMCPServer
@@ -14,14 +14,14 @@ import { Logger } from "../utils/log.js";
  * without breaking the existing extension interface.
  */
 export class MemoryBankMCPAdapter implements MCPServerInterface {
-	private readonly context: vscode.ExtensionContext;
+	private readonly context: ExtensionContext;
 	private readonly memoryBank: MemoryBankService;
 	private readonly logger: Logger;
 	private childProcess: ChildProcess | null = null;
 	private isRunning = false;
 	private readonly defaultPort: number; // For compatibility with existing interface
 
-	constructor(context: vscode.ExtensionContext, defaultPort = 3000) {
+	constructor(context: ExtensionContext, defaultPort = 3000) {
 		this.context = context;
 		this.defaultPort = defaultPort;
 		this.memoryBank = new MemoryBankService(context);
@@ -30,6 +30,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 
 	/**
 	 * Start the STDIO MCP server as a child process
+	 * Complexity reduced from ~19 to ~5 by extracting process management utilities
 	 */
 	async start(): Promise<void> {
 		if (this.isRunning || this.childProcess) {
@@ -38,62 +39,26 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 		}
 
 		try {
-			// Get the path to the compiled STDIO server
-			const serverPath = path.join(this.context.extensionPath, "dist", "index.cjs");
-
-			// Get the workspace path
-			const workspaceFolders = vscode.workspace.workspaceFolders;
-			if (!workspaceFolders || workspaceFolders.length === 0) {
-				this.logger.error("AI Memory: No workspace folder found. Cannot start MCP server.");
-				throw new Error("No workspace folder found to start MCP server.");
-			}
-			const workspacePath = workspaceFolders[0].uri.fsPath;
-
-			this.logger.info(
-				`Starting MCP STDIO server: ${serverPath} with workspace: ${workspacePath}`,
-			);
-
-			// Use process.execPath for the node command if available and makes sense for the context
-			// This assumes the node running the extension is the desired node for the child process.
-			const nodeExecutable = process.execPath || "node";
-
-			// Spawn the STDIO server process
-			this.childProcess = spawn(nodeExecutable, [serverPath, workspacePath], {
-				stdio: "pipe", // We'll manage stdio ourselves for MCP communication
-				cwd: this.context.extensionPath,
-				env: {
-					...process.env,
-					NODE_ENV: "production",
+			// Launch MCP server process using shared utilities
+			this.childProcess = await launchMCPServerProcess(this.context, this.logger, {
+				onError: (error) => {
+					this.logger.error(`MCP server process error: ${error.message}`);
+					this.isRunning = false;
+					this.childProcess = null;
+				},
+				onExit: (code, signal) => {
+					this.logger.info(
+						`MCP server process exited with code ${code}, signal ${signal}`,
+					);
+					this.isRunning = false;
+					this.childProcess = null;
+				},
+				onStderr: (data) => {
+					this.logger.debug(`MCP server stderr: ${data}`);
 				},
 			});
 
-			// Handle process events
-			this.childProcess.on("error", (error) => {
-				this.logger.error(`MCP server process error: ${error.message}`);
-				this.isRunning = false;
-				this.childProcess = null;
-			});
-
-			this.childProcess.on("exit", (code, signal) => {
-				this.logger.info(`MCP server process exited with code ${code}, signal ${signal}`);
-				this.isRunning = false;
-				this.childProcess = null;
-			});
-
-			// Log stderr for debugging
-			this.childProcess.stderr?.on("data", (data) => {
-				this.logger.debug(`MCP server stderr: ${data}`);
-			});
-
-			// Wait a moment for the process to start
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-
-			if (this.childProcess && !this.childProcess.killed) {
-				this.isRunning = true;
-				this.logger.info("MCP STDIO server started successfully");
-			} else {
-				throw new Error("Failed to start MCP server process");
-			}
+			this.isRunning = true;
 		} catch (error) {
 			this.logger.error(
 				`Failed to start MCP adapter: ${error instanceof Error ? error.message : String(error)}`,

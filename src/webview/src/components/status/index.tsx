@@ -1,12 +1,12 @@
 import { MemoryBankStatus } from "./memory-bank-status.js";
-// import { RulesStatus } from "./rules-status";
+import { RulesStatus } from "./rules-status.js";
 
 export function Status({
 	onReviewAllFiles,
 	reviewLoading,
 }: {
-	onReviewAllFiles: () => void;
-	reviewLoading: boolean;
+	readonly onReviewAllFiles: () => void;
+	readonly reviewLoading: boolean;
 }) {
 	return (
 		<div className="rounded-xl border border-border bg-muted p-4 shadow-sm space-y-4 mb-6">
@@ -14,8 +14,8 @@ export function Status({
 				Memory Bank Status
 			</h2>
 			<MemoryBankStatus onReviewAllFiles={onReviewAllFiles} reviewLoading={reviewLoading} />
-			{/* <hr className="border-border my-4" />
-      <RulesStatus /> */}
+			<hr className="border-border my-4" />
+			<RulesStatus />
 		</div>
 	);
 }

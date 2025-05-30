@@ -17,8 +17,8 @@ import type { MCPServerInterface } from "../types/mcpTypes.js";
  * This class is kept for reference only and will throw errors if instantiated.
  */
 export class MemoryBankMCPServer implements MCPServerInterface {
-	private memoryBank: MemoryBankService;
-	private port: number;
+	private readonly memoryBank: MemoryBankService;
+	private readonly port: number;
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
