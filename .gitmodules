@@ -1,0 +1,6 @@
+[submodule "ai-memory-bank"]
+path = memory-bank
+url = https://github.com/sm-moshi/ai-memory-bank.git
+[submodule "memory-bank"]
+	path = memory-bank
+	url = https://github.com/sm-moshi/ai-memory-bank.git
