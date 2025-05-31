@@ -15,11 +15,11 @@ export * from "./system.js";
 // Error Handling and Result Pattern Types
 export * from "./errorHandling.js";
 
-// Cache Management Types
-export * from "./cache.js";
+// System Infrastructure Types (cache, resources, DI)
+export * from "./system.js";
 
-// Resource Management Types
-export * from "./resources.js";
+// Error Handling and Result Pattern Types
+export * from "./errorHandling.js";
 
 // Configuration Types (excluding MCPServerConfig to avoid conflict)
 export type {
