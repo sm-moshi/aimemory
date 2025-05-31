@@ -5,12 +5,8 @@
 
 import fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-	CacheStats,
-	FileCache,
-	FileOperationContext,
-	MemoryBankFileType,
-} from "../types/types.js";
+import type { CacheStats, FileCache, FileOperationContext } from "../types/types.js";
+import { MemoryBankFileType } from "../types/types.js";
 import {
 	CacheManager,
 	loadFileWithTemplate,
@@ -45,7 +41,14 @@ describe("File Operation Helpers", () => {
 		vi.clearAllMocks();
 
 		mockFileCache = new Map();
-		mockCacheStats = { hits: 0, misses: 0, reloads: 0 };
+		mockCacheStats = {
+			hits: 0,
+			misses: 0,
+			totalFiles: 0,
+			hitRate: 0,
+			lastReset: new Date(),
+			reloads: 0,
+		};
 		mockLogger = {
 			info: vi.fn(),
 			error: vi.fn(),
@@ -169,7 +172,7 @@ describe("File Operation Helpers", () => {
 	});
 
 	describe("validateSingleFile", () => {
-		const fileType = "core/projectbrief.md" as MemoryBankFileType;
+		const fileType = MemoryBankFileType.ProjectBrief;
 
 		it("should return valid result for existing file", async () => {
 			vi.mocked(fs.stat).mockResolvedValue({ isFile: () => true } as any);
@@ -178,7 +181,7 @@ describe("File Operation Helpers", () => {
 
 			expect(result.isValid).toBe(true);
 			expect(result.fileType).toBe(fileType);
-			expect(result.filePath).toBe("/test/memory-bank/core/projectbrief.md");
+			expect(result.filePath).toBe("/test/memory-bank/core/projectBrief.md");
 		});
 
 		it("should return invalid result for non-file", async () => {
@@ -201,7 +204,7 @@ describe("File Operation Helpers", () => {
 	});
 
 	describe("loadFileWithTemplate", () => {
-		const fileType = "core/projectbrief.md" as MemoryBankFileType;
+		const fileType = MemoryBankFileType.ProjectBrief;
 		let cacheManager: CacheManager;
 
 		beforeEach(() => {
@@ -215,7 +218,7 @@ describe("File Operation Helpers", () => {
 			vi.mocked(fs.stat).mockResolvedValue(stats);
 
 			// Set up cache
-			mockFileCache.set("/test/memory-bank/core/projectbrief.md", {
+			mockFileCache.set("/test/memory-bank/core/projectBrief.md", {
 				content: "cached content",
 				mtimeMs: 123456,
 			});
@@ -257,7 +260,7 @@ describe("File Operation Helpers", () => {
 			expect(result.content).toBe("template content");
 			expect(result.wasCreated).toBe(true);
 			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/test/memory-bank/core/projectbrief.md",
+				"/test/memory-bank/core/projectBrief.md",
 				"template content",
 			);
 		});

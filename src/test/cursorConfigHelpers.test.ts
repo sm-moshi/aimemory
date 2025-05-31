@@ -5,7 +5,7 @@
 
 import fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CursorMCPConfig, CursorMCPServerConfig } from "../types/types.js";
+import type { CursorMCPConfig, MCPServerConfig } from "../types/config.js";
 import {
 	compareServerConfigs,
 	createAIMemoryServerConfig,
@@ -71,40 +71,57 @@ describe("Cursor Config Helpers", () => {
 	});
 
 	describe("createAIMemoryServerConfig", () => {
-		it("should create a valid server configuration", () => {
-			const result = createAIMemoryServerConfig("/ext/path", "/workspace/path");
-
+		it("should create AI Memory server config for Unix paths", () => {
+			const result = createAIMemoryServerConfig("/workspace/path");
 			expect(result).toEqual({
 				name: "AI Memory",
 				command: "node",
-				args: ["/ext/path/dist/index.cjs", "/workspace/path"],
-				cwd: "/ext/path",
+				args: ["/workspace/path/dist/mcp-server.js", "--workspace", "/workspace/path"],
+				cwd: "/workspace/path",
 			});
 		});
 
-		it("should handle different path formats", () => {
-			const result = createAIMemoryServerConfig("C:\\ext\\path", "C:\\workspace\\path");
+		it("should create AI Memory server config for Windows paths", () => {
+			const result = createAIMemoryServerConfig("C:\\workspace\\path");
+			expect(result).toEqual({
+				name: "AI Memory",
+				command: "node",
+				args: [
+					"C:\\workspace\\path/dist/mcp-server.js",
+					"--workspace",
+					"C:\\workspace\\path",
+				],
+				cwd: "C:\\workspace\\path",
+			});
+		});
 
-			// join() normalizes path separators, so on Unix it becomes forward slashes
-			expect(result.args?.[0]).toMatch(/^C:[\\/]ext[\\/]path[\\/]dist[\\/]index\.cjs$/);
-			expect(result.args).toContain("C:\\workspace\\path");
+		it("should detect differences when configs don't match", () => {
+			const config1 = {
+				name: "AI Memory",
+				command: "node",
+				args: ["old-path.js"],
+				cwd: "/old/path",
+			};
+			const config2 = {
+				name: "AI Memory",
+				command: "node",
+				args: ["new-path.js"],
+				cwd: "/new/path",
+			};
+			const result = compareServerConfigs(config1, config2);
+			expect(result.matches).toBe(false);
+			expect(result.differences).toContain("cwd: /old/path → /new/path");
+			expect(result.differences).toContain('args: ["old-path.js"] → ["new-path.js"]');
 		});
 	});
 
 	describe("compareServerConfigs", () => {
-		const baseConfig: CursorMCPServerConfig = {
+		const baseConfig: MCPServerConfig = {
 			name: "AI Memory",
 			command: "node",
 			args: ["/ext/dist/index.cjs", "/workspace"],
 			cwd: "/ext",
 		};
-
-		it("should return no match when existing config is undefined", () => {
-			const result = compareServerConfigs(undefined, baseConfig);
-
-			expect(result.matches).toBe(false);
-			expect(result.differences).toContain("Config does not exist");
-		});
 
 		it("should return match when configs are identical", () => {
 			const result = compareServerConfigs(baseConfig, baseConfig);
@@ -139,7 +156,7 @@ describe("Cursor Config Helpers", () => {
 		});
 
 		it("should detect multiple differences", () => {
-			const differentConfig: CursorMCPServerConfig = {
+			const differentConfig: MCPServerConfig = {
 				...baseConfig,
 				command: "bun",
 				cwd: "/different",

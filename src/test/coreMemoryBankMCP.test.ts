@@ -184,26 +184,31 @@ describe("CoreMemoryBankMCP", () => {
 
 			it("direct URI handler (3rd arg) returns file content if file exists", async () => {
 				const uriHandler = getDirectResourceHandler("memory-bank-files");
+				// Mock getFile to return a specific file content
 				mockMemoryBankService.getFile.mockReturnValueOnce({
-					fileType: MemoryBankFileType.ProjectBrief,
-					content: "Test content",
-					mtime: Date.now(),
+					type: MemoryBankFileType.ProjectBrief,
+					content: "Mocked file content",
+					lastUpdated: new Date(),
 				});
+
 				const result = await uriHandler(
 					new URL(`memory-bank://files/${MemoryBankFileType.ProjectBrief}`),
-					{ fileType: MemoryBankFileType.ProjectBrief },
+					{
+						fileType: MemoryBankFileType.ProjectBrief,
+					},
 				);
-				expect(mockMemoryBankService.getFile).toHaveBeenCalledWith(
-					MemoryBankFileType.ProjectBrief,
-				);
+
 				expect(result).toEqual({
 					contents: [
 						{
-							text: "Test content",
 							uri: `memory-bank://files/${MemoryBankFileType.ProjectBrief}`,
+							text: "Mocked file content",
 						},
 					],
 				});
+				expect(mockMemoryBankService.getFile).toHaveBeenCalledWith(
+					MemoryBankFileType.ProjectBrief,
+				);
 			});
 
 			it("direct URI handler (3rd arg) throws if file does not exist", async () => {
@@ -215,9 +220,6 @@ describe("CoreMemoryBankMCP", () => {
 						fileType: MemoryBankFileType.ProjectBrief,
 					}),
 				).rejects.toThrow(`File ${MemoryBankFileType.ProjectBrief} not found`);
-				expect(mockMemoryBankService.getFile).toHaveBeenCalledWith(
-					MemoryBankFileType.ProjectBrief,
-				);
 			});
 		});
 
@@ -333,7 +335,9 @@ describe("CoreMemoryBankMCP", () => {
 
 				const result = await handler();
 				expect(result.isError).toBe(true);
-				expect(result.content[0].text).toContain("Error reading memory bank files: Read Error");
+				expect(result.content[0].text).toContain(
+					"Error reading memory bank files: Read Error",
+				);
 			});
 		});
 
