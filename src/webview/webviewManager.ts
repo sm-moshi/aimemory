@@ -9,7 +9,6 @@ import type { CursorRulesService } from "../services/cursor/rules-service.js";
 import { getCursorMemoryBankRulesFile } from "../services/cursor/rules.js";
 import type { CursorMCPConfig, MCPServerConfig } from "../types/config.js";
 import type { MCPServerInterface, MemoryBankFile } from "../types/index.js";
-// import type { WebviewPanelManager } from "./WebviewPanelManager.js"; // Commented out due to module not found
 import type {
 	ServerAlreadyRunningMessage,
 	WebviewLogMessage,

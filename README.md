@@ -4,264 +4,262 @@
 [![License](https://img.shields.io/github/license/sm-moshi/aimemory)](LICENSE)
 [![Version](https://img.shields.io/github/package-json/v/sm-moshi/aimemory/main)](package.json)
 
-_A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
+_A robust, production-ready memory bank extension for Cursor and VS Code, enabling persistent, context-aware AI workflows with comprehensive MCP server integration._
 
-> _Last updated: 2025-05-31_
-
----
-
-## 📑 Table of Contents
-
-1. [AI Memory Extension for Cursor 🐹](#ai-memory-extension-for-cursor-)
-	1. [📑 Table of Contents](#-table-of-contents)
-	2. [🧠 Overview](#-overview)
-	3. [✨ Features](#-features)
-	4. [🖼 Visuals](#-visuals)
-	5. [🛠 Installation](#-installation)
-		1. [**WiP:** From Cursor Extension Panel (Recommended)](#wip-from-cursor-extension-panel-recommended)
-		2. [From VSIX File](#from-vsix-file)
-	6. [⚡ Quick Start](#-quick-start)
-		1. [Development Commands](#development-commands)
-	7. [💡 Usage Examples](#-usage-examples)
-	8. [🗂 Project Structure](#-project-structure)
-		1. [Key Configuration Files](#key-configuration-files)
-		2. [Key Configuration Files](#key-configuration-files-1)
-	9. [⚙️ Configuration](#️-configuration)
-		1. [Development Configuration](#development-configuration)
-		2. [Development Configuration](#development-configuration-1)
-	10. [🔄 Migration](#-migration)
-	11. [🛠 Troubleshooting](#-troubleshooting)
-	12. [🤝 Contributing](#-contributing)
-		 1. [Development Standards](#development-standards)
-	13. [📬 Support \& Contact](#-support--contact)
-	14. [📜 License](#-license)
-	15. [🔗 Links \& Docs](#-links--docs)
+**Status**: ✅ **Phase 1 Complete** - Production-ready core architecture with advanced features
 
 ---
 
 ## 🧠 Overview
 
-AI Memory is a modular extension for [Cursor](https://www.cursor.com/) (0.50+) and VS Code, providing persistent, context-aware memory for LLMs and agents. It features a modern webview, a robust MCP server (CLI/stdio-only), and a fully modular, self-healing memory bank system. Designed Cursor-first, it ensures seamless context retention, robust error handling, and a smooth developer experience.
+AI Memory is a mature extension for [Cursor](https://www.cursor.com/) (0.50+) and VS Code, providing persistent, context-aware memory for LLMs and agents. It features a modern React webview, a robust MCP server (CLI/stdio-only), and a fully modular, self-healing memory bank system.
 
-> **Note:** This extension uses **STDIO transport exclusively** for MCP server communication. As of v0.6.0, Express/HTTP transport has been completely removed in favor of STDIO-only design.
+**Key Benefits:**
 
----
+- **Zero Configuration**: Auto-creates and manages your memory bank structure
+- **Performance Optimized**: Streaming operations for large files, intelligent caching
+- **Security Hardened**: Comprehensive input validation and path traversal protection
+- **Developer Experience**: Modern toolchain with hot reload, comprehensive testing
 
-## ✨ Features
-
-- **Modular Memory Bank**: Structured folders for project, product, technical, and progress context.
-- **MCP Server (CLI/stdio-only)**: Robust, async, error-tolerant, and Cursor-first.
-- **Webview UI**: Initialise, update, and repair the memory bank with clear feedback and error messages.
-- **Self-Healing**: Auto-creates missing files/folders from templates. Manual repair available via webview.
-- **Migration Logic**: Detects and migrates flat memory banks to modular structure with user consent.
-- **/memory Commands**: Interact directly with the memory bank from Cursor chat (e.g., `/memory status`, `/memory list`, `/memory read <filename>`).
-- **Modern Tooling**: Fast development with [Biome](https://biomejs.dev/) for linting/formatting, SWC for compilation.
-- **Version Control Ready**: Modular structure supports future versioning, remote/cloud, and visualisation features.
+> **Architecture**: Uses **STDIO transport exclusively** for MCP server communication. Express/HTTP transport removed in favour of STDIO-only design for maximum Cursor compatibility.
 
 ---
 
-## 🖼 Visuals
+## ✨ Key Features
 
-> _Screenshots and diagrams coming soon!_
-
-- **Webview Dashboard:** _[Insert screenshot here]_
-- **Memory Bank Structure:** _[Insert diagram here]_
-
----
-
-## 🛠 Installation
-
-### **WiP:** From Cursor Extension Panel (Recommended)
-
-1. Open Cursor
-2. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X)
-3. Search for "AI Memory"
-4. Click Install
-
-### From VSIX File
-
-1. Download the latest `.vsix` from [GitHub releases](https://github.com/sm-moshi/aimemory/releases)
-2. In Cursor, open the Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
-3. Run "Extensions: Install from VSIX..." and select the file
+- **🏗 Modular Memory Bank**: Structured folders for project, product, technical, and progress context
+- **⚡ High-Performance MCP Server**: Async operations, streaming for large files, intelligent retry logic
+- **🖥 Modern Webview UI**: React 19 + Tailwind 4 interface for memory bank management
+- **🔧 Self-Healing Architecture**: Auto-repair missing files, migration detection, template-based recovery
+- **💬 Native Chat Integration**: `/memory` commands in Cursor chat for direct memory interaction
+- **🛡 Security First**: Zod validation, path sanitisation, resource limits, secure error handling
+- **📊 Performance Monitoring**: Streaming metrics, cache statistics, health monitoring
+- **🔄 Version Control Ready**: Git-friendly structure, supports team collaboration
 
 ---
 
-## ⚡ Quick Start
+## 🛠 Installation & Quick Start
+
+### Prerequisites
+
+- [Cursor](https://www.cursor.com/) 0.50+ or VS Code 1.96+
+- Node.js 20 LTS
+- pnpm 10.11+
+
+### Development Setup
 
 ```bash
+# Clone and setup
+git clone https://github.com/sm-moshi/aimemory.git
+cd aimemory
 pnpm install
-pnpm run build
-# Press F5 in Cursor to launch the extension
-```
 
-- Open the webview dashboard (`AI Memory: Open Dashboard`)
-- Click **Start MCP Server**
-- Click **Initialise Memory Bank**
-- Use `/memory` commands in Cursor chat
-
-### Development Commands
-
-```bash
-# Build extension and webview
+# Build extension
 pnpm run build
 
-# Development with hot reload
-pnpm run dev
-
-# Lint and format code
-pnpm run lint:fix
-
-# Run tests
-pnpm run test:unit
+# Launch development environment
+# Press F5 in Cursor to launch extension host
 ```
+
+### Using the Extension
+
+1. **Open Dashboard**: `AI Memory: Open Dashboard` (Command Palette)
+2. **Start MCP Server**: Click "Start MCP Server" in webview
+3. **Initialize Memory Bank**: Click "Initialize Memory Bank"
+4. **Use Chat Commands**: `/memory status`, `/memory list`, `/memory read <file>`
 
 ---
 
 ## 💡 Usage Examples
 
-- **Check memory status:**
+```text
+# Check memory bank status
+/memory status
 
-  ```text
-  /memory status
-  ```
+# List all memory files
+/memory list
 
-- **List memory files:**
+# Read specific memory file
+/memory read core/projectbrief.md
 
-  ```text
-  /memory list
-  ```
+# Read current progress
+/memory read progress/current.md
+```
 
-- **Read a memory file:**
+**Webview Actions:**
 
-  ```text
-  /memory read core/projectbrief.md
-  ```
-
-- **Repair memory bank:**
-  - Use the "Repair Memory Bank" button in the webview
+- **Repair Memory Bank**: Auto-fix missing or corrupted files
+- **Health Check**: Comprehensive system validation
+- **Performance Metrics**: View streaming and cache statistics
 
 ---
 
-## 🗂 Project Structure
+## 🏗 Project Structure
 
-| Folder         | Purpose                                      |
-| -------------- | -------------------------------------------- |
-| `src/`         | Extension, MCP server, webview, types, utils |
-| `memory-bank/` | Modular, persistent project memory           |
-| `docs/`        | Public documentation, guides, and plans      |
-| `dist/`        | Packaged extension and assets                |
-| `.vscode/`     | VS Code workspace configuration              |
+```markdown
+aimemory/
+├── src/                    # Extension source code
+│   ├── core/              # Business logic & services
+│   ├── services/          # Domain-specific modules
+│   ├── infrastructure/    # Framework adapters
+│   ├── mcp/              # MCP server implementation
+│   ├── webview/          # React UI
+│   └── types/            # TypeScript definitions
+├── memory-bank/          # Development memory bank (submodule)
+├── docs/                 # Documentation
+└── dist/                 # Build outputs
+```
 
-### Key Configuration Files
+**Core Technologies:**
 
-| File               | Purpose                                      |
-| ------------------ | -------------------------------------------- |
-| `biome.json`       | Biome linting and formatting configuration   |
-| `package.json`     | Dependencies and build scripts               |
-| `tsconfig.json`    | TypeScript compiler configuration            |
-| `rollup.config.js` | Extension and MCP server build configuration |
-
-### Key Configuration Files
-
-| File               | Purpose                                      |
-| ------------------ | -------------------------------------------- |
-| `biome.json`       | Biome linting and formatting configuration   |
-| `package.json`     | Dependencies and build scripts               |
-| `tsconfig.json`    | TypeScript compiler configuration            |
-| `rollup.config.js` | Extension and MCP server build configuration |
-
-See [memory-bank rules](memory-bank/core/projectbrief.md) for details.
+- **Backend**: Node.js 20, TypeScript 5.8, MCP Protocol
+- **Build**: Rollup 4 + SWC, Biome (linting/formatting)
+- **Frontend**: React 19, Tailwind 4, Vite 6
+- **Testing**: Vitest, @vscode/test-cli, >90% coverage
 
 ---
 
 ## ⚙️ Configuration
 
-- All required files are auto-created if missing.
-- No manual configuration is required for basic use.
-- Advanced settings and customisation coming soon.
+**Zero Configuration Required** - All files auto-created on first use.
 
-### Development Configuration
+**Available Settings** (VS Code Settings):
 
-- **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
-- **Type Safety**: Strict TypeScript configuration enforced
-- **VS Code**: Workspace includes recommended extensions (Biome)
-- **Build**: SWC for fast and efficient compilation
+- `aimemory.logLevel`: Control logging verbosity (`info`, `debug`, `trace`)
 
-### Development Configuration
+**Advanced Configuration:**
 
-- **Linting & Formatting**: Uses [Biome](https://biomejs.dev/) for fast, consistent code formatting
-- **Type Safety**: Strict TypeScript configuration enforced
-- **VS Code**: Workspace includes recommended extensions (Biome)
-- **Build**: SWC for fast and efficient compilation
+- Memory bank templates auto-customize based on project type
+- MCP server configuration automatically managed
+- Cursor rules integration built-in
 
 ---
 
-## 🔄 Migration
+## 🧪 Development
 
-- Automatic detection and migration of flat memory banks to modular structure.
-- No files are overwritten without explicit user consent.
-- See [Migration Guide](docs/guides/MIGRATION_GUIDE.md) for details.
+```bash
+# Development with hot reload
+pnpm run dev
+
+# Run tests
+pnpm test                    # Unit tests
+pnpm test:extension          # VS Code extension tests
+pnpm test:coverage           # Coverage report
+
+# Code quality
+pnpm run lint:fix            # Auto-fix linting issues
+pnpm run check-types         # TypeScript validation
+
+# Build for production
+pnpm run build:prod          # Optimized build
+pnpm run package             # Create .vsix package
+```
+
+**Quality Standards:**
+
+- **British English** enforced throughout codebase
+- **Test Coverage**: >90% maintained
+- **Code Quality**: Biome linting, strict TypeScript
+- **Performance**: Streaming for files >1MB, memory-bounded operations
+
+---
+
+## 🔧 Advanced Features
+
+### Performance Optimizations
+
+- **Streaming Manager**: Intelligent file reading (normal vs streaming based on size)
+- **LRU Cache**: Bounded cache with automatic eviction
+- **Resource Management**: Memory pressure handling, cleanup lifecycle
+- **Retry Logic**: Exponential backoff for transient failures
+
+### Security Features
+
+- **Input Validation**: Comprehensive Zod schemas for all inputs
+- **Path Security**: Path traversal prevention, file system boundaries
+- **Resource Limits**: File size limits, cache bounds, operation timeouts
+- **Error Handling**: Secure error messages, no sensitive data leakage
+
+### Architecture Patterns
+
+- **Clean Architecture**: Clear separation of concerns (utils → services → core)
+- **Dependency Injection**: Testable, modular service design
+- **Result Pattern**: Explicit error handling throughout
+- **Event-Driven**: Async operations with proper cleanup
+
+---
+
+## 🚀 Production Ready
+
+> **Phase 1 Complete** ✅
+
+- [x] Core architecture implementation
+- [x] Performance optimization
+- [x] Security hardening
+- [x] Comprehensive testing
+- [x] Modern toolchain integration
+
+> **Next: Phase 2 - Metadata System**
+
+- [ ] Intelligent file categorisation
+- [ ] Advanced search capabilities
+- [ ] Content analysis and insights
+- [ ] Multi-workspace support
 
 ---
 
 ## 🛠 Troubleshooting
 
-- **MCP Server Health:** Use the webview dashboard or `/memory status` in Cursor chat.
-- **Repair:** Use the webview's repair button if files are missing or broken.
-- **See [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)** for more.
+> **Common Issues:**
 
-> **Tip:** If you encounter issues, check the Output Channel in Cursor/VS Code for logs.
+- **MCP Server**: Check webview dashboard or `/memory status`
+- **Missing Files**: Use webview "Repair Memory Bank" button
+- **Performance**: Large files automatically use streaming
+- **Logs**: Check Output Channel → "AI Memory"
+
+**Documentation:**
+
+- [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)
+- [Migration Guide](docs/guides/MIGRATION_GUIDE.md)
+- [Quick Start Guide](docs/guides/QUICKSTART.md)
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see:
+We welcome contributions! Please see our development standards:
 
-- [Contributing Guide](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Unified Ruleset](vsix-extension.mdc)
+**Quality Requirements:**
 
-### Development Standards
-
-- **Code Quality**: All code is automatically formatted with [Biome](https://biomejs.dev/)
-- **Type Safety**: Strict TypeScript configuration enforced
-- **Testing**: Unit tests required for new features
-- **Pre-commit**: Run `pnpm run lint:fix` before committing
+- British English spelling throughout
+- Comprehensive test coverage for new features
+- Biome formatting compliance
+- TypeScript strict mode compliance
 
 ```bash
 # Before committing
-pnpm run lint:fix
-pnpm run test:unit
-pnpm run build
+pnpm run lint:fix && pnpm test && pnpm run build
 ```
 
-> **Branching:** We use [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/). Please branch from `develop` and use `feature/*` for new features.
+**Development Process:**
+
+- Branch from `develop` using `feature/*` naming
+- Follow [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) workflow
+- Ensure all tests pass and coverage maintained
 
 ---
 
-## 📬 Support & Contact
+## 📜 License & Links
 
-- Open an [issue](https://github.com/sm-moshi/aimemory/issues) for bugs or feature requests
-- For questions, use GitHub Discussions or contact the maintainers via the repository
+**License:** [Apache 2.0](LICENSE)
 
----
+**Documentation:**
 
-## 📜 License
+- [Implementation Details](docs/wip/IMPLEMENTATION.md) -> not yet public
+- [Phase 1 Architecture](docs/v1.0/PHASE_1_CORE_ARCHITECTURE.md) -> not yet public
+- [GitHub Best Practices](docs/devs/github-repo-guide.md) -> not yet public
 
-[Apache 2.0](LICENSE)
+**Support:**
 
----
-
-## 🔗 Links & Docs
-
-- [Quickstart Guide](docs/guides/QUICKSTART.md)
-- [Migration Guide](docs/guides/MIGRATION_GUIDE.md)
-- [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md)
-- [Implementation Guide](docs/wip/IMPLEMENTATION.md)
-- [Roadmap](docs/wip/ROADMAP.md)
-- [GitHub Repository Best Practices](docs/devs/github-repo-guide.md)
-
----
-
-> _Built with ❤️ for the Cursor and VS Code community. Contributions, feedback, and ideas are always welcome!_
+- [GitHub Issues](https://github.com/sm-moshi/aimemory/issues) for bugs/features
+- [GitHub Discussions](https://github.com/sm-moshi/aimemory/discussions) for questions

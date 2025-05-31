@@ -5,183 +5,152 @@ export const techTemplates = new Map<MemoryBankFileType, string>([
 		MemoryBankFileType.TechContextIndex,
 		`# Tech Context Index
 
-*Summary of technology stack, environment setup, and technical constraints*
+> Summary of technology stack, environment setup, and technical constraints
 
 ## Architecture Overview
+<!-- High-level technology choices and principles -->
+- **Platform**: [Primary platform/runtime]
+- **Language**: [Programming language and version]
+- **Framework**: [Main framework/libraries]
 
-<!-- Brief description of your technical architecture -->
-The backend is built with **[Runtime]** and **[Primary Language]**, leveraging **[Key Framework/SDK]** for core functionality.
+## Core Technologies
+<!-- Key technologies that define the solution -->
+- **Backend**: [Server-side technologies]
+- **Frontend**: [Client-side technologies]
+- **Database**: [Data storage solutions]
+- **Infrastructure**: [Deployment and infrastructure]
 
-The frontend/UI is implemented with **[UI Framework]** and **[Styling Solution]** for a modern, responsive interface.
+## Development Environment
+<!-- Tools and setup for development -->
+- **IDE/Editor**: [Development environment]
+- **Build Tools**: [Build system and tools]
+- **Testing**: [Testing frameworks and tools]
+- **Version Control**: [VCS and workflows]
 
-## Modern Build System
+## Quality and Tooling
+<!-- Code quality and development tools -->
+- **Linting**: [Code quality tools]
+- **Formatting**: [Code formatting standards]
+- **Testing**: [Testing strategy and coverage]
+- **CI/CD**: [Continuous integration and deployment]
 
-<!-- Describe your build and tooling approach -->
-Build and tooling systems use **[Build Tool]** with **[Compiler/Transpiler]** for fast compilation, **[Linter/Formatter]** for code quality, and **[Test Framework]** for comprehensive testing.
+## Constraints and Requirements
+<!-- Technical limitations and requirements -->
+- **Performance**: [Performance requirements]
+- **Security**: [Security constraints]
+- **Compatibility**: [Platform compatibility needs]
+- **Scalability**: [Scaling requirements]
 
-For complete build system specifications, see [stack.md](techContext/stack.md).
-For detailed dependency list and versions, see [dependencies.md](techContext/dependencies.md).
-
-## Quality Foundation
-
-<!-- Current quality standards and achievements -->
-The project maintains [quality standard] with [testing approach] and [optimization strategy].
-
-For current quality achievements and metrics, see [progress/current.md](progress/current.md).
-
-## Technical Constraints & Design Principles
-
-<!-- Key constraints and principles guiding development -->
-Key constraints include **[constraint 1]**, **[constraint 2]**, **[constraint 3]**, and **[constraint 4]**.
-
-All dependencies and configurations are chosen for **[principle 1]**, **[principle 2]**, and **[principle 3]**.
-
-## Runtime Environment
-
-### Core Platform
-- **Runtime**: [Runtime version] ([justification])
-- **Operating System**: [Primary OS] ([version info])
-- **Shell**: [Shell type] ([path if relevant])
-- **Package Manager**: [Tool version] ([benefits])
-
-### Development Tools
-- **Primary IDE**: [IDE version] ([key features])
-- **Target Platform**: [Compatibility target] ([version])
-- **Language**: [Language version] ([features used])
-
-For complete environment details, see [environment.md](techContext/environment.md).
-
-## Technology Stack Highlights
-
-### Backend Excellence
-<!-- Key backend technologies and their purposes -->
-- **[Framework/SDK]**: [Purpose and version]
-- **[Validation Tool]**: [Purpose]
-- **[Key Migration]**: [Status and goal]
-
-### Frontend Modernization
-<!-- Key frontend technologies -->
-- **[UI Framework]**: [Purpose and benefits]
-- **[Styling]**: [Approach and benefits]
-- **[Build Tool]**: [Development benefits]
-- **[UI Components]**: [Integration approach]
-
-### Build & Quality Tools
-<!-- Development and quality tools -->
-- **[Build Pipeline]**: [Performance benefits]
-- **[Quality Tool]**: [Quality improvements]
-- **[Test Framework]**: [Testing benefits]
-- **[Development Tool]**: [Development workflow benefits]
-
-For complete technology specifications, see [stack.md](techContext/stack.md).
-
-## Development Status
-
-<!-- Current development approach and progress -->
-The project follows a [development approach] targeting [completion target].
-
-For current development progress and roadmap, see [progress/current.md](progress/current.md).
-For complete project goals and scope, see [core/projectbrief.md](core/projectbrief.md).
-
-## Technical Achievements
-
-### Performance Improvements
-<!-- Key performance wins -->
-- **[Performance Improvement]**: [Quantified benefit]
-- **[Quality Improvement]**: [Quantified benefit]
-- **[Workflow Improvement]**: [Workflow benefits]
-
-### Developer Experience
-<!-- DX improvements -->
-- **[Quality Foundation]**: [Confidence benefits]
-- **[Modern Toolchain]**: [Performance benefits]
-- **[Type Safety]**: [Safety benefits]
-
-### Standards Compliance
-<!-- Standards and compliance achievements -->
-- **[Protocol/Standard]**: [Compliance level]
-- **[API Integration]**: [Integration approach]
-- **[Code Quality]**: [Quality standards]
-- **[Security]**: [Security measures]
+## Reference Links
+<!-- Links to detailed documentation -->
+- [Technology Stack Details](techContext/stack.md)
+- [Dependencies](techContext/dependencies.md)
+- [Environment Setup](techContext/environment.md)
 
 ---
-
-The tech stack is designed to support [project goals] while maintaining [key principles]. The combination of [tools/approach] provides a solid foundation for [future development].
-
----
-
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
 		MemoryBankFileType.TechContextStack,
 		`# Technology Stack
 
-## Core Technologies
+## Runtime Environment
 
-### Runtime Environment
-- **Platform**: [Operating system/platform]
+### Core Platform
 - **Runtime**: [Runtime environment and version]
-- **Package Manager**: [Package management tool]
+- **Operating System**: [Supported OS platforms]
+- **Architecture**: [Target architectures]
 
-### Programming Languages
-- **Primary**: [Main language and version]
-- **Secondary**: [Other languages used and purposes]
+### Language and Compilation
+- **Primary Language**: [Language and version]
+- **Compilation Target**: [Compilation settings]
+- **Module System**: [Module format and bundling]
 
-### Frameworks and Libraries
-- **Web Framework**: [If applicable]
-- **UI Framework**: [If applicable]
-- **Testing Framework**: [Testing tools]
-- **Build Tools**: [Compilation and build tools]
+## Backend Technologies
 
-## Development Stack
+### Server Framework
+- **Framework**: [Server framework and version]
+- **HTTP Handling**: [Request/response handling]
+- **Middleware**: [Key middleware components]
 
-### Development Tools
-- **IDE/Editor**: [Recommended development environment]
-- **Version Control**: [VCS and branching strategy]
-- **CI/CD**: [Continuous integration/deployment tools]
+### Data Management
+- **Database**: [Database technology and version]
+- **ORM/Query Builder**: [Data access layer]
+- **Caching**: [Caching solutions]
+- **File Storage**: [File handling and storage]
 
-### Code Quality Tools
-- **Linting**: [Code linting tools and configuration]
+### Integration and APIs
+- **External APIs**: [Third-party service integrations]
+- **Message Queues**: [Async communication]
+- **Real-time**: [WebSocket/real-time features]
+
+## Frontend Technologies
+
+### UI Framework
+- **Framework**: [Frontend framework and version]
+- **Component Library**: [UI component system]
+- **State Management**: [Client state handling]
+
+### Styling and Design
+- **CSS Framework**: [Styling approach]
+- **Design System**: [Design standards]
+- **Responsive Design**: [Mobile/responsive strategy]
+
+### Build and Bundling
+- **Bundler**: [Asset bundling solution]
+- **Transpilation**: [Code transformation]
+- **Optimization**: [Production optimizations]
+
+## Development Tools
+
+### Build System
+- **Build Tool**: [Primary build system]
+- **Task Runner**: [Development tasks]
+- **Package Manager**: [Dependency management]
+
+### Code Quality
+- **Linting**: [Code linting tools]
 - **Formatting**: [Code formatting tools]
-- **Testing**: [Testing framework and tools]
+- **Type Checking**: [Static type analysis]
+
+### Testing Framework
+- **Unit Testing**: [Unit test framework]
+- **Integration Testing**: [Integration test tools]
+- **E2E Testing**: [End-to-end testing]
 - **Coverage**: [Code coverage tools]
 
-## Infrastructure Stack
+## Infrastructure and Deployment
 
-### Deployment
-- **Platform**: [Deployment platform]
-- **Containerization**: [If using containers]
-- **Orchestration**: [If using orchestration]
+### Deployment Platform
+- **Platform**: [Deployment target]
+- **Containerization**: [Container technology]
+- **Orchestration**: [Container orchestration]
 
-### Monitoring and Observability
-- **Logging**: [Logging framework and aggregation]
-- **Metrics**: [Metrics collection and visualization]
-- **Tracing**: [Distributed tracing if applicable]
+### CI/CD Pipeline
+- **CI Platform**: [Continuous integration]
+- **Deployment**: [Deployment automation]
+- **Monitoring**: [Application monitoring]
 
-## Data Stack
-- **Database**: [Primary data storage]
-- **Caching**: [Caching layer if applicable]
-- **Message Queue**: [If using message queues]
+### Security
+- **Authentication**: [Auth implementation]
+- **Authorization**: [Permission system]
+- **Data Protection**: [Data security measures]
 
-## Security Stack
-- **Authentication**: [Authentication mechanism]
-- **Authorization**: [Authorization approach]
-- **Secrets Management**: [How secrets are managed]
+## Performance and Optimization
 
-## Status Tracking
+### Performance Strategy
+- **Caching**: [Caching strategies]
+- **CDN**: [Content delivery]
+- **Database**: [Database optimization]
 
-### Implementation Phases
-- **Phase 0 - Foundation**: ✅ Complete
-- **Phase 1 - Core Features**: [Status]
-- **Phase 2 - Advanced Features**: [Status]
-
-### Technology Decisions
-- **[Decision]**: [Status and rationale]
-- **[Decision]**: [Status and rationale]
+### Monitoring and Analytics
+- **Application Monitoring**: [APM tools]
+- **Error Tracking**: [Error monitoring]
+- **Analytics**: [Usage analytics]
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
@@ -191,147 +160,209 @@ The tech stack is designed to support [project goals] while maintaining [key pri
 ## Core Dependencies
 
 ### Production Dependencies
-| Package | Version | Purpose | Update Frequency |
-|---------|---------|---------|------------------|
-| [package] | [version] | [purpose] | [frequency] |
+- **[Package Name]** (v[version]): [Purpose and justification]
+- **[Package Name]** (v[version]): [Purpose and justification]
+- **[Package Name]** (v[version]): [Purpose and justification]
 
 ### Development Dependencies
-| Package | Version | Purpose | Update Frequency |
-|---------|---------|---------|------------------|
-| [package] | [version] | [purpose] | [frequency] |
+- **[Package Name]** (v[version]): [Development purpose]
+- **[Package Name]** (v[version]): [Development purpose]
+- **[Package Name]** (v[version]): [Development purpose]
 
-## Dependency Management Strategy
+## Dependency Management
 
-### Update Policy
-- **Major Updates**: [How major version updates are handled]
-- **Security Updates**: [Policy for security patches]
-- **LTS Strategy**: [Long-term support preference]
+### Version Strategy
+- **Versioning Policy**: [How versions are managed]
+- **Update Frequency**: [How often dependencies are updated]
+- **Security Updates**: [How security updates are handled]
 
-### Version Pinning
-- **Exact Versions**: [When exact versions are required]
-- **Range Specifications**: [How version ranges are specified]
-- **Lock Files**: [Lock file management approach]
+### Lock Files
+- **Lock File**: [Lock file format used]
+- **Reproducibility**: [How builds are kept reproducible]
+- **Conflict Resolution**: [How version conflicts are resolved]
 
-## Security Considerations
+## Security and Compliance
 
 ### Vulnerability Scanning
-- **Tools**: [Security scanning tools in use]
-- **Frequency**: [How often scans are performed]
-- **Response Process**: [How vulnerabilities are addressed]
+- **Tools**: [Security scanning tools]
+- **Process**: [How vulnerabilities are identified and fixed]
+- **Monitoring**: [Ongoing security monitoring]
 
-### Trusted Sources
-- **Package Registries**: [Approved package sources]
-- **Verification**: [Package verification process]
+### License Compliance
+- **License Policy**: [Acceptable licenses]
+- **License Tracking**: [How licenses are tracked]
+- **Compliance Checking**: [Automated license checking]
 
-## Performance Considerations
+## Dependency Categories
 
-### Bundle Size Impact
-- **Bundle Analysis**: [How bundle size is monitored]
-- **Optimization**: [Bundle optimization strategies]
-- **Tree Shaking**: [Dead code elimination approach]
+### Essential Dependencies
+<!-- Critical dependencies the project cannot function without -->
+- **[Category]**: [Purpose and key packages]
+- **[Category]**: [Purpose and key packages]
 
-### Runtime Performance
-- **Performance Critical**: [Dependencies affecting performance]
-- **Alternatives**: [Lighter alternatives considered]
+### Optional Dependencies
+<!-- Nice-to-have dependencies that add features -->
+- **[Category]**: [Purpose and key packages]
+- **[Category]**: [Purpose and key packages]
 
-## Maintenance and Updates
+### Development-Only Dependencies
+<!-- Dependencies only needed during development -->
+- **[Category]**: [Purpose and key packages]
+- **[Category]**: [Purpose and key packages]
 
-### Regular Review Schedule
-- **Monthly**: [Dependencies reviewed monthly]
-- **Quarterly**: [Major dependency reviews]
-- **As Needed**: [Security and critical updates]
+## Upgrade and Maintenance
 
-### Deprecation Management
-- **Deprecated Dependencies**: [How deprecated packages are handled]
-- **Migration Plans**: [Plans for replacing deprecated dependencies]
+### Upgrade Strategy
+- **Major Versions**: [How major upgrades are handled]
+- **Minor Versions**: [Automatic vs manual minor updates]
+- **Patch Versions**: [Patch update policy]
+
+### Testing Strategy
+- **Dependency Testing**: [How dependency updates are tested]
+- **Rollback Plan**: [How to rollback problematic updates]
+- **Staging**: [How updates are staged before production]
+
+### Maintenance Schedule
+- **Regular Reviews**: [Frequency of dependency reviews]
+- **End-of-Life Planning**: [How EOL dependencies are handled]
+- **Performance Impact**: [How dependency performance is monitored]
+
+## Risk Management
+
+### Critical Dependencies
+- **Single Points of Failure**: [Dependencies that could break the system]
+- **Mitigation Strategies**: [How critical dependency risks are mitigated]
+- **Alternatives**: [Backup options for critical dependencies]
+
+### Supply Chain Security
+- **Package Verification**: [How package integrity is verified]
+- **Trusted Sources**: [Only trusted package sources]
+- **Code Review**: [Review process for new dependencies]
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
 		MemoryBankFileType.TechContextEnvironment,
-		`# Environment Configuration
+		`# Environment Setup
 
 ## Development Environment
 
 ### System Requirements
 - **Operating System**: [Supported OS versions]
-- **Runtime**: [Required runtime and version]
-- **Memory**: [Minimum RAM requirements]
+- **Hardware**: [Minimum hardware requirements]
+- **Memory**: [RAM requirements]
 - **Storage**: [Disk space requirements]
 
-### Development Setup
-\`\`\`bash
-# Installation commands
-[command to install dependencies]
-[command to setup environment]
-[command to start development]
-\`\`\`
+### Required Software
+- **Runtime**: [Runtime environment and installation]
+- **Package Manager**: [Package manager setup]
+- **Editor/IDE**: [Recommended development environment]
+- **Version Control**: [Git and repository setup]
+
+### Installation Steps
+1. [First setup step]
+2. [Second setup step]
+3. [Third setup step]
+4. [Verification step]
+
+## Configuration
 
 ### Environment Variables
-| Variable | Purpose | Default | Required |
-|----------|---------|---------|----------|
-| \`VAR_NAME\` | [description] | [default] | [yes/no] |
+- **[VARIABLE_NAME]**: [Purpose and example value]
+- **[VARIABLE_NAME]**: [Purpose and example value]
+- **[VARIABLE_NAME]**: [Purpose and example value]
 
-## Testing Environment
+### Configuration Files
+- **[config-file.ext]**: [Purpose and key settings]
+- **[config-file.ext]**: [Purpose and key settings]
 
-### Test Configuration
-- **Test Runner**: [Testing framework used]
-- **Test Database**: [Test database setup]
-- **Mock Services**: [How external services are mocked]
+### Local Development Settings
+- **Database**: [Local database setup]
+- **API Keys**: [Development API configuration]
+- **Feature Flags**: [Local feature toggle setup]
 
-### Test Environment Variables
-| Variable | Purpose | Test Value |
-|----------|---------|------------|
-| \`TEST_VAR\` | [description] | [test value] |
+## Build and Run
 
-## Production Environment
+### Build Process
+\`\`\`bash
+# Build commands
+npm run build
+npm run test
+\`\`\`
 
-### Deployment Requirements
-- **Platform**: [Production platform]
-- **Runtime Version**: [Specific version requirements]
-- **Resource Allocation**: [CPU/Memory requirements]
+### Development Server
+\`\`\`bash
+# Development commands
+npm run dev
+npm run watch
+\`\`\`
 
-### Production Configuration
-- **Environment Variables**: [Required production env vars]
-- **Secrets Management**: [How secrets are handled]
-- **Configuration Management**: [Config management approach]
-
-## Environment-Specific Behavior
-
-### Feature Flags
-- **Development**: [Development-only features]
-- **Testing**: [Test-specific behavior]
-- **Production**: [Production optimizations]
-
-### Logging and Monitoring
-- **Development**: [Local logging configuration]
-- **Testing**: [Test logging and reporting]
-- **Production**: [Production monitoring setup]
+### Testing
+\`\`\`bash
+# Testing commands
+npm run test
+npm run test:watch
+npm run test:coverage
+\`\`\`
 
 ## Troubleshooting
 
 ### Common Issues
-- **[Issue]**: [Description and solution]
-- **[Issue]**: [Description and solution]
+- **Issue**: [Description]
+  - **Cause**: [Why this happens]
+  - **Solution**: [How to fix it]
 
-### Environment Validation
-\`\`\`bash
-# Commands to verify environment setup
-[validation command]
-[health check command]
-\`\`\`
+- **Issue**: [Description]
+  - **Cause**: [Why this happens]
+  - **Solution**: [How to fix it]
 
-### Reset and Cleanup
-\`\`\`bash
-# Commands to reset environment
-[cleanup command]
-[reset command]
-\`\`\`
+### Performance Issues
+- **Slow Build**: [Optimization tips]
+- **Memory Usage**: [Memory optimization]
+- **Hot Reload**: [Development server issues]
+
+### Platform-Specific Issues
+- **Windows**: [Windows-specific considerations]
+- **macOS**: [macOS-specific considerations]
+- **Linux**: [Linux-specific considerations]
+
+## IDE and Tooling
+
+### Recommended Extensions
+- **[Extension Name]**: [Purpose and benefits]
+- **[Extension Name]**: [Purpose and benefits]
+
+### Code Formatting
+- **Formatter**: [Code formatting tool]
+- **Rules**: [Formatting rules and configuration]
+- **Integration**: [IDE integration setup]
+
+### Debugging
+- **Debugger Setup**: [How to configure debugging]
+- **Breakpoints**: [Debugging best practices]
+- **Logging**: [Development logging configuration]
+
+## Deployment Environments
+
+### Development
+- **URL**: [Development environment URL]
+- **Database**: [Development database]
+- **Features**: [Development-specific features]
+
+### Staging
+- **URL**: [Staging environment URL]
+- **Database**: [Staging database]
+- **Testing**: [Staging testing process]
+
+### Production
+- **URL**: [Production environment URL]
+- **Monitoring**: [Production monitoring]
+- **Backups**: [Backup and recovery]
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 ]);

@@ -5,7 +5,7 @@ export const progressTemplates = new Map<MemoryBankFileType, string>([
 		MemoryBankFileType.ProgressIndex,
 		`# Progress Index
 
-*Summary of project progress, milestones, and current status*
+> Summary of project progress, milestones, and current status
 
 ## Current Status
 - **Overall Progress**: [percentage]% complete
@@ -41,7 +41,7 @@ export const progressTemplates = new Map<MemoryBankFileType, string>([
 - [Progress History](progress/history.md)
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
@@ -113,7 +113,7 @@ export const progressTemplates = new Map<MemoryBankFileType, string>([
 - **[Date]**: [Important decision or note]
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
@@ -201,7 +201,7 @@ export const progressTemplates = new Map<MemoryBankFileType, string>([
 - **[Date]**: [Technology change and rationale]
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 ]);

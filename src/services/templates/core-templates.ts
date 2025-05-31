@@ -5,7 +5,7 @@ export const coreTemplates = new Map<MemoryBankFileType, string>([
 		MemoryBankFileType.ProjectBrief,
 		`# Project Brief
 
-*Foundation document that shapes all other files*
+> Foundation document that shapes all other files
 
 ## Vision Statement
 <!-- Brief 1-2 sentence vision of what this project achieves -->
@@ -40,7 +40,7 @@ export const coreTemplates = new Map<MemoryBankFileType, string>([
 -
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
@@ -88,7 +88,7 @@ export const coreTemplates = new Map<MemoryBankFileType, string>([
 <!-- How this fits into larger organizational goals -->
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 	[
@@ -140,7 +140,7 @@ export const coreTemplates = new Map<MemoryBankFileType, string>([
 - **Deployment Status**:
 
 ---
-*Last updated: [date]*
+> *Last updated: [date]*
 `,
 	],
 ]);

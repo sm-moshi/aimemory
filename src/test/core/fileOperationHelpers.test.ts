@@ -80,6 +80,214 @@ async function filesMissingStatMockImplementation(
 	return { isDirectory: () => true, isFile: () => false } as Stats;
 }
 
+// Helper function for healthy file operation manager mock
+function createHealthyFileOperationManagerMock(memoryBankFolder: string) {
+	return async (pathToStat: string) => {
+		if (pathToStat.toString() === memoryBankFolder) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		const isAParentDir = Object.values(MemoryBankFileType).some((ft) => {
+			const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
+			return dirname(expectedFilePath) === pathToStat.toString();
+		});
+		if (isAParentDir) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		return {
+			success: true,
+			data: {
+				isDirectory: () => false,
+				isFile: () => true,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
+// Helper function for folder missing file operation manager mock
+function createFolderMissingFileOperationManagerMock(memoryBankFolder: string) {
+	return async (pathToStat: string) => {
+		if (pathToStat.toString() === memoryBankFolder) {
+			const error = new Error("ENOENT: No such file or directory") as NodeJS.ErrnoException;
+			error.code = "ENOENT";
+			return { success: false, error };
+		}
+		// For other files, also return error as they can't be accessed
+		const error = new Error("ENOENT: Path inside missing root") as NodeJS.ErrnoException;
+		error.code = "ENOENT";
+		return { success: false, error };
+	};
+}
+
+// Helper function for files missing file operation manager mock
+function createFilesMissingFileOperationManagerMock(memoryBankFolder: string) {
+	return async (pathToStat: string) => {
+		const pathStr = pathToStat.toString();
+		if (pathStr === memoryBankFolder) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+
+		const isCoreProjectBrief =
+			validateAndConstructFilePath(memoryBankFolder, MemoryBankFileType.ProjectBrief) ===
+			pathStr;
+		const isProgressCurrent =
+			validateAndConstructFilePath(memoryBankFolder, MemoryBankFileType.ProgressCurrent) ===
+			pathStr;
+
+		if (isCoreProjectBrief || isProgressCurrent) {
+			const error = new Error("ENOENT") as NodeJS.ErrnoException;
+			error.code = "ENOENT";
+			return { success: false, error };
+		}
+
+		if (
+			Object.values(MemoryBankFileType).some(
+				(ft) => validateAndConstructFilePath(memoryBankFolder, ft) === pathStr,
+			)
+		) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => false,
+					isFile: () => true,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		if (
+			Object.values(MemoryBankFileType).some(
+				(ft) => dirname(validateAndConstructFilePath(memoryBankFolder, ft)) === pathStr,
+			)
+		) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		// Default for unexpected paths in this mock during a test
+		const error = new Error(
+			"Unknown path in mock for filesMissing scenario",
+		) as NodeJS.ErrnoException;
+		error.code = "ENOENT"; // Or some other appropriate error
+		return { success: false, error };
+	};
+}
+
+// Helper function for cache test file operation manager mock
+function createCacheTestFileOperationManagerMock(expectedFilePath: string, cachedMtimeMs: number) {
+	return async (pathArg: string) => {
+		if (pathArg === expectedFilePath) {
+			return {
+				success: true,
+				data: {
+					mtimeMs: cachedMtimeMs,
+					isFile: () => true,
+					isDirectory: () => false,
+					mtime: new Date(cachedMtimeMs),
+				} as Stats,
+			};
+		}
+		// Fallback for directory checks etc.
+		return {
+			success: true,
+			data: {
+				isFile: () => false,
+				isDirectory: () => true,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
+// Helper function for stale cache test file operation manager mock
+function createStaleCacheTestFileOperationManagerMock(
+	expectedFilePath: string,
+	diskMtimeMs: number,
+) {
+	return async (pathArg: string) => {
+		if (pathArg === expectedFilePath) {
+			return {
+				success: true,
+				data: {
+					mtimeMs: diskMtimeMs,
+					isFile: () => true,
+					isDirectory: () => false,
+					mtime: new Date(diskMtimeMs),
+				} as Stats,
+			};
+		}
+		return {
+			success: true,
+			data: {
+				isFile: () => false,
+				isDirectory: () => true,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
+// Helper function for file creation test file operation manager mock
+function createFileCreationTestFileOperationManagerMock(
+	expectedFilePath: string,
+	creationMtimeMs: number,
+	fileExistsRef: { value: boolean },
+) {
+	return async (pathArg: string) => {
+		if (pathArg === expectedFilePath) {
+			if (!fileExistsRef.value) {
+				const error = new Error("ENOENT file missing") as NodeJS.ErrnoException;
+				error.code = "ENOENT";
+				return { success: false, error };
+			}
+			// After creation, stat succeeds
+			return {
+				success: true,
+				data: {
+					mtimeMs: creationMtimeMs,
+					isFile: () => true,
+					isDirectory: () => false,
+					mtime: new Date(creationMtimeMs),
+				} as Stats,
+			};
+		}
+		// For directory checks (e.g. by mkdirWithRetry)
+		return {
+			success: true,
+			data: {
+				isDirectory: () => true,
+				isFile: () => false,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
 // Mock file system operations
 vi.mock("node:fs/promises", () => ({
 	default: {
@@ -266,28 +474,9 @@ describe("File Operation Helpers", () => {
 			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({ success: true });
 
 			// Mock stat to return the same mtime as cached
-			mockFileOperationManager.statWithRetry.mockImplementation(async (pathArg: string) => {
-				if (pathArg === expectedFilePath) {
-					return {
-						success: true,
-						data: {
-							mtimeMs: cachedMtimeMs,
-							isFile: () => true,
-							isDirectory: () => false,
-							mtime: new Date(cachedMtimeMs),
-						} as Stats,
-					};
-				}
-				// Fallback for directory checks etc.
-				return {
-					success: true,
-					data: {
-						isFile: () => false,
-						isDirectory: () => true,
-						mtimeMs: Date.now(),
-					} as Stats,
-				};
-			});
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createCacheTestFileOperationManagerMock(expectedFilePath, cachedMtimeMs),
+			);
 
 			const result = await loadFileWithTemplate(fileType, mockContext);
 
@@ -308,27 +497,9 @@ describe("File Operation Helpers", () => {
 			// Mock mkdir to succeed for directory creation
 			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({ success: true });
 
-			mockFileOperationManager.statWithRetry.mockImplementation(async (pathArg: string) => {
-				if (pathArg === expectedFilePath) {
-					return {
-						success: true,
-						data: {
-							mtimeMs: diskMtimeMs,
-							isFile: () => true,
-							isDirectory: () => false,
-							mtime: new Date(diskMtimeMs),
-						} as Stats,
-					};
-				}
-				return {
-					success: true,
-					data: {
-						isFile: () => false,
-						isDirectory: () => true,
-						mtimeMs: Date.now(),
-					} as Stats,
-				};
-			});
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createStaleCacheTestFileOperationManagerMock(expectedFilePath, diskMtimeMs),
+			);
 
 			mockStreamingManager.readFile.mockResolvedValue({
 				success: true,
@@ -354,38 +525,17 @@ describe("File Operation Helpers", () => {
 			);
 			const creationMtimeMs = 999999;
 
-			let fileExists = false;
-			mockFileOperationManager.statWithRetry.mockImplementation(async (pathArg: string) => {
-				if (pathArg === expectedFilePath) {
-					if (!fileExists) {
-						const error = new Error("ENOENT file missing") as NodeJS.ErrnoException;
-						error.code = "ENOENT";
-						return { success: false, error };
-					}
-					// After creation, stat succeeds
-					return {
-						success: true,
-						data: {
-							mtimeMs: creationMtimeMs,
-							isFile: () => true,
-							isDirectory: () => false,
-							mtime: new Date(creationMtimeMs),
-						} as Stats,
-					};
-				}
-				// For directory checks (e.g. by mkdirWithRetry)
-				return {
-					success: true,
-					data: {
-						isDirectory: () => true,
-						isFile: () => false,
-						mtimeMs: Date.now(),
-					} as Stats,
-				};
-			});
+			const fileExistsRef = { value: false };
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createFileCreationTestFileOperationManagerMock(
+					expectedFilePath,
+					creationMtimeMs,
+					fileExistsRef,
+				),
+			);
 
 			mockFileOperationManager.writeFileWithRetry.mockImplementation(async () => {
-				fileExists = true; // Simulate file creation
+				fileExistsRef.value = true; // Simulate file creation
 				return { success: true };
 			});
 			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({ success: true });
@@ -420,41 +570,7 @@ describe("File Operation Helpers", () => {
 		it("should return healthy result when all files exist", async () => {
 			const memoryBankFolder = mockContext.memoryBankFolder;
 			mockFileOperationManager.statWithRetry.mockImplementation(
-				async (pathToStat: string) => {
-					// Replicate healthyStatMockImplementation logic using the new manager
-					if (pathToStat.toString() === memoryBankFolder) {
-						return {
-							success: true,
-							data: {
-								isDirectory: () => true,
-								isFile: () => false,
-								mtimeMs: Date.now(),
-							} as Stats,
-						};
-					}
-					const isAParentDir = Object.values(MemoryBankFileType).some((ft) => {
-						const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
-						return dirname(expectedFilePath) === pathToStat.toString();
-					});
-					if (isAParentDir) {
-						return {
-							success: true,
-							data: {
-								isDirectory: () => true,
-								isFile: () => false,
-								mtimeMs: Date.now(),
-							} as Stats,
-						};
-					}
-					return {
-						success: true,
-						data: {
-							isDirectory: () => false,
-							isFile: () => true,
-							mtimeMs: Date.now(),
-						} as Stats,
-					};
-				},
+				createHealthyFileOperationManagerMock(memoryBankFolder),
 			);
 
 			const result = await performHealthCheck(mockContext);
@@ -467,21 +583,7 @@ describe("File Operation Helpers", () => {
 		it("should return unhealthy result when folder is missing", async () => {
 			const memoryBankFolder = mockContext.memoryBankFolder;
 			mockFileOperationManager.statWithRetry.mockImplementation(
-				async (pathToStat: string) => {
-					if (pathToStat.toString() === memoryBankFolder) {
-						const error = new Error(
-							"ENOENT: No such file or directory",
-						) as NodeJS.ErrnoException;
-						error.code = "ENOENT";
-						return { success: false, error };
-					}
-					// For other files, also return error as they can't be accessed
-					const error = new Error(
-						"ENOENT: Path inside missing root",
-					) as NodeJS.ErrnoException;
-					error.code = "ENOENT";
-					return { success: false, error };
-				},
+				createFolderMissingFileOperationManagerMock(memoryBankFolder),
 			);
 
 			const result = await performHealthCheck(mockContext);
@@ -502,84 +604,10 @@ describe("File Operation Helpers", () => {
 		it("should return unhealthy result when files are missing", async () => {
 			const memoryBankFolder = mockContext.memoryBankFolder;
 			mockFileOperationManager.statWithRetry.mockImplementation(
-				async (pathToStat: string) => {
-					const pathStr = pathToStat.toString();
-					if (pathStr === memoryBankFolder) {
-						return {
-							success: true,
-							data: {
-								isDirectory: () => true,
-								isFile: () => false,
-								mtimeMs: Date.now(),
-							} as Stats,
-						};
-					}
-
-					const isCoreProjectBrief =
-						validateAndConstructFilePath(
-							memoryBankFolder,
-							MemoryBankFileType.ProjectBrief,
-						) === pathStr;
-					const isProgressCurrent =
-						validateAndConstructFilePath(
-							memoryBankFolder,
-							MemoryBankFileType.ProgressCurrent,
-						) === pathStr;
-
-					if (isCoreProjectBrief || isProgressCurrent) {
-						const error = new Error("ENOENT") as NodeJS.ErrnoException;
-						error.code = "ENOENT";
-						return { success: false, error };
-					}
-
-					if (
-						Object.values(MemoryBankFileType).some(
-							(ft) => validateAndConstructFilePath(memoryBankFolder, ft) === pathStr,
-						)
-					) {
-						return {
-							success: true,
-							data: {
-								isDirectory: () => false,
-								isFile: () => true,
-								mtimeMs: Date.now(),
-							} as Stats,
-						};
-					}
-					if (
-						Object.values(MemoryBankFileType).some(
-							(ft) =>
-								dirname(validateAndConstructFilePath(memoryBankFolder, ft)) ===
-								pathStr,
-						)
-					) {
-						return {
-							success: true,
-							data: {
-								isDirectory: () => true,
-								isFile: () => false,
-								mtimeMs: Date.now(),
-							} as Stats,
-						};
-					}
-					// Default for unexpected paths in this mock during a test
-					const error = new Error(
-						"Unknown path in mock for filesMissing scenario",
-					) as NodeJS.ErrnoException;
-					error.code = "ENOENT"; // Or some other appropriate error
-					return { success: false, error };
-				},
+				createFilesMissingFileOperationManagerMock(memoryBankFolder),
 			);
 
 			const result = await performHealthCheck(mockContext);
-			const projectBriefPath = validateAndConstructFilePath(
-				mockContext.memoryBankFolder,
-				MemoryBankFileType.ProjectBrief,
-			);
-			const progressCurrentPath = validateAndConstructFilePath(
-				mockContext.memoryBankFolder,
-				MemoryBankFileType.ProgressCurrent,
-			);
 
 			expect(result.isHealthy).toBe(false);
 			expect(result.issues).toContain(
