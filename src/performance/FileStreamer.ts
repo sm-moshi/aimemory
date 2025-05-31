@@ -3,13 +3,13 @@ import type { ReadStream, Stats } from "node:fs";
 import { validateMemoryBankPath } from "../services/validation/security.js";
 import type { Result } from "../types/errorHandling.js";
 import type { FileError } from "../types/fileOperations.js";
-import type { MemoryBankLogger } from "../types/logging.js";
 import type {
 	FileStreamerConfig,
+	MemoryBankLogger,
 	StreamDataHandlerContext,
 	StreamingOptions,
 	StreamingResult,
-} from "../types/streaming.js";
+} from "../types/index.js";
 
 /**
  * FileStreamer provides secure streaming file operations with path validation

@@ -1,5 +1,5 @@
 import type { IDisposable } from "../types/core.js";
-import type { MemoryBankLogger } from "../types/logging.js";
+import type { MemoryBankLogger } from "../types/index.js";
 
 /**
  * Manages the lifecycle of disposable resources.

@@ -6,7 +6,7 @@ import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
 import { StreamingManager } from "../../performance/StreamingManager.js";
 import { MemoryBankFileType } from "../../types/core.js";
 import { isSuccess } from "../../types/errorHandling.js";
-import type { MemoryBankLogger } from "../../types/logging.js";
+import type { MemoryBankLogger } from "../../types/index.js";
 
 // This will hold the globally mocked fs.stat function instance
 let globalFsStatMock: Mock;

@@ -5,7 +5,7 @@
  * Extracted from MemoryBankServiceCore to reduce class complexity.
  */
 
-import type { MemoryBankLogger } from "../../types/types.js";
+import type { MemoryBankLogger } from "../../types/index.js";
 
 /**
  * Simple logger implementation that writes to stderr

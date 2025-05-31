@@ -5,7 +5,7 @@
  * and eliminate unsafe type assertions throughout the codebase.
  */
 
-import { MemoryBankFileType } from "../../types/types.js";
+import { MemoryBankFileType } from "../../types/index.js";
 
 // Re-export TypeValidationError from centralized types
 export { TypeValidationError } from "../../types/mcpTypes.js";

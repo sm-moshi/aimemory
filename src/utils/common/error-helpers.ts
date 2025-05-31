@@ -5,6 +5,8 @@
  * These utilities can be used across any environment.
  */
 
+import type { z } from "zod";
+
 /**
  * Safely extracts an error message from any error type
  * Handles both Error instances and unknown error types
@@ -35,4 +37,23 @@ export function formatErrorMessage(context: string, error: unknown): string {
  */
 export function logError(context: string, error: unknown): void {
 	console.error(formatErrorMessage(context, error));
+}
+
+/**
+ * Formats Zod validation issues into a human-readable string.
+ *
+ * @param issues - An array of ZodIssue objects.
+ * @returns A formatted string detailing the validation errors.
+ */
+export function formatZodError(issues: z.ZodIssue[]): string {
+	if (!issues || issues.length === 0) {
+		return "No validation errors.";
+	}
+
+	const errorMessages = issues.map((issue) => {
+		const path = issue.path.join(".");
+		return path ? `${path}: ${issue.message}` : issue.message;
+	});
+
+	return `Validation Failed: ${errorMessages.join("; ")}`;
 }

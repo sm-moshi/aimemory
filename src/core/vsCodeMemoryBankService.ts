@@ -13,8 +13,8 @@ import type {
 	MemoryBankFile,
 	MemoryBankFileType,
 	MemoryBankLogger,
-} from "../types/types.js";
-import { isSuccess } from "../types/types.js";
+} from "../types/index.js";
+import { isSuccess } from "../types/index.js";
 import type { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
 
 export class VSCodeMemoryBankService implements MemoryBank {

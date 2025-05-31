@@ -4,7 +4,7 @@ import type {
 	BasicCacheConfig as CacheManagerConfig,
 	CacheStats,
 } from "../types/cache.js";
-import type { MemoryBankLogger } from "../types/logging.js";
+import type { MemoryBankLogger } from "../types/index.js";
 
 /**
  * Enhanced CacheManager with LRU eviction, bounded capacity, and performance monitoring.

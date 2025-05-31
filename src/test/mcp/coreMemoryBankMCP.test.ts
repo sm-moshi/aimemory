@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CoreMemoryBankMCP } from "../../mcp/coreMemoryBankMCP.js";
 import { registerMemoryBankPrompts } from "../../services/cursor/mcp-prompts-registry.js";
-import { MemoryBankFileType } from "../../types/types.js";
+import { MemoryBankFileType } from "../../types/index.js";
 
 // Mock MemoryBankServiceCore
 const mockMemoryBankService = {

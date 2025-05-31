@@ -7,10 +7,40 @@
 
 import type { Stats } from "node:fs";
 import { dirname } from "node:path";
+import matter from "gray-matter";
 import { getTemplateForFileType } from "../services/templates/memory-bank-templates.js";
 import type { FileOperationContext, HealthCheckResult, MemoryBankFile } from "../types/core.js";
 import { MemoryBankFileType } from "../types/core.js";
+import { getSchemaForType } from "../types/memoryBankSchemas.js";
+import { formatZodError } from "../utils/common/error-helpers.js";
 import { validateAndConstructFilePath } from "../utils/files/path-validation.js";
+
+/**
+ * Parse frontmatter from file content and return parsed metadata
+ */
+function parseFrontmatter(content: string, fileType: MemoryBankFileType) {
+	try {
+		const { data: metadata, content: contentWithoutFrontmatter } = matter(content);
+
+		// Auto-manage timestamps if not present
+		metadata.created ??= new Date().toISOString();
+		metadata.updated = new Date().toISOString();
+
+		return {
+			metadata,
+			content: contentWithoutFrontmatter,
+			parseSuccess: true,
+		};
+	} catch (error) {
+		// If frontmatter parsing fails, treat as plain content
+		return {
+			metadata: {},
+			content,
+			parseSuccess: false,
+			parseError: error instanceof Error ? error.message : String(error),
+		};
+	}
+}
 
 /**
  * Creates a file from a template, writes it to disk, and updates the cache.
@@ -211,8 +241,105 @@ export async function performHealthCheck(
 }
 
 /**
+ * Extract metadata type from parsed frontmatter safely
+ */
+function extractMetadataType(metadata: unknown): string | undefined {
+	return typeof metadata === "object" && metadata !== null && "type" in metadata
+		? String(metadata.type)
+		: undefined;
+}
+
+/**
+ * Extract created date from metadata safely
+ */
+function extractCreatedDate(metadata: unknown): Date | undefined {
+	const metadataCreated =
+		typeof metadata === "object" && metadata !== null && "created" in metadata
+			? String(metadata.created)
+			: undefined;
+	return metadataCreated ? new Date(metadataCreated) : undefined;
+}
+
+/**
+ * Parse and validate frontmatter metadata
+ */
+function parseAndValidateMetadata(
+	rawContent: string,
+	fileType: MemoryBankFileType,
+	context: FileOperationContext,
+) {
+	const { metadata, content, parseSuccess, parseError } = parseFrontmatter(rawContent, fileType);
+
+	if (!parseSuccess) {
+		if (parseError) {
+			context.logger.warn(`Frontmatter parsing failed for ${fileType}: ${parseError}`);
+		}
+		return {
+			content,
+			metadata,
+			validationStatus: "unchecked" as const,
+			validationErrors: undefined,
+			actualSchemaUsed: undefined,
+		};
+	}
+
+	const metadataType = extractMetadataType(metadata);
+	const schema = getSchemaForType(metadataType);
+	const validationResult = schema.safeParse(metadata);
+
+	if (validationResult.success) {
+		return {
+			content,
+			metadata,
+			validationStatus: "valid" as const,
+			validationErrors: undefined,
+			actualSchemaUsed: metadataType ?? "default",
+		};
+	}
+
+	const actualSchemaUsed = metadataType ?? "default";
+	context.logger.warn(
+		`Frontmatter validation failed for ${fileType}: ${formatZodError(validationResult.error.issues)}`,
+	);
+
+	return {
+		content,
+		metadata,
+		validationStatus: "invalid" as const,
+		validationErrors: validationResult.error.issues,
+		actualSchemaUsed,
+	};
+}
+
+/**
+ * Create MemoryBankFile entry from processed data
+ */
+function createMemoryBankFileEntry(
+	fileType: MemoryBankFileType,
+	stats: Stats,
+	filePath: string,
+	parsedData: ReturnType<typeof parseAndValidateMetadata>,
+): MemoryBankFile {
+	const { content, metadata, validationStatus, validationErrors, actualSchemaUsed } = parsedData;
+
+	return {
+		type: fileType,
+		content,
+		lastUpdated: stats.mtime,
+		filePath,
+		relativePath: fileType,
+		metadata: metadata as import("../types/core.js").FrontmatterMetadata,
+		created: extractCreatedDate(metadata),
+		validationStatus,
+		validationErrors,
+		actualSchemaUsed,
+	};
+}
+
+/**
  * High-level orchestrator for loading all memory bank files
- * Reduces loadFiles() complexity from ~8-10 to ~4-5 complexity points
+ * Phase 2: Now includes frontmatter parsing and validation
+ * COMPLEXITY REDUCED: Extracted helper functions reduce complexity from 19-23 to ~12-15
  */
 export async function loadAllMemoryBankFiles(
 	context: FileOperationContext,
@@ -225,17 +352,21 @@ export async function loadAllMemoryBankFiles(
 
 	try {
 		for (const fileType of Object.values(MemoryBankFileType)) {
-			const { content, stats, wasCreated } = await loadFileWithTemplate(fileType, context);
+			const {
+				content: rawContent,
+				stats,
+				wasCreated,
+			} = await loadFileWithTemplate(fileType, context);
 
 			if (wasCreated) {
 				createdFiles.push(fileType);
 			}
 
-			filesMap.set(fileType, {
-				type: fileType,
-				content,
-				lastUpdated: stats.mtime,
-			});
+			const filePath = validateAndConstructFilePath(context.memoryBankFolder, fileType);
+			const parsedData = parseAndValidateMetadata(rawContent, fileType, context);
+			const memoryBankFile = createMemoryBankFileEntry(fileType, stats, filePath, parsedData);
+
+			filesMap.set(fileType, memoryBankFile);
 		}
 
 		if (createdFiles.length > 0) {

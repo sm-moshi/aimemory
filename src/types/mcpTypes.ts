@@ -104,3 +104,12 @@ export class TypeValidationError extends Error {
 		this.name = "TypeValidationError";
 	}
 }
+
+/**
+ * Result type for command handler operations
+ */
+export interface CommandResult {
+	success: boolean;
+	message: string;
+	error?: import("./errorHandling.js").MemoryBankError;
+}

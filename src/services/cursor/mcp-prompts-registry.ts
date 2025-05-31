@@ -10,9 +10,6 @@ import {
 	REVIEW_AND_UPDATE_MEMORY_BANK_PROMPT,
 } from "./mcp-prompts.js";
 
-type PromptFunction = () => string;
-type ParameterizedPromptFunction = (param: string) => string;
-
 export function registerMemoryBankPrompts(server: McpServer): void {
 	// Simple prompts without parameters
 	const simplePrompts: Record<string, string> = {

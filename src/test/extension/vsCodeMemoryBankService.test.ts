@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VSCodeMemoryBankService } from "../../core/vsCodeMemoryBankService.js";
-import { MemoryBankFileType, isSuccess } from "../../types/types.js";
+import { MemoryBankFileType, isSuccess } from "../../types/index.js";
 
 // Mock dependencies for VSCodeMemoryBankService
 const mockCoreService = {

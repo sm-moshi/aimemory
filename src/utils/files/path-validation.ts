@@ -6,7 +6,7 @@
  */
 
 import { join, resolve } from "node:path";
-import { MemoryBankFileType } from "../../types/types.js";
+import { MemoryBankFileType } from "../../types/index.js";
 
 /**
  * Validates and constructs a safe file path within the memory bank directory

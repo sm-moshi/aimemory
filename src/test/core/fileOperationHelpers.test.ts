@@ -12,8 +12,8 @@ import {
 	validateMemoryBankDirectory,
 	validateSingleFile,
 } from "../../services/validation/file-validation.js";
-import type { FileCache, FileOperationContext } from "../../types/types.js";
-import { MemoryBankFileType } from "../../types/types.js";
+import type { FileCache, FileOperationContext } from "../../types/index.js";
+import { MemoryBankFileType } from "../../types/index.js";
 import { validateAndConstructFilePath } from "../../utils/files/path-validation.js";
 
 // Helper function for the 'healthy' fs.stat mock implementation

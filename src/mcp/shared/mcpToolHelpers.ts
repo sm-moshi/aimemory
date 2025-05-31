@@ -6,9 +6,9 @@
  */
 
 import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
+import { MemoryBankError, isError, tryCatch } from "../../types/index.js";
+import type { AsyncResult, MemoryBankFileType, Result } from "../../types/index.js";
 import type { MCPErrorResponse, MCPResponse, MCPSuccessResponse } from "../../types/mcpTypes.js";
-import { MemoryBankError, isError, tryCatch } from "../../types/types.js";
-import type { AsyncResult, MemoryBankFileType, Result } from "../../types/types.js";
 
 /**
  * Ensures memory bank is ready, handling common readiness patterns

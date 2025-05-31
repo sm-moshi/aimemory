@@ -13,7 +13,7 @@ import type {
 } from "../types/core.js";
 import { MemoryBankError, isError, tryCatchAsync } from "../types/errorHandling.js";
 import type { AsyncResult } from "../types/errorHandling.js";
-import type { MemoryBankLogger } from "../types/logging.js";
+import type { MemoryBankLogger } from "../types/index.js";
 import { validateAndConstructArbitraryFilePath } from "../utils/files/path-validation.js";
 import type { CacheManager } from "./CacheManager.js";
 import type { FileOperationManager } from "./FileOperationManager.js";
