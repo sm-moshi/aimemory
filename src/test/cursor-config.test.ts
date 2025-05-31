@@ -2,7 +2,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { type Mock, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { updateCursorMCPConfig } from "../../utils/cursor-config.js";
+import { updateCursorMCPConfig } from "../utils/cursor-config.js";
 
 // Mock dependencies
 const mockMkdir = vi.fn(); // Keep for tests to reference, but factory won't use this directly
@@ -71,7 +71,7 @@ vi.mock("vscode", () => ({
 	},
 }));
 
-vi.mock("../../utils/log.js", () => ({
+vi.mock("../utils/log.js", () => ({
 	// Ensure this mock returns the consistent instance
 	Logger: {
 		getInstance: () => mockLoggerInstance,
@@ -115,8 +115,6 @@ describe("cursor-config", () => {
 		}
 
 		// Define expectedStdioServerConfig using the actual path join logic
-		// TODO: Why is this reported as "useless" by the linter?
-
 		expectedStdioServerConfig = {
 			name: "AI Memory",
 			command: "node",

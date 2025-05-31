@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { CursorRulesService } from "../../lib/cursor-rules-service.js";
+import { CursorRulesService } from "../lib/cursor-rules-service.js";
 
 // Mock vscode
 vi.mock("vscode", () => ({
@@ -26,22 +26,22 @@ vi.mock("vscode", () => ({
 	},
 }));
 
-// Mock fs promises with readFile for cursor-rules
-vi.mock("node:fs/promises", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("node:fs/promises")>();
-	return {
-		...actual,
-		mkdir: vi.fn(),
-		readFile: vi.fn().mockResolvedValue("Mocked Markdown Content"),
-	};
-});
+// Mock fs promises
+vi.mock("node:fs/promises", () => ({
+	mkdir: vi.fn(),
+}));
+
+// Mock the fs module to return mocked content for cursor-rules constants tests
+vi.mock("node:fs", () => ({
+	readFileSync: vi.fn().mockReturnValue("Mocked Markdown Content"),
+}));
 
 // Import cursor-rules constants for testing
 import {
 	CURSOR_MEMORY_BANK_FILENAME,
+	CURSOR_MEMORY_BANK_RULES_FILE,
 	CURSOR_RULES_PATH,
-	getCursorMemoryBankRulesFile,
-} from "../../lib/cursor-rules.js";
+} from "../lib/cursor-rules.js";
 
 describe("CursorRulesService", () => {
 	let service: CursorRulesService;
@@ -205,8 +205,7 @@ describe("cursor-rules constants", () => {
 		expect(CURSOR_MEMORY_BANK_FILENAME).toBe("memory-bank.mdc");
 	});
 
-	it("getCursorMemoryBankRulesFile returns mocked markdown content", async () => {
-		const content = await getCursorMemoryBankRulesFile();
-		expect(content).toContain("Mocked Markdown Content");
+	it("CURSOR_MEMORY_BANK_RULES_FILE contains mocked markdown content", () => {
+		expect(CURSOR_MEMORY_BANK_RULES_FILE).toContain("Mocked Markdown Content");
 	});
 });

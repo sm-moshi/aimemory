@@ -5,7 +5,7 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
 import type { CursorRulesService } from "../lib/cursor-rules-service.js";
-import { getCursorMemoryBankRulesFile } from "../lib/cursor-rules.js";
+import { CURSOR_MEMORY_BANK_RULES_FILE } from "../lib/cursor-rules.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
 import type { CursorMCPConfig, CursorMCPServerConfig } from "../types/types.js";
 import { LogLevel, Logger } from "../utils/log.js";
@@ -389,8 +389,10 @@ export class WebviewManager {
 	 * Perform the actual rules file reset operation
 	 */
 	private async performRulesReset(): Promise<{ success: boolean; error?: string }> {
-		const rulesContent = await getCursorMemoryBankRulesFile();
-		await this.cursorRulesService.createRulesFile("memory-bank.mdc", rulesContent);
+		await this.cursorRulesService.createRulesFile(
+			"memory-bank.mdc",
+			CURSOR_MEMORY_BANK_RULES_FILE,
+		);
 		vscode.window.showInformationMessage("Memory bank rules have been reset.");
 		this.logger.info("Memory bank rules reset successfully.");
 		return { success: true };

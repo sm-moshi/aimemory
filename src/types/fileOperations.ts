@@ -107,35 +107,3 @@ export interface BatchOperationResult {
 	totalProcessed: number;
 	duration: number;
 }
-
-// =============================================================================
-// Enhanced File Operations (Phase 1)
-// =============================================================================
-
-/**
- * Configuration for retry behavior in file operations
- */
-export interface RetryConfig {
-	maxRetries: number;
-	baseDelay: number;
-	maxDelay: number;
-	backoffFactor: number;
-}
-
-/**
- * Configuration for FileOperationManager
- */
-export interface FileOperationManagerConfig {
-	retryConfig?: Partial<RetryConfig>;
-	timeout?: number;
-}
-
-/**
- * Standardized file error with additional context
- */
-export interface FileError {
-	code: string;
-	message: string;
-	path?: string;
-	originalError?: Error;
-}

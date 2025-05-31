@@ -99,9 +99,8 @@ export interface HealthCheckResult {
 
 /**
  * Cache performance statistics
- * @deprecated Use CacheStats from "./system.js" for enhanced functionality
  */
-export interface LegacyCacheStats {
+export interface CacheStats {
 	hits: number;
 	misses: number;
 	totalFiles: number;
@@ -125,11 +124,12 @@ export interface FileOperationStats {
  * Complete system health and performance metrics
  */
 export interface SystemMetrics {
-	cache: LegacyCacheStats;
+	cache: CacheStats;
 	fileOperations: FileOperationStats;
 	uptime: number;
 	memoryUsage: number;
 }
 
+import type { MemoryBankError } from "./errors.js";
 // Import dependencies
-import type { AsyncResult, MemoryBankError } from "./errorHandling.js";
+import type { AsyncResult } from "./result.js";

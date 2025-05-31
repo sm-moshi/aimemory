@@ -4,7 +4,6 @@ import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js"
 import { registerMemoryBankPrompts } from "../../lib/mcp-prompts-registry.js";
 import type { MCPServerConfig } from "../../types/mcpTypes.js";
 import type { MemoryBankFileType } from "../../types/types.js";
-import { UpdateMemoryBankFileSchema, validateMCPToolParams } from "../../types/validation.js";
 import {
 	MemoryBankOperations,
 	createMemoryBankTool,
@@ -150,18 +149,8 @@ export abstract class BaseMCPServer {
 			},
 			createMemoryBankTool(
 				this.memoryBank,
-				(args: { fileType: string; content: string }) => {
-					const validated = validateMCPToolParams(
-						"update-memory-bank-file",
-						args,
-						UpdateMemoryBankFileSchema,
-					);
-					return MemoryBankOperations.updateFile(
-						this.memoryBank,
-						validated.fileType,
-						validated.content,
-					);
-				},
+				({ fileType, content }: { fileType: string; content: string }) =>
+					MemoryBankOperations.updateFile(this.memoryBank, fileType, content),
 				"Error updating memory bank file",
 			),
 		);

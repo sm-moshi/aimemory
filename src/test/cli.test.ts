@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../mcp/coreMemoryBankMCP.js", () => ({
+vi.mock("../mcp/coreMemoryBankMCP.js", () => ({
 	CoreMemoryBankMCP: vi.fn().mockImplementation(() => ({
 		getServer: vi.fn().mockReturnValue({ connect: vi.fn().mockResolvedValue(undefined) }),
 	})),
@@ -15,7 +15,7 @@ describe("cli main", () => {
 	});
 
 	it("creates CoreMemoryBankMCP and connects transport", async () => {
-		const cliModule = await import("../../cli.js");
+		const cliModule = await import("../cli.js");
 		const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue("/mock/path");
 		const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
 			throw new Error("exit");
@@ -23,7 +23,6 @@ describe("cli main", () => {
 		let threw = false;
 		try {
 			await cliModule.main(true);
-			// TODO: Linter says: "Handle this exception or don't catch it at all."
 		} catch (e) {
 			threw = true;
 		}

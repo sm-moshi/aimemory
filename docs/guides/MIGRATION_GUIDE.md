@@ -1,6 +1,6 @@
 # AI Memory Extension Migration Guide
 
-> _Last updated: 2025-05-31_
+> _Last updated: 2025-05-30_
 
 This guide helps you upgrade to the latest version of AI Memory. The extension has evolved significantly from early experimental versions to the current robust stdio-based MCP implementation.
 

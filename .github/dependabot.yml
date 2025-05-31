@@ -7,8 +7,9 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
-      time: "00:00"
+      interval: "weekly"  # Changed from daily - less noise, still responsive
+      day: "monday"       # Consistent weekly schedule
+      time: "09:00"       # UTC timezone (GitHub Actions friendly)
     # Group related updates to reduce PR noise
     groups:
       vscode-types:
@@ -61,7 +62,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "00:00"
+      time: "09:00"
     # Group all action updates together
     groups:
       actions:

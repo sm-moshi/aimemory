@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { VSCodeMemoryBankService } from "../../core/vsCodeMemoryBankService.js";
-import { MemoryBankFileType, isSuccess } from "../../types/types.js";
+import { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
+import { MemoryBankFileType, isSuccess } from "../types/types.js";
 
 // Mock dependencies for VSCodeMemoryBankService
 const mockCoreService = {
@@ -34,7 +34,7 @@ const mockLogger = {
 } as any;
 
 // Mock Markdown import to avoid Rollup parse errors
-vi.mock("../../lib/rules/memory-bank-rules.md", () => ({ default: "Mocked Markdown Content" }));
+vi.mock("../lib/rules/memory-bank-rules.md", () => ({ default: "Mocked Markdown Content" }));
 
 // Minimal mock for vscode.ExtensionContext properties used by the service constructor
 const mockContext = {

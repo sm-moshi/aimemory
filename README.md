@@ -6,7 +6,7 @@
 
 _A modular, robust, and user-friendly memory bank for Cursor and VS Code, enabling persistent, context-aware AI workflows._
 
-> _Last updated: 2025-05-31_
+> _Last updated: 2025-05-28_
 
 ---
 

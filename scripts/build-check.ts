@@ -1,5 +1,5 @@
-import { execSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
+import { execSync } from "node:child_process";
 import * as path from "node:path";
 
 function checkPathExists(relativePath: string, name: string) {

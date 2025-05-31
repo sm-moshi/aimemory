@@ -1,6 +1,6 @@
 # AI Memory Extension Guides Index
 
-> _Last updated: 2025-05-31_
+> _Last updated: 2025-05-30_
 
 This folder contains comprehensive user-facing guides for the AI Memory extension (v0.8.0-dev.1). These guides cover installation, usage, troubleshooting, and migration for the stdio-based MCP implementation.
 

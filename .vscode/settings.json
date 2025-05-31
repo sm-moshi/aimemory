@@ -3,18 +3,29 @@
 		"connectionId": "sm-moshi-org",
 		"projectKey": "sm-moshi_aimemory"
 	},
+	"biome.rename": true,
 	"cursorStats.currency": "EUR",
 	"cursorStats.enableLogging": true,
 	"cursorStats.showDailyRemaining": true,
 	"cursorStats.showTotalRequests": true,
 	"cursorStats.showProgressBars": true,
+	"dependi.rust.enabled": false,
 	"dependi.npm.unstableFilter": "IncludeIfUnstable",
 	"dependi.npm.informPatchUpdates": true,
+	"dependi.go.enabled": false,
+	"dependi.python.enabled": false,
+	"dependi.php.enabled": false,
+	"dependi.dart.enabled": false,
 	"dependi.vulnerability.ghsa.enabled": true,
 	"eslint.run": "onSave",
 	"evenBetterToml.formatter.alignEntries": true,
 	"evenBetterToml.formatter.allowedBlankLines": 3,
+	"vsintellicode.java.completionsEnabled": false,
+	"vsintellicode.python.completionsEnabled": false,
+	"vsintellicode.sql.completionsEnabled": false,
+	"intellicodeCompletions.language.python": false,
 	"debug.javascript.enableNetworkView": true,
+	"jest.enable": false,
 	"npm.enableRunFromFolder": true,
 	"npm.packageManager": "pnpm",
 	"npm.fetchOnlinePackageInfo": true,
@@ -55,64 +66,5 @@
 		"**/.vscode-test/**": true,
 		"**/coverage/**": true
 	},
-	"dependi.npm.lockFileEnabled": true,
-	"eslint.codeActionsOnSave.mode": "problems",
-	"evenBetterToml.formatter.alignComments": true,
-	// Enhanced TypeScript Settings
-	"typescript.preferences.includePackageJsonAutoImports": "on",
-	"typescript.suggest.autoImports": true,
-	"typescript.suggest.classMemberSnippets.enabled": true,
-	"typescript.suggest.objectLiteralMethodSnippets.enabled": true,
-	"typescript.preferences.quoteStyle": "double",
-	"typescript.format.semicolons": "insert",
-	"typescript.inlayHints.enumMemberValues.enabled": true,
-	"typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-	"typescript.inlayHints.parameterNames.enabled": "literals",
-	"typescript.inlayHints.parameterTypes.enabled": true,
-	"typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-	"typescript.inlayHints.variableTypes.enabled": false,
-	// Testing Configuration
-	"coverage-gutters.showGutterCoverage": true,
-	"coverage-gutters.showLineCoverage": true,
-	"coverage-gutters.showRulerCoverage": true,
-	"coverage-gutters.coverageFileNames": [
-		"lcov.info",
-		"cov.xml",
-		"coverage.xml",
-		"jacoco.xml",
-		"coverage.lcov"
-	],
-	// MCP Development Settings (via terminal environment)
-	"terminal.integrated.env.linux": {
-		"DEBUG": "mcp:*"
-	},
-	"terminal.integrated.env.osx": {
-		"DEBUG": "mcp:*"
-	},
-	"terminal.integrated.env.windows": {
-		"DEBUG": "mcp:*"
-	},
-	// Performance Settings
-	"extensions.ignoreRecommendations": false,
-	"files.autoSave": "onFocusChange",
-	"explorer.fileNesting.enabled": false,
-	// Git and Source Control
-	"git.autofetch": true,
-	"git.confirmSync": false,
-	"git.enableSmartCommit": true,
-	"git.suggestSmartCommit": true,
-	"scm.inputFontSize": 12,
-	"diffEditor.ignoreTrimWhitespace": false,
-	"merge-conflict.autoNavigateNextConflict.enabled": true,
-	// Extension Development Specific
-	"debug.focusWindowOnBreak": true,
-	"debug.inlineValues": "auto",
-	"debug.showBreakpointsInOverviewRuler": true,
-	"debug.toolBarLocation": "floating",
-	"editor.codeActionsOnSave": {
-		"source.organizeImports.biome": "explicit",
-		"source.fixAll.biome": "explicit"
-	},
-	"emmet.showSuggestionsAsSnippets": true,
-	"emmet.triggerExpansionOnTab": true
+	"dependi.npm.lockFileEnabled": true
 }

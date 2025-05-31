@@ -1,10 +1,10 @@
-import fs from "node:fs";
-import path from "node:path";
-import commonjsPlugin from "@rollup/plugin-commonjs";
-import jsonPlugin from "@rollup/plugin-json";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import commonjsPlugin from "@rollup/plugin-commonjs";
 import swcPlugin from "@rollup/plugin-swc";
 import copyPlugin from "rollup-plugin-copy";
+import jsonPlugin from "@rollup/plugin-json";
+import path from "node:path";
+import fs from "node:fs";
 
 // Custom plugin to handle markdown imports
 const markdownPlugin = () => ({

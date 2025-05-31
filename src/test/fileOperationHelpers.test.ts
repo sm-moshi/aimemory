@@ -5,16 +5,15 @@
 
 import fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-// TODO: It's deprecated, when are we going to remove it?
-import type { FileCache, FileOperationContext, LegacyCacheStats } from "../../types/types.js";
-import { MemoryBankFileType } from "../../types/types.js";
+import type { CacheStats, FileCache, FileOperationContext } from "../types/types.js";
+import { MemoryBankFileType } from "../types/types.js";
 import {
 	CacheManager,
 	loadFileWithTemplate,
 	performHealthCheck,
 	validateMemoryBankDirectory,
 	validateSingleFile,
-} from "../../utils/fileOperationHelpers.js";
+} from "../utils/fileOperationHelpers.js";
 
 // Mock file system operations
 vi.mock("node:fs/promises", () => ({
@@ -28,15 +27,14 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 // Mock templates
-vi.mock("../../lib/memoryBankTemplates.js", () => ({
+vi.mock("../lib/memoryBankTemplates.js", () => ({
 	getTemplateForFileType: vi.fn((fileType: string) => `Template for ${fileType}`),
 }));
 
 describe("File Operation Helpers", () => {
 	let mockContext: FileOperationContext;
 	let mockFileCache: Map<string, FileCache>;
-	// TODO: It's deprecated, when are we going to remove it?
-	let mockCacheStats: LegacyCacheStats;
+	let mockCacheStats: CacheStats;
 	let mockLogger: any;
 
 	beforeEach(() => {
@@ -247,7 +245,7 @@ describe("File Operation Helpers", () => {
 		});
 
 		it("should create file from template when missing", async () => {
-			const { getTemplateForFileType } = await import("../../lib/memoryBankTemplates.js");
+			const { getTemplateForFileType } = await import("../lib/memoryBankTemplates.js");
 			const stats = { mtimeMs: 123456, mtime: new Date() } as any;
 
 			vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);

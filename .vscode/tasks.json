@@ -11,7 +11,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": ["$tsc"]
+			"problemMatcher": []
 		},
 		{
 			"label": "build:prod",
@@ -21,7 +21,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": ["$tsc"]
+			"problemMatcher": [ ]
 		},
 		{
 			"label": "build:full",
@@ -31,7 +31,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": ["$tsc"]
+			"problemMatcher": []
 		},
 		{
 			"label": "watch",
@@ -42,14 +42,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": {
-				"base": "$tsc-watch",
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": "^\\s*\\[\\d+:\\d+:\\d+\\s+[AP]M\\]\\s+File change detected\\.",
-					"endsPattern": "^\\s*\\[\\d+:\\d+:\\d+\\s+[AP]M\\]\\s+Found \\d+ errors?\\."
-				}
-			}
+			"problemMatcher": []
 		},
 		{
 			"label": "test",
@@ -62,48 +55,6 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "test:watch",
-			"type": "shell",
-			"command": "pnpm test:watch",
-			"group": "test",
-			"isBackground": true,
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "test:coverage",
-			"type": "shell",
-			"command": "pnpm test:coverage",
-			"group": "test",
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "test:extension",
-			"type": "shell",
-			"command": "pnpm test:extension",
-			"group": "test",
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "mcp:test-server",
-			"type": "shell",
-			"command": "npx @modelcontextprotocol/inspector dist/index.cjs",
-			"group": "test",
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": [],
-			"dependsOn": "build:dev"
-		},
-		{
 			"label": "package",
 			"type": "shell",
 			"command": "pnpm package",
@@ -111,8 +62,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": [],
-			"dependsOn": "build:prod"
+			"problemMatcher": []
 		},
 		{
 			"label": "lint",
@@ -122,7 +72,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": []
+			"problemMatcher": [ ]
 		},
 		{
 			"label": "lint:fix",
@@ -132,38 +82,7 @@
 			"presentation": {
 				"reveal": "always"
 			},
-			"problemMatcher": []
-		},
-		{
-			"label": "type-check",
-			"type": "shell",
-			"command": "pnpm type-check",
-			"group": "build",
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": ["$tsc"]
-		},
-		{
-			"label": "clean",
-			"type": "shell",
-			"command": "pnpm clean",
-			"group": "build",
-			"presentation": {
-				"reveal": "silent"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "dev:parallel",
-			"dependsOrder": "parallel",
-			"dependsOn": ["watch", "test:watch"],
-			"group": "build",
-			"isBackground": true,
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": []
+			"problemMatcher": [ ]
 		}
 	]
 }

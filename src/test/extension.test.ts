@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { deactivate } from "../../extension.js";
+import { deactivate } from "../extension.js";
 
 // Mock vscode module
 vi.mock("vscode", () => ({
@@ -26,13 +26,13 @@ vi.mock("vscode", () => ({
 }));
 
 // Mock all dependencies
-vi.mock("../../commandHandler.js", () => ({
+vi.mock("../commandHandler.js", () => ({
 	CommandHandler: vi.fn().mockImplementation(() => ({
 		processMemoryCommand: vi.fn(),
 	})),
 }));
 
-vi.mock("../../mcp/mcpAdapter.js", () => ({
+vi.mock("../mcp/mcpAdapter.js", () => ({
 	MemoryBankMCPAdapter: vi.fn().mockImplementation(() => ({
 		start: vi.fn(),
 		stop: vi.fn(),
@@ -40,11 +40,11 @@ vi.mock("../../mcp/mcpAdapter.js", () => ({
 	})),
 }));
 
-vi.mock("../../utils/cursor-config.js", () => ({
+vi.mock("../utils/cursor-config.js", () => ({
 	updateCursorMCPConfig: vi.fn(),
 }));
 
-vi.mock("../../utils/log.js", () => ({
+vi.mock("../utils/log.js", () => ({
 	Logger: {
 		getInstance: vi.fn(() => ({
 			setLevel: vi.fn(),
@@ -61,7 +61,7 @@ vi.mock("../../utils/log.js", () => ({
 	},
 }));
 
-vi.mock("../../webview/webviewManager.js", () => ({
+vi.mock("../webview/webviewManager.js", () => ({
 	WebviewManager: vi.fn().mockImplementation(() => ({
 		openWebview: vi.fn(),
 	})),
@@ -76,7 +76,7 @@ describe("Extension", () => {
 
 	describe("module structure", () => {
 		it("has required exports", async () => {
-			const extensionModule = await import("../../extension.js");
+			const extensionModule = await import("../extension.js");
 			expect(extensionModule.activate).toBeDefined();
 			expect(extensionModule.deactivate).toBeDefined();
 		});

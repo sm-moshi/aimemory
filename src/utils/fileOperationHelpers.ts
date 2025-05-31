@@ -10,11 +10,11 @@ import fs from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { getTemplateForFileType } from "../lib/memoryBankTemplates.js";
 import type {
+	CacheStats,
 	FileCache,
 	FileOperationContext,
 	FileValidationResult,
 	HealthCheckResult,
-	LegacyCacheStats,
 	MemoryBankFile,
 } from "../types/types.js";
 import { MemoryBankFileType } from "../types/types.js";
@@ -89,7 +89,7 @@ export function validateAndConstructArbitraryFilePath(
 export class CacheManager {
 	constructor(
 		private readonly fileCache: Map<string, FileCache>,
-		private readonly cacheStats: LegacyCacheStats,
+		private readonly cacheStats: CacheStats,
 	) {}
 
 	/**
@@ -135,7 +135,7 @@ export class CacheManager {
 	/**
 	 * Gets current cache statistics
 	 */
-	getStats(): LegacyCacheStats {
+	getStats(): CacheStats {
 		return { ...this.cacheStats };
 	}
 

@@ -1,6 +1,6 @@
 # AI Memory Extension Quickstart Guide
 
-> _Last updated: 2025-05-31_
+> _Last updated: 2025-05-30_
 
 Welcome to the AI Memory extension for Cursor and VS Code! This guide will help you install, set up, and use the extension for persistent, context-aware AI workflows using the Memory Bank technique.
 

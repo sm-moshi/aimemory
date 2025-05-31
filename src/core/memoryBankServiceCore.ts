@@ -3,9 +3,9 @@ import * as path from "node:path";
 import { MemoryBankError, isError, tryCatchAsync } from "../types/types.js";
 import type {
 	AsyncResult,
+	CacheStats,
 	FileCache,
 	FileOperationContext,
-	LegacyCacheStats,
 	MemoryBank,
 	MemoryBankFile,
 	MemoryBankFileType,
@@ -32,7 +32,7 @@ export class MemoryBankServiceCore implements MemoryBank {
 
 	// Cache management
 	private readonly _fileCache: Map<string, FileCache> = new Map();
-	private readonly _cacheStats: LegacyCacheStats = {
+	private readonly _cacheStats: CacheStats = {
 		hits: 0,
 		misses: 0,
 		totalFiles: 0,

@@ -11,8 +11,8 @@
  * Refactored from JavaScript to TypeScript for better type safety
  */
 
-import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { extname, join, resolve } from "node:path";
+import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { join, extname, resolve } from "node:path";
 import { cwd } from "node:process";
 
 const projectRoot = resolve(cwd());
