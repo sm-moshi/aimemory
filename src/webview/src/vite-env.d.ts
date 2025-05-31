@@ -1,17 +1,17 @@
 /// <reference types="vite/client" />
 /// <reference types="react" />
 
-interface VSCode {
-	postMessage: (message: any) => void;
-	getState: () => any;
-	setState: (state: any) => void;
-}
+import type { VSCodeAPI } from "./types/vscode.js";
 
-interface Window {
-	acquireVsCodeApi: () => VSCode;
-}
+// Declare the function provided by VS Code
+declare const acquireVsCodeApi: () => VSCodeAPI;
 
-declare const acquireVsCodeApi: () => VSCode;
+// Extend the Window interface to include the vscodeApi
+declare global {
+	interface Window {
+		vscodeApi?: VSCodeAPI;
+	}
+}
 
 // Define custom elements directly with any type
 declare namespace JSX {

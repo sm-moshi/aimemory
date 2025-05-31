@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
+import { MemoryBankError, isError, tryCatchAsync } from "../types/types.js";
 import type {
+	AsyncResult,
 	CacheStats,
 	FileCache,
 	FileOperationContext,
@@ -38,11 +40,14 @@ export class MemoryBankServiceCore implements MemoryBank {
 		this.cacheManager = new CacheManager(this._fileCache, this._cacheStats);
 	}
 
-	async getIsMemoryBankInitialized(): Promise<boolean> {
-		try {
+	async getIsMemoryBankInitialized(): AsyncResult<boolean, MemoryBankError> {
+		const result = await tryCatchAsync<boolean>(async () => {
 			const context = this.createContext();
 			const isValid = await validateMemoryBankDirectory(context);
-			if (!isValid) return false;
+
+			if (!isValid) {
+				throw new MemoryBankError("Memory bank directory is invalid.", "INVALID_DIRECTORY");
+			}
 
 			const { missingFiles, filesToInvalidate } = await validateAllMemoryBankFiles(context);
 			this.invalidateFilesInCache(filesToInvalidate);
@@ -55,23 +60,63 @@ export class MemoryBankServiceCore implements MemoryBank {
 			}
 
 			return isInitialized;
-		} catch (err) {
-			this.logger.error(
-				`Error checking memory bank initialisation: ${err instanceof Error ? err.message : String(err)}`,
-			);
-			return false;
+		});
+
+		if (isError(result)) {
+			return {
+				success: false,
+				error: new MemoryBankError(
+					`Operation failed: ${result.error.message}`,
+					"UNKNOWN_ERROR",
+					{ originalError: result.error },
+				),
+			};
 		}
+
+		return result;
 	}
 
-	async initializeFolders(): Promise<void> {
-		await ensureMemoryBankFolders(this._memoryBankFolder);
+	async initializeFolders(): AsyncResult<void, MemoryBankError> {
+		const result = await tryCatchAsync<void>(async () => {
+			await ensureMemoryBankFolders(this._memoryBankFolder);
+		});
+
+		if (isError(result)) {
+			// Wrap generic errors in a MemoryBankError
+			return {
+				success: false,
+				error: new MemoryBankError(
+					`Initialization failed: ${result.error.message}`,
+					"INIT_ERROR",
+					{ originalError: result.error },
+				),
+			};
+		}
+
+		return result; // It's a success result
 	}
 
-	async loadFiles(): Promise<MemoryBankFileType[]> {
-		const context = this.createContext();
-		const createdFiles = await loadAllMemoryBankFiles(context, this.files);
-		this.ready = true;
-		return createdFiles;
+	async loadFiles(): AsyncResult<MemoryBankFileType[], MemoryBankError> {
+		const result = await tryCatchAsync<MemoryBankFileType[]>(async () => {
+			const context = this.createContext();
+			const createdFiles = await loadAllMemoryBankFiles(context, this.files);
+			this.ready = true;
+			return createdFiles;
+		});
+
+		if (isError(result)) {
+			// Wrap generic errors in a MemoryBankError
+			return {
+				success: false,
+				error: new MemoryBankError(
+					`Failed to load files: ${result.error.message}`,
+					"LOAD_ERROR",
+					{ originalError: result.error },
+				),
+			};
+		}
+
+		return result; // It's a success result
 	}
 
 	isReady(): boolean {
@@ -83,22 +128,60 @@ export class MemoryBankServiceCore implements MemoryBank {
 		return this.files.get(type);
 	}
 
-	async updateFile(type: MemoryBankFileType, content: string): Promise<void> {
-		const context = this.createContext();
-		await updateMemoryBankFileHelper(type, content, context, this.files);
+	async updateFile(
+		type: MemoryBankFileType,
+		content: string,
+	): AsyncResult<void, MemoryBankError> {
+		const result = await tryCatchAsync<void>(async () => {
+			const context = this.createContext();
+			await updateMemoryBankFileHelper(type, content, context, this.files);
+		});
+
+		if (isError(result)) {
+			// Wrap generic errors in a MemoryBankError
+			return {
+				success: false,
+				error: new MemoryBankError(
+					`Failed to update file ${type}: ${result.error.message}`,
+					"UPDATE_ERROR",
+					{ originalError: result.error },
+				),
+			};
+		}
+
+		return result; // It's a success result
 	}
 
-	async writeFileByPath(relativePath: string, content: string): Promise<void> {
-		const fullPath = validateAndConstructArbitraryFilePath(
-			this._memoryBankFolder,
-			relativePath,
-		);
-		await fs.mkdir(path.dirname(fullPath), { recursive: true });
-		await fs.writeFile(fullPath, content);
+	async writeFileByPath(
+		relativePath: string,
+		content: string,
+	): AsyncResult<void, MemoryBankError> {
+		const result = await tryCatchAsync<void>(async () => {
+			const fullPath = validateAndConstructArbitraryFilePath(
+				this._memoryBankFolder,
+				relativePath,
+			);
+			await fs.mkdir(path.dirname(fullPath), { recursive: true });
+			await fs.writeFile(fullPath, content);
 
-		const stats = await fs.stat(fullPath);
-		this._fileCache.set(fullPath, { content, mtimeMs: stats.mtimeMs });
-		this.logger.info(`Written file by path: ${relativePath}`);
+			const stats = await fs.stat(fullPath);
+			this._fileCache.set(fullPath, { content, mtimeMs: stats.mtimeMs });
+			this.logger.info(`Written file by path: ${relativePath}`);
+		});
+
+		if (isError(result)) {
+			// Wrap generic errors in a MemoryBankError
+			return {
+				success: false,
+				error: new MemoryBankError(
+					`Failed to write file by path ${relativePath}: ${result.error.message}`,
+					"WRITE_ERROR",
+					{ originalError: result.error },
+				),
+			};
+		}
+
+		return result; // It's a success result
 	}
 
 	getAllFiles(): MemoryBankFile[] {
@@ -117,10 +200,25 @@ export class MemoryBankServiceCore implements MemoryBank {
 			.join("\n");
 	}
 
-	async checkHealth(): Promise<string> {
-		const context = this.createContext();
-		const healthResult = await performHealthCheck(context);
-		return healthResult.summary;
+	async checkHealth(): AsyncResult<string, MemoryBankError> {
+		const result = await tryCatchAsync<string>(async () => {
+			const context = this.createContext();
+			const healthResult = await performHealthCheck(context);
+			return healthResult.summary;
+		});
+
+		if (isError(result)) {
+			return {
+				success: false,
+				error: new MemoryBankError(
+					`Health check failed: ${result.error.message}`,
+					"HEALTH_CHECK_ERROR",
+					{ originalError: result.error },
+				),
+			};
+		}
+
+		return result;
 	}
 
 	invalidateCache(filePath?: string): void {

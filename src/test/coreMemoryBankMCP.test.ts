@@ -60,24 +60,24 @@ vi.mock("../lib/mcp-prompts-registry.js", () => ({
 const createLoadFilesSuccessImplementation = () => {
 	return async () => {
 		mockMemoryBankService.isReady.mockReturnValue(true);
-		return undefined;
+		// Return a successful Result object
+		return { success: true, data: [] };
 	};
 };
 
 const createLoadFilesFailureImplementation = (error: Error) => {
 	return async () => {
-		throw error;
+		// Return a failed Result object
+		return { success: false, error: error };
 	};
 };
 
 const setupSuccessfulLoadFiles = () => {
-	mockMemoryBankService.loadFiles.mockImplementationOnce(createLoadFilesSuccessImplementation());
+	mockMemoryBankService.loadFiles.mockImplementation(createLoadFilesSuccessImplementation());
 };
 
 const setupFailingLoadFiles = (error: Error) => {
-	mockMemoryBankService.loadFiles.mockImplementationOnce(
-		createLoadFilesFailureImplementation(error),
-	);
+	mockMemoryBankService.loadFiles.mockImplementation(createLoadFilesFailureImplementation(error));
 };
 
 // Helper function to create MCP instance for side effects
@@ -102,9 +102,14 @@ describe("CoreMemoryBankMCP", () => {
 		setupMCPInstance();
 
 		// Setup default mock behaviors for service methods that are commonly called
-		mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValue(true);
-		mockMemoryBankService.checkHealth.mockResolvedValue("Healthy");
-		mockMemoryBankService.loadFiles.mockResolvedValue(undefined);
+		mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValue({
+			success: true,
+			data: true,
+		});
+		mockMemoryBankService.checkHealth.mockResolvedValue({ success: true, data: "Healthy" });
+		mockMemoryBankService.loadFiles.mockResolvedValue({ success: true, data: [] });
+		mockMemoryBankService.initializeFolders.mockResolvedValue({ success: true });
+		mockMemoryBankService.updateFile.mockResolvedValue({ success: true });
 		// Set up isReady to return true by default for resource handlers
 		mockMemoryBankService.isReady.mockReturnValue(true);
 
@@ -259,7 +264,12 @@ describe("CoreMemoryBankMCP", () => {
 
 			it("loads if already initialized", async () => {
 				const handler = getToolHandler("init-memory-bank");
-				mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValueOnce(true);
+				// Clear all mocks and set specific behavior for this test
+				vi.clearAllMocks();
+				mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValueOnce({
+					success: true,
+					data: true,
+				});
 				setupSuccessfulLoadFiles();
 				const result = await handler();
 				expect(mockMemoryBankService.initializeFolders).not.toHaveBeenCalled();
@@ -269,10 +279,14 @@ describe("CoreMemoryBankMCP", () => {
 
 			it("handles errors during initialization", async () => {
 				const handler = getToolHandler("init-memory-bank");
-				mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValueOnce(false);
-				mockMemoryBankService.initializeFolders.mockRejectedValueOnce(
-					new Error("Init Error"),
-				);
+				mockMemoryBankService.getIsMemoryBankInitialized.mockResolvedValueOnce({
+					success: true,
+					data: false,
+				});
+				mockMemoryBankService.initializeFolders.mockResolvedValueOnce({
+					success: false,
+					error: new Error("Init Error"),
+				});
 				// This test should verify the error message, but since init-memory-bank
 				// has its own error handling, we expect the original init error
 				const result = await handler();
@@ -319,9 +333,7 @@ describe("CoreMemoryBankMCP", () => {
 
 				const result = await handler();
 				expect(result.isError).toBe(true);
-				expect(result.content[0].text).toContain(
-					"Error reading memory bank files: Failed to load memory bank: Read Error",
-				);
+				expect(result.content[0].text).toContain("Error reading memory bank files: Read Error");
 			});
 		});
 
@@ -350,7 +362,10 @@ describe("CoreMemoryBankMCP", () => {
 					fileType: MemoryBankFileType.ProjectBrief,
 					content: "new content",
 				};
-				mockMemoryBankService.updateFile.mockRejectedValueOnce(new Error("Update Error"));
+				mockMemoryBankService.updateFile.mockResolvedValueOnce({
+					success: false,
+					error: new Error("Update Error"),
+				});
 				setupSuccessfulLoadFiles();
 
 				const result = await handler(args);

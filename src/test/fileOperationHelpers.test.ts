@@ -9,19 +9,12 @@ import type {
 	CacheStats,
 	FileCache,
 	FileOperationContext,
-	FileValidationResult,
-	HealthCheckResult,
-	MemoryBankFile,
 	MemoryBankFileType,
 } from "../types/types.js";
 import {
 	CacheManager,
-	ensureMemoryBankFolders,
-	loadAllMemoryBankFiles,
 	loadFileWithTemplate,
 	performHealthCheck,
-	updateMemoryBankFile,
-	validateAllMemoryBankFiles,
 	validateMemoryBankDirectory,
 	validateSingleFile,
 } from "../utils/fileOperationHelpers.js";

@@ -7,7 +7,8 @@ import {
 	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
 } from "../lib/mcp-prompts.js";
 import type { CLIServerConfig, MCPServerConfig } from "../types/mcpTypes.js";
-import type { MemoryBankFileType } from "../types/types.js";
+import type { AsyncResult, MemoryBankFileType, Result } from "../types/types.js";
+import { MemoryBankError, isError, tryCatchAsync } from "../types/types.js";
 import { BaseMCPServer } from "./shared/baseMcpServer.js";
 import {
 	MemoryBankOperations,
@@ -72,12 +73,35 @@ export class MCPServerCLI extends BaseMCPServer {
 			{ fileType: z.string() },
 			createMemoryBankTool(
 				this.memoryBank,
-				async ({ fileType }: { fileType: string }) => {
-					const file = this.memoryBank.getFile(fileType as MemoryBankFileType);
-					if (!file) {
-						throw new Error(`File ${fileType} not found.`);
+				async ({
+					fileType,
+				}: { fileType: string }): AsyncResult<string, MemoryBankError> => {
+					const result = await tryCatchAsync(async () => {
+						const file = this.memoryBank.getFile(fileType as MemoryBankFileType);
+						if (!file) {
+							throw new MemoryBankError(
+								`File ${fileType} not found.`,
+								"FILE_NOT_FOUND",
+							);
+						}
+						return file.content;
+					});
+
+					if (isError(result)) {
+						if (result.error instanceof MemoryBankError) {
+							return result as Result<string, MemoryBankError>;
+						}
+						return {
+							success: false,
+							error: new MemoryBankError(
+								`An unexpected error occurred while reading file ${fileType}: ${result.error.message}`,
+								"READ_FILE_UNEXPECTED_ERROR",
+								{ originalError: result.error },
+							),
+						};
 					}
-					return file.content;
+
+					return result;
 				},
 				"Error reading memory bank file",
 			),
@@ -127,7 +151,10 @@ export class MCPServerCLI extends BaseMCPServer {
 	/**
 	 * Helper method to register tools with enhanced logging
 	 */
-	private registerToolWithLogging(toolName: string, handler: () => Promise<string>): void {
+	private registerToolWithLogging(
+		toolName: string,
+		handler: () => AsyncResult<string, MemoryBankError>,
+	): void {
 		this.server.tool(
 			toolName,
 			{},

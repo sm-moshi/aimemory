@@ -1,7 +1,11 @@
-import type { WebviewLogLevel, WebviewLogMessage, WebviewMessage } from "../types/messages.js";
+import type {
+	WebviewLogLevel,
+	WebviewLogMessage,
+	WebviewToExtensionMessage,
+} from "../types/messages.js";
 
 // Create a safe postMessage function
-export const postMessage = (message: WebviewMessage) => {
+export const postMessage = (message: WebviewToExtensionMessage) => {
 	if (window.vscodeApi) {
 		window.vscodeApi.postMessage(message);
 		console.log("Message sent:", message);

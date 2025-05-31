@@ -13,9 +13,7 @@ export type {
 	ResetRulesResultMessage,
 	ReviewUpdateMemoryBankMessage,
 	ExtensionToWebviewMessage,
-	WebviewCommand,
 	WebviewToExtensionMessage,
-	WebviewMessage,
 } from "./messages.js";
 
 // Hook types

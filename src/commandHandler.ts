@@ -1,5 +1,6 @@
 import type { MCPServerInterface } from "./types/mcpTypes.js";
-import type { MemoryBankFile } from "./types/types.js";
+import type { MemoryBankError, MemoryBankFile, MemoryBankFileType, Result } from "./types/types.js";
+import { isError, isSuccess } from "./types/types.js";
 import { formatErrorMessage } from "./utils/errorHelpers.js";
 
 export class CommandHandler {
@@ -31,8 +32,16 @@ export class CommandHandler {
 				case "initialize":
 				case "init":
 					return await this.handleInitializeCommand();
-				case "health":
-					return await this.mcpServer.getMemoryBank().checkHealth();
+				case "health": {
+					const healthResult = await this.mcpServer.getMemoryBank().checkHealth();
+					if (isError(healthResult)) {
+						return formatErrorMessage(
+							"Error checking memory bank health",
+							healthResult.error,
+						);
+					}
+					return healthResult.data;
+				}
 				case "write":
 					return await this.handleWriteFileByPathCommand(args);
 				default:
@@ -68,22 +77,49 @@ export class CommandHandler {
 	 */
 	private async handleStatusCommand(): Promise<string> {
 		const memoryBank = this.mcpServer.getMemoryBank();
-		const isInitialized = await memoryBank.getIsMemoryBankInitialized();
+		const isInitializedResult: Result<boolean, MemoryBankError> =
+			await memoryBank.getIsMemoryBankInitialized();
+
+		if (isError(isInitializedResult)) {
+			// If initialisation check itself fails, return an error message
+			return formatErrorMessage(
+				"Error checking memory bank initialization status",
+				isInitializedResult.error,
+			);
+		}
+
+		const isInitialized = isInitializedResult.data;
 
 		if (!isInitialized) {
 			return "Memory Bank Status: Not initialized\nUse the initialize-memory-bank tool to set up the memory bank.";
 		}
 
-		const createdFiles = await memoryBank.loadFiles();
-		const selfHealingMsg =
-			createdFiles.length > 0
-				? `\n[Self-healing] Created missing files: ${createdFiles.join(", ")}`
-				: "";
+		const loadFilesResult: Result<MemoryBankFileType[], MemoryBankError> =
+			await memoryBank.loadFiles();
 
+		let selfHealingMsg = "";
+		if (isSuccess(loadFilesResult)) {
+			const successfulResult = loadFilesResult as {
+				success: true;
+				data: MemoryBankFileType[];
+			};
+			if (successfulResult.data.length > 0) {
+				selfHealingMsg = `\n[Self-healing] Created missing files: ${successfulResult.data.join(", ")}`;
+			}
+		}
+
+		// Regardless of whether loadFiles succeeded or failed, we want to show the status based on available files
+		// If loadFiles failed, the categories will be based on potentially incomplete data, but it's better than nothing.
 		const files = memoryBank.getAllFiles();
 		const categories = this.categorizeFiles(files);
 
-		return this.buildStatusOutput(categories, selfHealingMsg);
+		// If loadFiles failed, prepend an error message to the status output
+		let statusOutput = this.buildStatusOutput(categories, selfHealingMsg);
+		if (isError(loadFilesResult)) {
+			statusOutput = `${formatErrorMessage("Error loading memory bank files", loadFilesResult.error)}\n\n${statusOutput}`;
+		}
+
+		return statusOutput;
 	}
 
 	/**

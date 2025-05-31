@@ -1,5 +1,6 @@
-import type { MemoryBankService } from "../core/memoryBank.js";
+import type { Console } from "node:console";
 import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
+import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
 
 /**
  * Common interface for MCP server implementations.
@@ -30,7 +31,7 @@ export interface MCPServerInterface {
 	/**
 	 * Get the memory bank service instance
 	 */
-	getMemoryBank(): MemoryBankService;
+	getMemoryBank(): VSCodeMemoryBankService;
 
 	/**
 	 * Update a memory bank file
@@ -41,6 +42,11 @@ export interface MCPServerInterface {
 	 * Handle a command
 	 */
 	handleCommand(command: string, args: string[]): Promise<string>;
+
+	/**
+	 * Check if the MCP server is currently running
+	 */
+	isServerRunning(): boolean;
 }
 
 /**

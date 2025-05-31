@@ -188,12 +188,14 @@ export interface MemoryBankFile {
  */
 export interface MemoryBank {
 	files: Map<MemoryBankFileType, MemoryBankFile>;
-	initializeFolders(): Promise<void>;
-	loadFiles(): Promise<MemoryBankFileType[]>;
+	initializeFolders(): AsyncResult<void, MemoryBankError>;
+	loadFiles(): AsyncResult<MemoryBankFileType[], MemoryBankError>;
 	getFile(type: MemoryBankFileType): MemoryBankFile | undefined;
-	updateFile(type: MemoryBankFileType, content: string): Promise<void>;
+	updateFile(type: MemoryBankFileType, content: string): AsyncResult<void, MemoryBankError>;
 	getAllFiles(): MemoryBankFile[];
 	getFilesWithFilenames(): string;
+	writeFileByPath(relativePath: string, content: string): AsyncResult<void, MemoryBankError>;
+	checkHealth(): AsyncResult<string, MemoryBankError>;
 }
 
 /**

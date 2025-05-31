@@ -7,25 +7,37 @@
 
 import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
 import type { MCPErrorResponse, MCPResponse, MCPSuccessResponse } from "../../types/mcpTypes.js";
+import { MemoryBankError, isError, tryCatch } from "../../types/types.js";
+import type { AsyncResult, MemoryBankFileType, Result } from "../../types/types.js";
 
 /**
  * Ensures memory bank is ready, handling common readiness patterns
  * Reduces complexity from ~8 branches to ~2 in calling code
  */
-export async function ensureMemoryBankReady(memoryBank: MemoryBankServiceCore): Promise<void> {
+export async function ensureMemoryBankReady(
+	memoryBank: MemoryBankServiceCore,
+): AsyncResult<void, MemoryBankError> {
 	if (!memoryBank.isReady()) {
-		try {
+		const loadResult: Result<MemoryBankFileType[], MemoryBankError> =
 			await memoryBank.loadFiles();
-			if (!memoryBank.isReady()) {
-				throw new Error(
-					"Memory bank could not be initialized. Please run init-memory-bank first.",
-				);
-			}
-		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			throw new Error(`Failed to load memory bank: ${message}`);
+		if (isError(loadResult)) {
+			// If loading failed, return the error
+			return loadResult; // loadFiles already returns MemoryBankError in its AsyncResult
+		}
+
+		if (!memoryBank.isReady()) {
+			// If after loading, it's still not ready (unexpected), return an error
+			return {
+				success: false,
+				error: new MemoryBankError(
+					"Memory bank could not be initialized after loading. Please run init-memory-bank tool.",
+					"INIT_FAILED_AFTER_LOAD",
+				),
+			};
 		}
 	}
+	// If already ready, or successfully loaded and is now ready, return success
+	return { success: true, data: undefined };
 }
 
 /**
@@ -60,17 +72,22 @@ export function createErrorResponse(error: unknown, context?: string): MCPErrorR
  */
 export function createMemoryBankTool<T = unknown>(
 	memoryBank: MemoryBankServiceCore,
-	handler: (args: T) => Promise<string>,
+	handler: (args: T) => AsyncResult<string, MemoryBankError>,
 	errorContext?: string,
 ) {
 	return async (args: T): Promise<MCPResponse> => {
-		try {
-			await ensureMemoryBankReady(memoryBank);
-			const result = await handler(args);
-			return createSuccessResponse(result);
-		} catch (error) {
-			return createErrorResponse(error, errorContext);
+		const result = await ensureMemoryBankReady(memoryBank);
+		if (isError(result)) {
+			return createErrorResponse(result.error, errorContext);
 		}
+
+		const handlerResult = await handler(args);
+
+		if (isError(handlerResult)) {
+			return createErrorResponse(handlerResult.error, errorContext);
+		}
+
+		return createSuccessResponse(handlerResult.data);
 	};
 }
 
@@ -79,7 +96,7 @@ export function createMemoryBankTool<T = unknown>(
  */
 export function createSimpleMemoryBankTool(
 	memoryBank: MemoryBankServiceCore,
-	handler: () => Promise<string>,
+	handler: () => AsyncResult<string, MemoryBankError>,
 	errorContext?: string,
 ) {
 	return createMemoryBankTool(memoryBank, handler, errorContext);
@@ -92,48 +109,93 @@ export const MemoryBankOperations = {
 	/**
 	 * Initialize memory bank operation
 	 */
-	async initialize(memoryBank: MemoryBankServiceCore): Promise<string> {
-		const isInitialized = await memoryBank.getIsMemoryBankInitialized();
-		if (!isInitialized) {
-			await memoryBank.initializeFolders();
-			await memoryBank.loadFiles();
-			return "Memory bank initialized successfully.";
+	async initialize(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+		const isInitializedResult = await memoryBank.getIsMemoryBankInitialized();
+		if (isError(isInitializedResult)) {
+			return isInitializedResult;
 		}
-		await memoryBank.loadFiles();
-		return "Memory bank already initialized.";
+
+		const isInitialized = isInitializedResult.data;
+
+		if (!isInitialized) {
+			const initializeFoldersResult = await memoryBank.initializeFolders();
+			if (isError(initializeFoldersResult)) {
+				return initializeFoldersResult;
+			}
+
+			const loadFilesResult = await memoryBank.loadFiles();
+			if (isError(loadFilesResult)) {
+				return loadFilesResult;
+			}
+
+			return { success: true, data: "Memory bank initialized successfully." };
+		}
+
+		const loadFilesResult = await memoryBank.loadFiles();
+		if (isError(loadFilesResult)) {
+			return loadFilesResult;
+		}
+
+		return { success: true, data: "Memory bank already initialized." };
 	},
 
 	/**
 	 * Read all files operation
 	 */
-	async readAllFiles(memoryBank: MemoryBankServiceCore): Promise<string> {
-		const files = memoryBank.getFilesWithFilenames();
-		return files
-			? `Here are the files in the memory bank:\n\n${files}`
-			: "Memory bank is empty or could not be read.";
+	async readAllFiles(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+		const result = tryCatch(() => {
+			const files = memoryBank.getFilesWithFilenames();
+			return files
+				? `Here are the files in the memory bank:\n\n${files}`
+				: "Memory bank is empty or could not be read.";
+		});
+
+		if (isError(result)) {
+			return {
+				success: false,
+				error: new MemoryBankError("Failed to read files", "READ_FILES_ERROR", {
+					originalError: result.error,
+				}),
+			};
+		}
+
+		return result;
 	},
 
 	/**
 	 * List files with metadata operation
 	 */
-	async listFiles(memoryBank: MemoryBankServiceCore): Promise<string> {
-		const files = memoryBank.getAllFiles();
-		const fileListText = files
-			.map(
-				(file) =>
-					`${file.type}: Last updated ${
-						file.lastUpdated ? new Date(file.lastUpdated).toLocaleString() : "never"
-					}`,
-			)
-			.join("\n");
-		return fileListText || "No memory bank files found.";
+	async listFiles(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+		const result = tryCatch(() => {
+			const files = memoryBank.getAllFiles();
+			const fileListText = files
+				.map(
+					(file) =>
+						`${file.type}: Last updated ${
+							file.lastUpdated ? new Date(file.lastUpdated).toLocaleString() : "never"
+						}`,
+				)
+				.join("\n");
+			return fileListText || "No memory bank files found.";
+		});
+
+		if (isError(result)) {
+			return {
+				success: false,
+				error: new MemoryBankError("Failed to list files", "LIST_FILES_ERROR", {
+					originalError: result.error,
+				}),
+			};
+		}
+
+		return result;
 	},
 
 	/**
 	 * Health check operation
 	 */
-	async checkHealth(memoryBank: MemoryBankServiceCore): Promise<string> {
-		return await memoryBank.checkHealth();
+	async checkHealth(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+		return memoryBank.checkHealth();
 	},
 
 	/**
@@ -143,11 +205,16 @@ export const MemoryBankOperations = {
 		memoryBank: MemoryBankServiceCore,
 		fileType: string,
 		content: string,
-	): Promise<string> {
-		await memoryBank.updateFile(
+	): AsyncResult<string, MemoryBankError> {
+		const updateResult = await memoryBank.updateFile(
 			fileType as Parameters<typeof memoryBank.updateFile>[0],
 			content,
 		);
-		return `Updated ${fileType} successfully`;
+
+		if (isError(updateResult)) {
+			return updateResult;
+		}
+
+		return { success: true, data: `Updated ${fileType} successfully` };
 	},
 };

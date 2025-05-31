@@ -3,11 +3,17 @@ import * as fsPromises from "node:fs/promises";
 import * as http from "node:http";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { MemoryBankService } from "../core/memoryBank.js";
-import { CursorRulesService } from "../lib/cursor-rules-service.js";
+import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
+import type { CursorRulesService } from "../lib/cursor-rules-service.js";
 import { CURSOR_MEMORY_BANK_RULES_FILE } from "../lib/cursor-rules.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
+import type { CursorMCPConfig, CursorMCPServerConfig } from "../types/types.js";
 import { LogLevel, Logger } from "../utils/log.js";
+import type {
+	ServerAlreadyRunningMessage,
+	WebviewLogMessage,
+	WebviewToExtensionMessage,
+} from "./src/types/messages.js";
 
 /**
  * Extract port number from a URL string
@@ -37,7 +43,7 @@ function extractPortsFromArgs(args: unknown[]): number[] {
 /**
  * Extract ports from a single server configuration
  */
-function extractPortsFromServer(server: any): number[] {
+function extractPortsFromServer(server: CursorMCPServerConfig): number[] {
 	const ports: number[] = [];
 
 	if (!server) {
@@ -61,15 +67,15 @@ async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
 	try {
 		const configPath = path.join(workspaceRoot, ".cursor", "mcp.json");
 		const configRaw = await fsPromises.readFile(configPath, "utf-8");
-		const config = JSON.parse(configRaw);
+		const config: CursorMCPConfig = JSON.parse(configRaw);
 
 		if (!config?.mcpServers) {
 			return [];
 		}
 
 		const ports: number[] = [];
-		for (const key of Object.keys(config.mcpServers)) {
-			const serverPorts = extractPortsFromServer(config.mcpServers[key]);
+		for (const serverConfig of Object.values(config.mcpServers)) {
+			const serverPorts = extractPortsFromServer(serverConfig);
 			ports.push(...serverPorts);
 		}
 
@@ -83,16 +89,20 @@ async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
 export class WebviewManager {
 	private panel: vscode.WebviewPanel | undefined;
 	private readonly extensionUri: vscode.Uri;
-	private readonly memoryBankService: MemoryBankService;
+	private readonly memoryBankService: VSCodeMemoryBankService;
 	private readonly cursorRulesService: CursorRulesService;
+	private readonly logger: Logger;
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly mcpServer: MCPServerInterface,
+		memoryBankService: VSCodeMemoryBankService,
+		cursorRulesService: CursorRulesService,
 	) {
 		this.extensionUri = context.extensionUri;
-		this.memoryBankService = new MemoryBankService(context);
-		this.cursorRulesService = new CursorRulesService(context);
+		this.memoryBankService = memoryBankService;
+		this.cursorRulesService = cursorRulesService;
+		this.logger = Logger.getInstance();
 	}
 
 	// Checks if an MCP server is already running on a specific port
@@ -150,8 +160,18 @@ export class WebviewManager {
 		}
 
 		for (const port of portsToCheck) {
+			// Check if a server is running on this port
 			const isRunning = await this.checkServerHealth(port);
 			if (isRunning) {
+				// Check if our internal server is running (if applicable)
+				const isInternalServer = this.mcpServer.isServerRunning();
+
+				if (isInternalServer) {
+					console.log(`Internal server is running, found on port ${port}`);
+				} else {
+					console.log(`External server found running on port ${port}`);
+				}
+
 				// Update the server state
 				this.mcpServer.setExternalServerRunning(port);
 
@@ -209,82 +229,30 @@ export class WebviewManager {
 
 		// Handle messages from the webview
 		this.panel.webview.onDidReceiveMessage(
-			async (message) => {
+			async (message: WebviewToExtensionMessage) => {
 				console.log("Received message in extension:", message);
 				switch (message.command) {
 					case "getRulesStatus":
-						await this.getRulesStatus();
+						await this.handleGetRulesStatus();
 						break;
 					case "resetRules":
-						await this.resetRules();
+						await this.handleResetRules();
 						break;
 					case "requestMemoryBankStatus":
 						console.log("Requesting...");
-						await this.getMemoryBankStatus();
+						await this.handleRequestMemoryBankStatus();
 						break;
 					case "serverAlreadyRunning":
-						// Update our internal tracking that a server is already running
-						console.log(`Server already running on port ${message.port}`);
-						this.mcpServer.setExternalServerRunning(message.port);
-						this.panel?.webview.postMessage({
-							type: "MCPServerStatus",
-							status: "started",
-							port: message.port,
-						});
+						await this.handleServerAlreadyRunning(message);
 						break;
 					case "startMCPServer":
-						try {
-							await this.mcpServer.start();
-							const serverPort = this.mcpServer.getPort();
-							const isStdioMode = !serverPort || serverPort === 0;
-
-							// Send status message with proper port info for different transport modes
-							this.panel?.webview.postMessage({
-								type: "MCPServerStatus",
-								status: "started",
-								port: isStdioMode ? null : serverPort, // null indicates STDIO mode
-								transport: isStdioMode ? "stdio" : "http",
-							});
-
-							Logger.getInstance().info(
-								`MCP Server started successfully in ${isStdioMode ? "STDIO" : "HTTP"} mode`,
-								{ port: serverPort, transport: isStdioMode ? "stdio" : "http" },
-							);
-						} catch (error) {
-							const errorMessage =
-								error instanceof Error ? error.message : String(error);
-							Logger.getInstance().error(
-								`Failed to start MCP server: ${errorMessage}`,
-							);
-
-							this.panel?.webview.postMessage({
-								type: "MCPServerStatus",
-								status: "error",
-								error: errorMessage,
-							});
-						}
+						await this.handleStartMCPServer();
 						break;
 					case "stopMCPServer":
-						try {
-							this.mcpServer.stop();
-							this.panel?.webview.postMessage({
-								type: "MCPServerStatus",
-								status: "stopped",
-							});
-
-							Logger.getInstance().info("MCP Server stopped successfully");
-						} catch (error) {
-							const errorMessage =
-								error instanceof Error ? error.message : String(error);
-							Logger.getInstance().error(
-								`Failed to stop MCP server: ${errorMessage}`,
-							);
-						}
+						await this.handleStopMCPServer();
 						break;
 					case "logMessage": {
-						// Route webview log messages to the Output Channel via Logger
-						const level = message.level === "error" ? LogLevel.Error : LogLevel.Info;
-						Logger.getInstance().log(level, message.text, message.meta);
+						this.handleLogMessage(message);
 						break;
 					}
 				}
@@ -304,12 +272,12 @@ export class WebviewManager {
 
 		// Initial status check
 		setTimeout(async () => {
-			await this.getRulesStatus();
+			await this.handleGetRulesStatus();
 			await this.sendCurrentMCPServerStatus();
 		}, 500);
 	}
 
-	private async getRulesStatus() {
+	private async handleGetRulesStatus() {
 		if (!this.panel) {
 			return;
 		}
@@ -338,7 +306,7 @@ export class WebviewManager {
 		} catch (error) {
 			// File doesn't exist or access error - both indicate rules not initialized
 			initialized = false;
-			Logger.getInstance().debug(
+			this.logger.debug(
 				`Cursor rules file not found or inaccessible: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
@@ -351,7 +319,7 @@ export class WebviewManager {
 		});
 	}
 
-	private async getMemoryBankStatus() {
+	private async handleRequestMemoryBankStatus() {
 		console.log("Here1");
 		if (!this.panel) {
 			return;
@@ -367,7 +335,7 @@ export class WebviewManager {
 		});
 	}
 
-	private async resetRules() {
+	private async handleResetRules() {
 		if (!this.panel) {
 			return;
 		}
@@ -389,7 +357,7 @@ export class WebviewManager {
 				logLevelToUse = LogLevel.Info;
 			}
 
-			Logger.getInstance().log(logLevelToUse, logMessage);
+			this.logger.log(logLevelToUse, logMessage);
 
 			this.panel?.webview.postMessage({
 				type: "resetRulesResult",
@@ -411,7 +379,7 @@ export class WebviewManager {
 				success: false,
 				error: "No workspace folder found",
 			});
-			Logger.getInstance().error("Reset rules failed: No workspace folder found");
+			this.logger.error("Reset rules failed: No workspace folder found");
 			return false;
 		}
 		return true;
@@ -426,7 +394,7 @@ export class WebviewManager {
 			CURSOR_MEMORY_BANK_RULES_FILE,
 		);
 		vscode.window.showInformationMessage("Memory bank rules have been reset.");
-		Logger.getInstance().info("Memory bank rules reset successfully.");
+		this.logger.info("Memory bank rules reset successfully.");
 		return { success: true };
 		// Errors will propagate to the caller (resetRules)
 	}
@@ -541,16 +509,13 @@ export class WebviewManager {
 			const runningStatus = isRunning ? "running" : "stopped";
 			const transportType = this.determineTransportType(isRunning, isStdioMode);
 
-			Logger.getInstance().info(
-				`Initial MCP server status sent to webview: ${runningStatus}`,
-				{
-					port: serverPort,
-					transport: transportType,
-					isStdioMode,
-				},
-			);
+			this.logger.info(`Initial MCP server status sent to webview: ${runningStatus}`, {
+				port: serverPort,
+				transport: transportType,
+				isStdioMode,
+			});
 		} catch (error) {
-			Logger.getInstance().error(
+			this.logger.error(
 				`Failed to get MCP server status: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
@@ -564,5 +529,67 @@ export class WebviewManager {
 			return undefined;
 		}
 		return isStdioMode ? "stdio" : "http";
+	}
+
+	private async handleServerAlreadyRunning(message: ServerAlreadyRunningMessage) {
+		// Update our internal tracking that a server is already running
+		console.log(`Server already running on port ${message.port}`);
+		this.mcpServer.setExternalServerRunning(message.port);
+		this.panel?.webview.postMessage({
+			type: "MCPServerStatus",
+			status: "started",
+			port: message.port,
+		});
+	}
+
+	private async handleStartMCPServer() {
+		try {
+			await this.mcpServer.start();
+			const serverPort = this.mcpServer.getPort();
+			const isStdioMode = !serverPort || serverPort === 0;
+
+			// Send status message with proper port info for different transport modes
+			this.panel?.webview.postMessage({
+				type: "MCPServerStatus",
+				status: "started",
+				port: isStdioMode ? null : serverPort, // null indicates STDIO mode
+				transport: isStdioMode ? "stdio" : "http",
+			});
+
+			this.logger.info(
+				`MCP Server started successfully in ${isStdioMode ? "STDIO" : "HTTP"} mode`,
+				{ port: serverPort, transport: isStdioMode ? "stdio" : "http" },
+			);
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			this.logger.error(`Failed to start MCP server: ${errorMessage}`);
+
+			this.panel?.webview.postMessage({
+				type: "MCPServerStatus",
+				status: "error",
+				error: errorMessage,
+			});
+		}
+	}
+
+	private async handleStopMCPServer() {
+		try {
+			this.mcpServer.stop();
+			this.panel?.webview.postMessage({
+				type: "MCPServerStatus",
+				status: "stopped",
+			});
+
+			this.logger.info("MCP Server stopped successfully");
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			this.logger.error(`Failed to stop MCP server: ${errorMessage}`);
+		}
+	}
+
+	private handleLogMessage(message: WebviewLogMessage) {
+		// Route webview log messages to the Output Channel via Logger
+		const level = message.level === "error" ? LogLevel.Error : LogLevel.Info;
+		this.logger.log(level, message.text, message.meta);
 	}
 }

@@ -3,11 +3,13 @@
  * Type definitions for VSCode webview API and global declarations
  */
 
+import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./messages.js";
+
 /**
  * VSCode API interface for webview communication
  */
 export interface VSCodeAPI {
-	postMessage: (message: any) => void;
+	postMessage: (message: WebviewToExtensionMessage) => void;
 	getState: () => any;
 	setState: (state: any) => void;
 }
@@ -26,8 +28,5 @@ declare global {
  * Message event type for webview communication
  */
 export interface WebviewMessageEvent extends MessageEvent {
-	data: {
-		type?: string;
-		[key: string]: any;
-	};
+	data: ExtensionToWebviewMessage;
 }

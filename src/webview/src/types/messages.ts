@@ -73,29 +73,71 @@ export type ExtensionToWebviewMessage =
 	| ResetRulesResultMessage
 	| ReviewUpdateMemoryBankMessage;
 
+// --- Specific command message interfaces (Webview to Extension) ---
+
 /**
- * Command message structure sent from webview to extension
+ * Start MCP server command message
  */
-export interface WebviewCommand {
-	command:
-		| "startMCPServer"
-		| "stopMCPServer"
-		| "getRulesStatus"
-		| "resetRules"
-		| "requestMemoryBankStatus"
-		| "reviewAndUpdateMemoryBank"
-		| "serverAlreadyRunning";
-	port?: number;
+export interface StartMCPServerMessage {
+	command: "startMCPServer";
+}
+
+/**
+ * Stop MCP server command message
+ */
+export interface StopMCPServerMessage {
+	command: "stopMCPServer";
+}
+
+/**
+ * Get rules status command message
+ */
+export interface GetRulesStatusMessage {
+	command: "getRulesStatus";
+}
+
+/**
+ * Reset rules command message
+ */
+export interface ResetRulesMessage {
+	command: "resetRules";
+}
+
+/**
+ * Request memory bank status command message
+ */
+export interface RequestMemoryBankStatusMessage {
+	command: "requestMemoryBankStatus";
+}
+
+/**
+ * Review and update memory bank command message
+ * Keeping fileType and content as optional based on previous definition,
+ * although usage in webviewManager.ts is not apparent for this command.
+ */
+export interface ReviewAndUpdateMemoryBankMessage {
+	command: "reviewAndUpdateMemoryBank";
 	fileType?: string;
 	content?: string;
 }
 
 /**
- * Union type for all messages sent from webview to extension
+ * Server already running command message
  */
-export type WebviewToExtensionMessage = WebviewLogMessage | WebviewCommand;
+export interface ServerAlreadyRunningMessage {
+	command: "serverAlreadyRunning";
+	port: number;
+}
 
 /**
- * Union type for all webview messages (for backwards compatibility)
+ * Union type for all messages sent from webview to extension
  */
-export type WebviewMessage = WebviewToExtensionMessage;
+export type WebviewToExtensionMessage =
+	| WebviewLogMessage
+	| StartMCPServerMessage
+	| StopMCPServerMessage
+	| GetRulesStatusMessage
+	| ResetRulesMessage
+	| RequestMemoryBankStatusMessage
+	| ReviewAndUpdateMemoryBankMessage
+	| ServerAlreadyRunningMessage;

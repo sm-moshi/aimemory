@@ -1,9 +1,9 @@
 import type { ChildProcess } from "node:child_process";
 import type { ExtensionContext } from "vscode";
-import { MemoryBankService } from "../core/memoryBank.js";
+import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
 import type { MemoryBankFileType } from "../types/types.js";
-import { Logger } from "../utils/log.js";
+import type { Logger } from "../utils/log.js";
 import { launchMCPServerProcess } from "./shared/processHelpers.js";
 
 /**
@@ -15,17 +15,22 @@ import { launchMCPServerProcess } from "./shared/processHelpers.js";
  */
 export class MemoryBankMCPAdapter implements MCPServerInterface {
 	private readonly context: ExtensionContext;
-	private readonly memoryBank: MemoryBankService;
+	private readonly memoryBank: VSCodeMemoryBankService;
 	private readonly logger: Logger;
 	private childProcess: ChildProcess | null = null;
 	private isRunning = false;
 	private readonly defaultPort: number; // For compatibility with existing interface
 
-	constructor(context: ExtensionContext, defaultPort = 3000) {
+	constructor(
+		context: ExtensionContext,
+		memoryBankService: VSCodeMemoryBankService,
+		logger: Logger,
+		defaultPort = 3000,
+	) {
 		this.context = context;
 		this.defaultPort = defaultPort;
-		this.memoryBank = new MemoryBankService(context);
-		this.logger = Logger.getInstance();
+		this.memoryBank = memoryBankService;
+		this.logger = logger;
 	}
 
 	/**
@@ -106,7 +111,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	/**
 	 * Get the memory bank service instance
 	 */
-	getMemoryBank(): MemoryBankService {
+	getMemoryBank(): VSCodeMemoryBankService {
 		return this.memoryBank;
 	}
 

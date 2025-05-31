@@ -35,13 +35,15 @@ export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBank
 			return;
 		}
 		setUpdateLoading(true);
-		window.vscodeApi?.postMessage({ command: "updateMemoryBankFile", fileType, content });
+		// TODO: Implement updateMemoryBankFile command handling in extension
+		// window.vscodeApi?.postMessage({ command: "updateMemoryBankFile", fileType, content });
 		setUpdateLoading(false);
 	}, []);
 
 	const handleRepairMemoryBank = useCallback(async () => {
 		setUpdateLoading(true);
-		window.vscodeApi?.postMessage({ command: "repairMemoryBank" });
+		// TODO: Implement repairMemoryBank command handling in extension
+		// window.vscodeApi?.postMessage({ command: "repairMemoryBank" });
 		setUpdateLoading(false);
 	}, []);
 

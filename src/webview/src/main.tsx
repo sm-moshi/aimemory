@@ -4,72 +4,48 @@ import { createRoot } from "react-dom/client";
 import App from "./App.js";
 import "./index.css";
 import "@vscode-elements/elements";
-
-// Declare the global vscode API
-declare global {
-	interface Window {
-		acquireVsCodeApi: () => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			postMessage: (message: any) => void;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			getState: () => any;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			setState: (state: any) => void;
-		};
-		vscodeApi?: {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			postMessage: (message: any) => void;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			getState: () => any;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			setState: (state: any) => void;
-		};
-	}
-}
+import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./types/messages.js";
+import type { VSCodeAPI, WebviewMessageEvent } from "./types/vscode.js";
 
 // Create a better mock implementation for development
-class MockVSCodeAPI {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+class MockVSCodeAPI implements VSCodeAPI {
 	private state: any = { rulesInitialized: false };
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	postMessage(message: any) {
+	postMessage(message: WebviewToExtensionMessage): void {
 		console.log("🔄 Mock VSCode - Message sent:", message);
 
 		// Simulate VSCode API responses for development
 		setTimeout(() => {
-			switch (message.type) {
+			switch ((message as any).command ?? (message as any).type) {
 				case "getRulesStatus":
 					this.mockResponse({
 						type: "rulesStatus",
 						initialized: this.state.rulesInitialized,
-					});
+					} as ExtensionToWebviewMessage);
 					break;
 				case "resetRules":
 					this.state.rulesInitialized = true;
 					this.mockResponse({
 						type: "resetRulesResult",
 						success: true,
-					});
+					} as ExtensionToWebviewMessage);
 					break;
 			}
 		}, 500); // Add delay to simulate network
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getState(): any {
 		return this.state;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	setState(newState: any) {
+	setState(newState: any): void {
 		this.state = { ...this.state, ...newState };
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private mockResponse(data: any) {
+	private mockResponse(data: ExtensionToWebviewMessage) {
 		console.log("⬅️ Mock VSCode - Response:", data);
-		window.dispatchEvent(new MessageEvent("message", { data }));
+		const event = new MessageEvent("message", { data }) as WebviewMessageEvent;
+		window.dispatchEvent(event);
 	}
 }
 

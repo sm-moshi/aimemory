@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
 import { MemoryBankMCPAdapter } from "../mcp/mcpAdapter.js";
 
 // Mock vscode API
@@ -16,7 +17,7 @@ vi.mock("vscode", () => ({
 	window: {
 		showInformationMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
-		// ... any other window properties used
+		// TODO: ... any other window properties used
 	},
 }));
 
@@ -40,13 +41,17 @@ vi.mock("node:path", async () => {
 	};
 });
 
-vi.mock("../core/memoryBank.js", () => ({
-	MemoryBankService: vi.fn().mockImplementation(() => ({
-		updateFile: vi.fn(),
-		initializeFolders: vi.fn(),
-		loadFiles: vi.fn(),
-		checkHealth: vi.fn().mockResolvedValue("All systems healthy"),
-	})),
+vi.mock("../core/vsCodeMemoryBankService.js", () => ({
+	// This mock implementation now correctly accepts constructor arguments
+	VSCodeMemoryBankService: vi
+		.fn()
+		.mockImplementation((context, core, cursorRulesService, logger) => ({
+			updateFile: vi.fn(),
+			initializeFolders: vi.fn(),
+			loadFiles: vi.fn(),
+			checkHealth: vi.fn().mockResolvedValue("All systems healthy"),
+			getIsMemoryBankInitialized: vi.fn().mockResolvedValue(true),
+		})),
 }));
 
 vi.mock("../utils/log.js", () => ({
@@ -57,54 +62,119 @@ vi.mock("../utils/log.js", () => ({
 			debug: vi.fn(),
 		})),
 	},
+	LogLevel: { Info: "info", Error: "error", Warn: "warn", Debug: "debug" },
 }));
 
-describe("MemoryBankMCPAdapter", () => {
-	const mockContext = {
-		extensionPath: "/mock/extension/path",
-	};
+// Create basic mock dependencies for VSCodeMemoryBankService
+const mockCoreService = {} as any;
+const mockCursorRulesService = {} as any;
+const mockLogger = {
+	// Basic mock for Logger
+	info: vi.fn(),
+	error: vi.fn(),
+	debug: vi.fn(),
+} as any;
 
+// Helper function to create a consistent mock VSCodeMemoryBankService instance
+const createMockVSCodeMemoryBankService = () =>
+	new VSCodeMemoryBankService(
+		mockContext as any,
+		mockCoreService,
+		mockCursorRulesService,
+		mockLogger,
+	);
+
+const mockContext = {
+	extensionPath: "/mock/extension/path",
+	extensionUri: { fsPath: "/mock/uri" },
+	workspaceState: { get: vi.fn(), update: vi.fn(), keys: () => [], setKeysForSync: vi.fn() },
+	globalState: { get: vi.fn(), update: vi.fn(), keys: () => [], setKeysForSync: vi.fn() },
+	secrets: { get: vi.fn(), store: vi.fn(), delete: vi.fn(), onDidChange: vi.fn() },
+};
+
+describe("MemoryBankMCPAdapter", () => {
 	describe("constructor", () => {
 		it("initializes with correct default values", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			expect(adapter.getPort()).toBe(7331);
 			expect(adapter.isServerRunning()).toBe(false);
 		});
 
 		it("uses default port when not specified", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+			);
 			expect(adapter.getPort()).toBe(3000);
 		});
 	});
 
 	describe("interface compatibility", () => {
 		it("getPort returns configured port", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			expect(adapter.getPort()).toBe(7331);
 		});
 
 		it("getMemoryBank returns memory bank service instance", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			const memoryBank = adapter.getMemoryBank();
-			expect(memoryBank).toBeDefined();
+			expect(memoryBank).toBe(mockVSCodeMemoryBankService);
 		});
 
 		it("setExternalServerRunning can be called", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			expect(() => adapter.setExternalServerRunning(8080)).not.toThrow();
 		});
 	});
 
 	describe("isServerRunning", () => {
 		it("returns false when not started", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			expect(adapter.isServerRunning()).toBe(false);
 		});
 	});
 
 	describe("updateMemoryBankFile", () => {
 		it("delegates to memory bank service", async () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			await expect(
 				adapter.updateMemoryBankFile("core/projectbrief.md", "test content"),
 			).resolves.not.toThrow();
@@ -113,19 +183,37 @@ describe("MemoryBankMCPAdapter", () => {
 
 	describe("handleCommand", () => {
 		it("handles init command", async () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			const result = await adapter.handleCommand("init", []);
 			expect(result).toBe("Memory bank initialized successfully");
 		});
 
 		it("handles status command", async () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			const result = await adapter.handleCommand("status", []);
 			expect(result).toBe("Memory bank status: All systems healthy");
 		});
 
 		it("handles unknown commands", async () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			const result = await adapter.handleCommand("unknown", []);
 			expect(result).toBe("Unknown command: unknown");
 		});
@@ -133,12 +221,24 @@ describe("MemoryBankMCPAdapter", () => {
 
 	describe("start and stop", () => {
 		it("start method exists and can be called", async () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			await expect(adapter.start()).resolves.not.toThrow();
 		});
 
 		it("stop method exists and can be called", () => {
-			const adapter = new MemoryBankMCPAdapter(mockContext as any, 7331);
+			const mockVSCodeMemoryBankService = createMockVSCodeMemoryBankService();
+			const adapter = new MemoryBankMCPAdapter(
+				mockContext as any,
+				mockVSCodeMemoryBankService,
+				mockLogger,
+				7331,
+			);
 			expect(() => adapter.stop()).not.toThrow();
 		});
 	});

@@ -1,7 +1,12 @@
+import * as path from "node:path";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { CommandHandler } from "./commandHandler.js";
+import { DIContainer } from "./core/DIContainer.js";
+import { MemoryBankServiceCore } from "./core/memoryBankServiceCore.js";
+import { VSCodeMemoryBankService } from "./core/vsCodeMemoryBankService.js";
+import { CursorRulesService } from "./lib/cursor-rules-service.js";
 import { MemoryBankMCPAdapter } from "./mcp/mcpAdapter.js";
 import type { MCPServerInterface } from "./types/mcpTypes.js";
 import { updateCursorMCPConfig } from "./utils/cursor-config.js";
@@ -39,25 +44,113 @@ export function activate(context: vscode.ExtensionContext) {
 	const initialLevel = parseLogLevel(config.get<string>("logLevel") ?? "info");
 	logger.setLevel(initialLevel);
 
+	// Create DI Container
+	const container = new DIContainer();
+
+	// Register core services and dependencies with the container
+	container.register("Logger", () => logger, true); // Register existing singleton instance
+
+	container.register(
+		"MemoryBankServiceCore",
+		() => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				throw new Error(
+					"Cannot initialize MemoryBankServiceCore: No workspace folder found",
+				);
+			}
+			const memoryBankFolder = path.join(
+				workspaceFolders[0].uri.fsPath,
+				".aimemory",
+				"memory-bank",
+			);
+			// MemoryBankServiceCore constructor needs memoryBankPath and optional logger
+			return new MemoryBankServiceCore(memoryBankFolder, container.resolve("Logger"));
+		},
+		true,
+	); // Register as singleton
+
+	container.register(
+		"CursorRulesService",
+		() => {
+			// CursorRulesService constructor needs context
+			return new CursorRulesService(context);
+		},
+		true,
+	); // Register as singleton
+
+	container.register(
+		"VSCodeMemoryBankService",
+		(c) => {
+			// VSCodeMemoryBankService constructor needs context, core, cursorRulesService, and logger
+			return new VSCodeMemoryBankService(
+				context,
+				c.resolve("MemoryBankServiceCore"),
+				c.resolve("CursorRulesService"),
+				c.resolve("Logger"),
+			);
+		},
+		true,
+	); // Register as singleton
+
+	container.register(
+		"MCPServerInterface",
+		(c) => {
+			// MemoryBankMCPAdapter constructor needs context, memoryBankService, logger, and an optional port
+			// We are using STDIO transport, so port can be default or null
+			return new MemoryBankMCPAdapter(
+				context,
+				c.resolve<VSCodeMemoryBankService>("VSCodeMemoryBankService"),
+				c.resolve<Logger>("Logger"),
+				DEFAULT_MCP_PORT,
+			);
+		},
+		true,
+	); // Register as singleton
+
+	container.register(
+		"WebviewManager",
+		(c) => {
+			// WebviewManager constructor needs context, mcpServer, memoryBankService, cursorRulesService
+			return new WebviewManager(
+				context,
+				c.resolve("MCPServerInterface"),
+				c.resolve("VSCodeMemoryBankService"),
+				c.resolve("CursorRulesService"),
+			);
+		},
+		true,
+	); // Register as singleton
+
+	container.register(
+		"CommandHandler",
+		(c) => {
+			// CommandHandler constructor needs mcpServer
+			return new CommandHandler(c.resolve("MCPServerInterface"));
+		},
+		true,
+	); // Register as singleton
+
 	// Listen for changes to the log level config and update logger dynamically
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration("aimemory.logLevel")) {
 				const newLevel =
 					vscode.workspace.getConfiguration("aimemory").get<string>("logLevel") ?? "info";
-				logger.setLevel(parseLogLevel(newLevel));
-				logger.info(`Log level changed to: ${newLevel}`);
+				// Resolve logger from container to ensure we get the registered instance
+				const resolvedLogger = container.resolve<Logger>("Logger");
+				resolvedLogger.setLevel(parseLogLevel(newLevel));
+				resolvedLogger.info(`Log level changed to: ${newLevel}`);
 			}
 		}),
 	);
 
 	console.log("Registering open webview command");
 
-	// Create MCP server instance - using STDIO transport only
-	const mcpServer: MCPServerInterface = new MemoryBankMCPAdapter(context, DEFAULT_MCP_PORT);
-
-	// Create webview manager
-	const webviewManager = new WebviewManager(context, mcpServer);
+	// Resolve top-level components from the container
+	const webviewManager = container.resolve<WebviewManager>("WebviewManager");
+	const commandHandler = container.resolve<CommandHandler>("CommandHandler");
+	const mcpServer = container.resolve<MCPServerInterface>("MCPServerInterface");
 
 	// Register command to open the webview
 	const openWebviewCommand = vscode.commands.registerCommand("aimemory.openWebview", () => {
@@ -83,9 +176,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log("AI Memory extension is now active!");
-
-	// Create command handler
-	const commandHandler = new CommandHandler(mcpServer);
 
 	// Register a command that starts the MCP server
 	const startMCPCommand = vscode.commands.registerCommand("aimemory.startMCP", async () => {

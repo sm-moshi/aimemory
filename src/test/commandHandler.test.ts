@@ -3,15 +3,14 @@ import { CommandHandler } from "../commandHandler.js";
 import { MemoryBankFileType } from "../types/types.js";
 
 const mockMemoryBank = {
-	getIsMemoryBankInitialized: vi.fn().mockResolvedValue(true),
-	loadFiles: vi.fn().mockResolvedValue([]),
+	getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true, data: true }),
+	loadFiles: vi.fn().mockResolvedValue({ success: true, data: [] }),
 	getAllFiles: vi.fn().mockReturnValue([]),
-	initializeFolders: vi.fn().mockResolvedValue(undefined),
-	checkHealth: vi
-		.fn()
-		.mockResolvedValue(
-			"Memory Bank Health: ✅ All files and folders are present and readable.",
-		),
+	initializeFolders: vi.fn().mockResolvedValue({ success: true }),
+	checkHealth: vi.fn().mockResolvedValue({
+		success: true,
+		data: "Memory Bank Health: ✅ All files and folders are present and readable.",
+	}),
 };
 const mockMcpServer = {
 	getMemoryBank: () => mockMemoryBank,
@@ -81,7 +80,7 @@ describe("CommandHandler", () => {
 			});
 
 			it("returns not initialized status when memory bank is not ready", async () => {
-				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue(false);
+				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: false });
 
 				const result = await handler.processMemoryCommand("/memory status");
 				expect(result).toContain("Memory Bank Status: Not initialized");
@@ -89,11 +88,11 @@ describe("CommandHandler", () => {
 			});
 
 			it("shows self-healing message when files were created", async () => {
-				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue(true);
-				mockMemoryBank.loadFiles.mockResolvedValue([
-					"core/projectbrief.md",
-					"progress/current.md",
-				]);
+				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: true });
+				mockMemoryBank.loadFiles.mockResolvedValue({
+					success: true,
+					data: ["core/projectbrief.md", "progress/current.md"],
+				});
 
 				const result = await handler.processMemoryCommand("/memory status");
 				expect(result).toContain("[Self-healing] Created missing files:");
@@ -101,8 +100,8 @@ describe("CommandHandler", () => {
 			});
 
 			it("categorizes files correctly", async () => {
-				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue(true);
-				mockMemoryBank.loadFiles.mockResolvedValue([]);
+				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: true });
+				mockMemoryBank.loadFiles.mockResolvedValue({ success: true, data: [] });
 				mockMemoryBank.getAllFiles.mockReturnValue([
 					{
 						type: "core/projectbrief.md",
@@ -215,8 +214,8 @@ describe("CommandHandler", () => {
 			});
 
 			it("handles non-Error initialization failures", async () => {
-				mockMemoryBank.initializeFolders.mockResolvedValue(undefined);
-				mockMemoryBank.loadFiles.mockRejectedValue("Load failed");
+				mockMemoryBank.initializeFolders.mockResolvedValue({ success: true });
+				mockMemoryBank.loadFiles.mockRejectedValue(new Error("Load failed"));
 
 				const result = await handler.processMemoryCommand("/memory init");
 				expect(result).toContain("Error initialising memory bank: Load failed");
@@ -233,10 +232,13 @@ describe("CommandHandler", () => {
 			});
 
 			it("handles health check errors", async () => {
-				mockMemoryBank.checkHealth.mockRejectedValue(new Error("Health check failed"));
+				mockMemoryBank.checkHealth.mockResolvedValue({
+					success: false,
+					error: new Error("Health check failed"),
+				});
 
 				const result = await handler.processMemoryCommand("/memory health");
-				expect(result).toContain("Error processing command: Health check failed");
+				expect(result).toContain("Error checking memory bank health: Health check failed");
 			});
 		});
 
@@ -247,10 +249,13 @@ describe("CommandHandler", () => {
 		});
 
 		it("handles general processing errors", async () => {
-			mockMemoryBank.getIsMemoryBankInitialized.mockRejectedValue(new Error("General error"));
+			mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
+				success: false,
+				error: new Error("General error"),
+			});
 
 			const result = await handler.processMemoryCommand("/memory status");
-			expect(result).toContain("Error processing command: General error");
+			expect(result).toContain("Error checking memory bank initialization status: General error");
 		});
 	});
 

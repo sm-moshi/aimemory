@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { CursorRulesService } from "../lib/cursor-rules-service.js";
+import type { CursorRulesService } from "../lib/cursor-rules-service.js";
 import { CURSOR_MEMORY_BANK_FILENAME, CURSOR_MEMORY_BANK_RULES_FILE } from "../lib/cursor-rules.js";
 import type {
 	AsyncResult,
@@ -12,20 +12,24 @@ import type {
 } from "../types/types.js";
 import { isSuccess } from "../types/types.js";
 import { Logger } from "../utils/log.js";
-import { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
+import type { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
 
 export class VSCodeMemoryBankService implements MemoryBank {
 	private readonly core: MemoryBankServiceCore;
 	private readonly cursorRulesService: CursorRulesService;
 	private readonly logger: Logger;
+	private readonly extensionUri: vscode.Uri;
 
-	constructor(private readonly context: vscode.ExtensionContext) {
-		const memoryBankFolder = this.getMemoryBankFolder();
-		const logger = this.createVSCodeLoggerAdapter();
-
-		this.core = new MemoryBankServiceCore(memoryBankFolder, logger);
-		this.cursorRulesService = new CursorRulesService(context);
-		this.logger = Logger.getInstance();
+	constructor(
+		private readonly context: vscode.ExtensionContext,
+		core: MemoryBankServiceCore,
+		cursorRulesService: CursorRulesService,
+		logger: Logger,
+	) {
+		this.extensionUri = context.extensionUri;
+		this.core = core;
+		this.cursorRulesService = cursorRulesService;
+		this.logger = logger;
 	}
 
 	// VS Code-specific methods
