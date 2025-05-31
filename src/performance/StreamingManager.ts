@@ -25,6 +25,7 @@ export class StreamingManager {
 	private readonly timeout: number;
 	private readonly enableProgressCallbacks: boolean;
 	private readonly fileStreamer: FileStreamer;
+	private readonly allowedRoot: string;
 
 	private readonly stats: StreamingStats = {
 		totalOperations: 0,
@@ -40,23 +41,31 @@ export class StreamingManager {
 
 	constructor(
 		private readonly logger: MemoryBankLogger,
+		allowedRoot: string,
 		config?: StreamingManagerConfig,
 	) {
+		if (!allowedRoot) {
+			throw new Error(
+				"StreamingManager requires allowedRoot for security - cannot operate without path restrictions",
+			);
+		}
+
+		this.allowedRoot = allowedRoot;
 		this.sizeThreshold = config?.sizeThreshold ?? 1024 * 1024; // 1MB default
 		this.chunkSize = config?.chunkSize ?? 64 * 1024; // 64KB default
 		this.timeout = config?.timeout ?? 30000; // 30 seconds default
 		this.enableProgressCallbacks = config?.enableProgressCallbacks ?? true;
 
-		// Initialize FileStreamer
+		// Initialize FileStreamer with allowedRoot for security
 		const fileStreamerConfig: FileStreamerConfig = {
 			defaultChunkSize: this.chunkSize,
 			defaultTimeout: this.timeout,
 			defaultEnableProgressCallbacks: this.enableProgressCallbacks,
 		};
-		this.fileStreamer = new FileStreamer(this.logger, fileStreamerConfig);
+		this.fileStreamer = new FileStreamer(this.logger, this.allowedRoot, fileStreamerConfig);
 
 		this.logger.debug(
-			`StreamingManager initialised with sizeThreshold: ${this.sizeThreshold} bytes, chunkSize: ${this.chunkSize} bytes`,
+			`StreamingManager initialised with allowedRoot: ${allowedRoot}, sizeThreshold: ${this.sizeThreshold} bytes, chunkSize: ${this.chunkSize} bytes`,
 		);
 	}
 
@@ -141,7 +150,9 @@ export class StreamingManager {
 		filePath: string,
 		options?: StreamingOptions,
 	): Promise<Result<StreamingResult, FileError>> {
-		const pathResult = await this._validateAndResolvePath(filePath, options?.allowedRoot);
+		// Use constructor's allowedRoot if no allowedRoot is provided in options
+		const allowedRoot = options?.allowedRoot ?? this.allowedRoot;
+		const pathResult = await this._validateAndResolvePath(filePath, allowedRoot);
 		if (!pathResult.success) {
 			return { success: false, error: pathResult.error };
 		}
@@ -301,8 +312,10 @@ export class StreamingManager {
 		filePath: string,
 		allowedRoot?: string,
 	): Promise<Result<boolean, FileError>> {
+		// Use constructor's allowedRoot if no allowedRoot is provided
+		const effectiveAllowedRoot = allowedRoot ?? this.allowedRoot;
 		// Validate and resolve path first
-		const pathResult = await this._validateAndResolvePath(filePath, allowedRoot);
+		const pathResult = await this._validateAndResolvePath(filePath, effectiveAllowedRoot);
 		if (!pathResult.success) {
 			return { success: false, error: pathResult.error };
 		}

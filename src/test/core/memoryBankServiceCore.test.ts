@@ -280,8 +280,11 @@ describe("MemoryBankServiceCore", () => {
 		(mockMemoryBankLogger.debug as Mock).mockClear();
 
 		mockCacheManager = new CacheManager(mockMemoryBankLogger);
-		mockStreamingManager = new StreamingManager(mockMemoryBankLogger);
-		mockFileOperationManager = new FileOperationManager(mockMemoryBankLogger);
+		mockStreamingManager = new StreamingManager(mockMemoryBankLogger, "/mock/test-allowedRoot");
+		mockFileOperationManager = new FileOperationManager(
+			mockMemoryBankLogger,
+			"/mock/test-allowedRoot",
+		);
 
 		// Get references to the shared mocked fs functions
 		globalFsStatMock = vi.mocked(mockFunctions.mockStat);

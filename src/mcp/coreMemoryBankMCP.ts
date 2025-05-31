@@ -16,13 +16,13 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 	constructor(config: CoreMemoryBankConfig) {
 		const logger = config.logger ?? console;
 		const cacheManager = new CacheManager(logger);
-		const streamingManager = new StreamingManager(logger, {
+		const streamingManager = new StreamingManager(logger, config.memoryBankPath, {
 			sizeThreshold: 1024 * 1024, // 1MB
 			chunkSize: 64 * 1024, // 64KB
 			timeout: 5000, // 5 seconds
 			enableProgressCallbacks: false,
 		});
-		const fileOperationManager = new FileOperationManager(logger);
+		const fileOperationManager = new FileOperationManager(logger, config.memoryBankPath);
 
 		super({
 			name: "CoreMemoryBankMCP",
