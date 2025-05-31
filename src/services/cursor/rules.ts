@@ -7,7 +7,7 @@ let memoryBankRulesContent: string;
 async function loadMemoryBankRulesContent(): Promise<string> {
 	if (!memoryBankRulesContent) {
 		memoryBankRulesContent = await fs.readFile(
-			path.join(__dirname, "rules", "memory-bank-rules.md"),
+			path.join(__dirname, "memory-bank-rules.md"),
 			"utf-8",
 		);
 	}

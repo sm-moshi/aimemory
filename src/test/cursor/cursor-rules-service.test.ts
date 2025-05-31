@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { CursorRulesService } from "../../lib/cursor-rules-service.js";
+import { CursorRulesService } from "../../services/cursor/rules-service.js";
 
 // Mock vscode
 vi.mock("vscode", () => ({
@@ -41,7 +41,7 @@ import {
 	CURSOR_MEMORY_BANK_FILENAME,
 	CURSOR_RULES_PATH,
 	getCursorMemoryBankRulesFile,
-} from "../../lib/cursor-rules.js";
+} from "../../services/cursor/rules.js";
 
 describe("CursorRulesService", () => {
 	let service: CursorRulesService;

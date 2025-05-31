@@ -97,18 +97,7 @@ export interface HealthCheckResult {
 // Memory Bank Statistics and Monitoring
 // =============================================================================
 
-/**
- * Cache performance statistics
- * @deprecated Use CacheStats from "./system.js" for enhanced functionality
- */
-export interface LegacyCacheStats {
-	hits: number;
-	misses: number;
-	totalFiles: number;
-	hitRate: number;
-	lastReset: Date;
-	reloads: number;
-}
+// Note: LegacyCacheStats is now imported from cache.ts to avoid duplication
 
 /**
  * File operation statistics
@@ -125,11 +114,34 @@ export interface FileOperationStats {
  * Complete system health and performance metrics
  */
 export interface SystemMetrics {
-	cache: LegacyCacheStats;
+	cache: import("./cache.js").LegacyCacheStats;
 	fileOperations: FileOperationStats;
 	uptime: number;
 	memoryUsage: number;
 }
 
+import type { FileOperationManager } from "../core/FileOperationManager.js";
+import type { StreamingManager } from "../performance/StreamingManager.js";
+import type { FileCache, LegacyCacheStats } from "./cache.js";
 // Import dependencies
 import type { AsyncResult, MemoryBankError } from "./errorHandling.js";
+import type { MemoryBankLogger } from "./logging.js";
+
+/**
+ * Context for file operations in memory bank services (from types.ts)
+ */
+export interface FileOperationContext {
+	memoryBankFolder: string;
+	logger: MemoryBankLogger;
+	fileCache: Map<string, FileCache>;
+	cacheStats: LegacyCacheStats;
+	streamingManager: StreamingManager;
+	fileOperationManager: FileOperationManager;
+}
+
+/**
+ * Interface for disposable resources.
+ */
+export interface IDisposable {
+	dispose(): void | Promise<void>;
+}

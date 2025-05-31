@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTemplateForFileType } from "../../lib/memoryBankTemplates.js";
+import { getTemplateForFileType } from "../../services/templates/memory-bank-templates.js";
 import { MemoryBankFileType } from "../../types/types.js";
 
 // Unit tests for getTemplateForFileType
@@ -18,7 +18,7 @@ describe("getTemplateForFileType", () => {
 	});
 
 	it("returns the default template for unknown type", () => {
-		// @ts-expect-error: purposely passing an invalid value
+		// @ts-expect-error: Testing with invalid type intentionally
 		const result = getTemplateForFileType("not-a-real-type");
 		expect(result).toContain("Memory Bank File");
 		expect(result).toContain("default template");

@@ -1,6 +1,10 @@
 import type { Stats } from "node:fs";
-import type { CacheEntry, CacheManagerConfig, CacheStats } from "../types/system.js";
-import type { MemoryBankLogger } from "../types/types.js";
+import type {
+	CacheEntry,
+	BasicCacheConfig as CacheManagerConfig,
+	CacheStats,
+} from "../types/cache.js";
+import type { MemoryBankLogger } from "../types/logging.js";
 
 /**
  * Enhanced CacheManager with LRU eviction, bounded capacity, and performance monitoring.

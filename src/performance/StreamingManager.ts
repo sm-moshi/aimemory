@@ -1,18 +1,19 @@
 import type { Stats } from "node:fs";
-import { createReadStream } from "node:fs";
 import * as fs from "node:fs/promises";
 import { resolve } from "node:path";
 import { sanitizePath } from "../services/validation/security.js";
 import type { Result } from "../types/errorHandling.js";
 import type { FileError } from "../types/fileOperations.js";
+import type { MemoryBankLogger } from "../types/index.js";
 import type {
+	FileStreamerConfig,
 	StreamingManagerConfig,
 	StreamingMetadata,
 	StreamingOptions,
 	StreamingResult,
 	StreamingStats,
-} from "../types/system.js";
-import type { MemoryBankLogger } from "../types/types.js";
+} from "../types/streaming.js";
+import { FileStreamer } from "./FileStreamer.js";
 
 /**
  * StreamingManager handles intelligent file reading with automatic streaming
@@ -23,6 +24,7 @@ export class StreamingManager {
 	private readonly chunkSize: number;
 	private readonly timeout: number;
 	private readonly enableProgressCallbacks: boolean;
+	private readonly fileStreamer: FileStreamer;
 
 	private readonly stats: StreamingStats = {
 		totalOperations: 0,
@@ -45,77 +47,123 @@ export class StreamingManager {
 		this.timeout = config?.timeout ?? 30000; // 30 seconds default
 		this.enableProgressCallbacks = config?.enableProgressCallbacks ?? true;
 
+		// Initialize FileStreamer
+		const fileStreamerConfig: FileStreamerConfig = {
+			defaultChunkSize: this.chunkSize,
+			defaultTimeout: this.timeout,
+			defaultEnableProgressCallbacks: this.enableProgressCallbacks,
+		};
+		this.fileStreamer = new FileStreamer(this.logger, fileStreamerConfig);
+
 		this.logger.debug(
 			`StreamingManager initialised with sizeThreshold: ${this.sizeThreshold} bytes, chunkSize: ${this.chunkSize} bytes`,
 		);
 	}
 
 	/**
+	 * Validates and resolves a file path, applying sanitization.
+	 */
+	private async _validateAndResolvePath(
+		filePath: string,
+		allowedRoot?: string,
+	): Promise<Result<string, FileError>> {
+		let sanitisedPath: string;
+		if (allowedRoot) {
+			try {
+				const validatedPath = sanitizePath(filePath, allowedRoot);
+				sanitisedPath = resolve(allowedRoot, validatedPath);
+			} catch (error) {
+				const fileError: FileError = {
+					code: "PATH_VALIDATION_ERROR",
+					message: `Path validation failed: ${error instanceof Error ? error.message : String(error)}`,
+					path: filePath,
+					originalError: error instanceof Error ? error : new Error(String(error)),
+				};
+				return { success: false, error: fileError };
+			}
+		} else {
+			if (filePath.includes("../") || filePath.includes("..\\") || filePath.includes("\0")) {
+				const fileError: FileError = {
+					code: "PATH_VALIDATION_ERROR",
+					message: "Path contains potentially dangerous sequences",
+					path: filePath,
+				};
+				return { success: false, error: fileError };
+			}
+			sanitisedPath = filePath;
+		}
+		return { success: true, data: sanitisedPath };
+	}
+
+	/**
+	 * Starts tracking an active file operation.
+	 */
+	private _startOperation(
+		filePath: string,
+		fileSize: number,
+		strategy: "streaming" | "normal",
+	): string {
+		const startTime = performance.now();
+		const operationId = `${filePath}-${startTime}`;
+		const metadata: StreamingMetadata = {
+			filePath,
+			fileSize,
+			strategy,
+			startTime,
+		};
+		this.activeOperations.set(operationId, metadata);
+		return operationId;
+	}
+
+	/**
+	 * Ends tracking an active file operation and updates stats.
+	 */
+	private _endOperation(
+		operationId: string,
+		duration: number,
+		fileSize: number,
+		strategy: "streaming" | "normal",
+	): void {
+		const metadata = this.activeOperations.get(operationId);
+		if (metadata) {
+			metadata.endTime = metadata.startTime + duration;
+			this.stats.totalOperations++;
+			this.stats.totalBytesRead += fileSize;
+			this.updateAverageTimes(duration, strategy);
+			this.activeOperations.delete(operationId);
+		}
+	}
+
+	/**
 	 * Reads a file using intelligent strategy selection based on file size
 	 */
-
 	async readFile(
 		filePath: string,
 		options?: StreamingOptions,
 	): Promise<Result<StreamingResult, FileError>> {
-		const startTime = performance.now();
-		const operationId = `${filePath}-${startTime}`;
+		const pathResult = await this._validateAndResolvePath(filePath, options?.allowedRoot);
+		if (!pathResult.success) {
+			return { success: false, error: pathResult.error };
+		}
+		const sanitisedPath = pathResult.data;
+
+		let operationId = "";
+		let fileSize = 0;
+		let strategy: "streaming" | "normal" = "normal";
 
 		try {
-			// SECURITY: Validate and sanitise file path to prevent path traversal attacks
-			// Only apply strict validation if allowedRoot is specified (for controlled environments)
-			let sanitisedPath: string;
-			if (options?.allowedRoot) {
-				try {
-					const validatedPath = sanitizePath(filePath, options.allowedRoot);
-					// Resolve the validated path against the allowedRoot for actual file operations
-					sanitisedPath = resolve(options.allowedRoot, validatedPath);
-				} catch (error) {
-					const fileError: FileError = {
-						code: "PATH_VALIDATION_ERROR",
-						message: `Path validation failed: ${error instanceof Error ? error.message : String(error)}`,
-						path: filePath,
-						originalError: error instanceof Error ? error : new Error(String(error)),
-					};
-					return { success: false, error: fileError };
-				}
-			} else {
-				// Basic security check for obvious path traversal attempts
-				if (
-					filePath.includes("../") ||
-					filePath.includes("..\\") ||
-					filePath.includes("\0")
-				) {
-					const fileError: FileError = {
-						code: "PATH_VALIDATION_ERROR",
-						message: "Path contains potentially dangerous sequences",
-						path: filePath,
-					};
-					return { success: false, error: fileError };
-				}
-				sanitisedPath = filePath;
-			}
-
-			// Get file stats to determine strategy using the sanitised path
 			const stats = await fs.stat(sanitisedPath);
-			const fileSize = stats.size;
-
-			// Track operation metadata (using original path for logging, but sanitised path for operations)
-			const metadata: StreamingMetadata = {
-				filePath,
-				fileSize,
-				strategy: fileSize >= this.sizeThreshold ? "streaming" : "normal",
-				startTime,
-			};
-			this.activeOperations.set(operationId, metadata);
+			fileSize = stats.size;
+			strategy = fileSize >= this.sizeThreshold ? "streaming" : "normal";
+			operationId = this._startOperation(filePath, fileSize, strategy);
 
 			let result: Result<StreamingResult, FileError>;
 
-			if (fileSize >= this.sizeThreshold) {
+			if (strategy === "streaming") {
 				this.logger.debug(
 					`Using streaming strategy for large file: ${filePath} (${fileSize} bytes)`,
 				);
-				result = await this.streamReadFile(sanitisedPath, stats, options);
+				result = await this.fileStreamer.streamFile(sanitisedPath, stats, options);
 				this.stats.streamedOperations++;
 				this.stats.largestFileStreamed = Math.max(this.stats.largestFileStreamed, fileSize);
 			} else {
@@ -125,26 +173,20 @@ export class StreamingManager {
 				result = await this.normalReadFile(sanitisedPath, stats);
 			}
 
-			// Update metadata and stats
-			const endTime = performance.now();
-			const duration = endTime - startTime;
-			metadata.endTime = endTime;
-
-			this.stats.totalOperations++;
-			this.stats.totalBytesRead += fileSize;
-			this.updateAverageTimes(duration, metadata.strategy);
-
-			this.activeOperations.delete(operationId);
-
-			if (result.success) {
+			if (operationId && result.success) {
+				this._endOperation(operationId, result.data.duration, fileSize, strategy);
 				this.logger.debug(
-					`Successfully read ${filePath} in ${duration.toFixed(2)}ms using ${metadata.strategy} strategy`,
+					`Successfully read ${filePath} in ${result.data.duration.toFixed(2)}ms using ${strategy} strategy`,
 				);
+			} else if (operationId) {
+				this.activeOperations.delete(operationId);
 			}
 
 			return result;
 		} catch (error) {
-			this.activeOperations.delete(operationId);
+			if (operationId) {
+				this.activeOperations.delete(operationId);
+			}
 			const fileError: FileError = {
 				code: "STREAMING_READ_ERROR",
 				message: `Failed to read file: ${error instanceof Error ? error.message : String(error)}`,
@@ -185,117 +227,6 @@ export class StreamingManager {
 			};
 			return { success: false, error: fileError };
 		}
-	}
-
-	/**
-	 * Streaming file reading for large files
-	 */
-	private async streamReadFile(
-		filePath: string,
-		stats: Stats,
-		options?: StreamingOptions,
-	): Promise<Result<StreamingResult, FileError>> {
-		return new Promise((resolve) => {
-			const chunks: Buffer[] = [];
-			let bytesRead = 0;
-			let chunksProcessed = 0;
-			const startTime = performance.now();
-			const totalSize = stats.size;
-
-			const chunkSize = options?.chunkSize ?? this.chunkSize;
-			const timeoutMs = options?.timeout ?? this.timeout;
-
-			// Create timeout handler
-			const timeoutId = setTimeout(() => {
-				const fileError: FileError = {
-					code: "STREAMING_TIMEOUT",
-					message: `Streaming read timed out after ${timeoutMs}ms`,
-					path: filePath,
-				};
-				resolve({ success: false, error: fileError });
-			}, timeoutMs);
-
-			// Create read stream
-			const stream = createReadStream(filePath, {
-				highWaterMark: chunkSize,
-			});
-
-			// Handle data chunks
-			stream.on("data", (chunk: Buffer | string) => {
-				const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-				chunks.push(buffer);
-				bytesRead += buffer.length;
-				chunksProcessed++;
-
-				// Progress callback
-				if (this.enableProgressCallbacks && options?.onProgress) {
-					options.onProgress(bytesRead, totalSize);
-				}
-
-				// Memory pressure check - pause to yield control
-				if (this.shouldPauseForMemoryPressure(bytesRead, chunksProcessed)) {
-					stream.pause();
-					setImmediate(() => {
-						if (!stream.destroyed) {
-							stream.resume();
-						}
-					});
-				}
-			});
-
-			// Handle successful completion
-			stream.on("end", () => {
-				clearTimeout(timeoutId);
-				try {
-					const content = Buffer.concat(chunks).toString("utf-8");
-					const duration = performance.now() - startTime;
-
-					const result: StreamingResult = {
-						content,
-						wasStreamed: true,
-						duration,
-						bytesRead,
-						chunksProcessed,
-					};
-
-					resolve({ success: true, data: result });
-				} catch (error) {
-					const fileError: FileError = {
-						code: "STREAMING_PARSE_ERROR",
-						message: `Failed to parse streamed content: ${error instanceof Error ? error.message : String(error)}`,
-						path: filePath,
-						originalError: error instanceof Error ? error : new Error(String(error)),
-					};
-					resolve({ success: false, error: fileError });
-				}
-			});
-
-			// Handle errors
-			stream.on("error", (error) => {
-				clearTimeout(timeoutId);
-				const fileError: FileError = {
-					code: "STREAMING_READ_ERROR",
-					message: `Stream read error: ${error.message}`,
-					path: filePath,
-					originalError: error,
-				};
-				resolve({ success: false, error: fileError });
-			});
-
-			// Handle cancellation if supported
-			if (options?.enableCancellation) {
-				// Note: Cancellation would need to be implemented by the caller
-				// by providing a way to signal cancellation
-			}
-		});
-	}
-
-	/**
-	 * Determines if streaming should pause to manage memory pressure
-	 */
-	private shouldPauseForMemoryPressure(bytesRead: number, chunksProcessed: number): boolean {
-		// Pause every 10 chunks to yield control and prevent memory pressure
-		return chunksProcessed % 10 === 0;
 	}
 
 	/**
@@ -366,46 +297,18 @@ export class StreamingManager {
 	/**
 	 * Checks if a file would be streamed based on its size
 	 */
-
 	async wouldStreamFile(
 		filePath: string,
 		allowedRoot?: string,
 	): Promise<Result<boolean, FileError>> {
-		try {
-			// SECURITY: Validate and sanitise file path to prevent path traversal attacks
-			// Only apply strict validation if allowedRoot is specified (for controlled environments)
-			let sanitisedPath: string;
-			if (allowedRoot) {
-				try {
-					const validatedPath = sanitizePath(filePath, allowedRoot);
-					// Resolve the validated path against the allowedRoot for actual file operations
-					sanitisedPath = resolve(allowedRoot, validatedPath);
-				} catch (error) {
-					const fileError: FileError = {
-						code: "PATH_VALIDATION_ERROR",
-						message: `Path validation failed: ${error instanceof Error ? error.message : String(error)}`,
-						path: filePath,
-						originalError: error instanceof Error ? error : new Error(String(error)),
-					};
-					return { success: false, error: fileError };
-				}
-			} else {
-				// Basic security check for obvious path traversal attempts
-				if (
-					filePath.includes("../") ||
-					filePath.includes("..\\") ||
-					filePath.includes("\0")
-				) {
-					const fileError: FileError = {
-						code: "PATH_VALIDATION_ERROR",
-						message: "Path contains potentially dangerous sequences",
-						path: filePath,
-					};
-					return { success: false, error: fileError };
-				}
-				sanitisedPath = filePath;
-			}
+		// Validate and resolve path first
+		const pathResult = await this._validateAndResolvePath(filePath, allowedRoot);
+		if (!pathResult.success) {
+			return { success: false, error: pathResult.error };
+		}
+		const sanitisedPath = pathResult.data;
 
+		try {
 			const stats = await fs.stat(sanitisedPath);
 			return { success: true, data: stats.size >= this.sizeThreshold };
 		} catch (error) {

@@ -9,8 +9,17 @@ export * from "./core.js";
 // File Operations Types
 export * from "./fileOperations.js";
 
-// System Infrastructure Types (cache, resources, DI)
-export * from "./system.js";
+// Cache Management Types
+export * from "./cache.js";
+
+// Resource Management Types
+export * from "./resources.js";
+
+// Dependency Injection Types
+export * from "./di.js";
+
+// Streaming Types
+export * from "./streaming.js";
 
 // Error Handling and Result Pattern Types
 export * from "./errorHandling.js";
@@ -31,3 +40,9 @@ export type { MCPServerConfig as CursorMCPServerConfig } from "./config.js";
 
 // MCP Types (from existing focused file)
 export * from "./mcpTypes.js";
+
+// Logging Types
+export * from "./logging.js";
+
+// Explicitly export from the new ResourceManager file path if it's not covered by core.ts
+export { ResourceManager } from "../core/ResourceManager.js";

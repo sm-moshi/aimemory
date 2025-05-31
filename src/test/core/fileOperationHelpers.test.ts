@@ -3,18 +3,290 @@
  * Verifies functionality of shared file operation utilities
  */
 
+import type { PathLike, Stats } from "node:fs";
 import fs from "node:fs/promises";
+import { dirname } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-// TODO: It's deprecated, when are we going to remove it?
-import type { FileCache, FileOperationContext, LegacyCacheStats } from "../../types/types.js";
-import { MemoryBankFileType } from "../../types/types.js";
+import { loadFileWithTemplate, performHealthCheck } from "../../core/memory-bank-file-helpers.js";
 import {
-	CacheManager,
-	loadFileWithTemplate,
-	performHealthCheck,
 	validateMemoryBankDirectory,
 	validateSingleFile,
-} from "../../utils/fileOperationHelpers.js";
+} from "../../services/validation/file-validation.js";
+import type { FileCache, FileOperationContext } from "../../types/types.js";
+import { MemoryBankFileType } from "../../types/types.js";
+import { validateAndConstructFilePath } from "../../utils/files/path-validation.js";
+
+// Helper function for the 'healthy' fs.stat mock implementation
+async function healthyStatMockImplementation(
+	pathToStat: PathLike,
+	memoryBankFolder: string,
+): Promise<Stats> {
+	const pathStr = pathToStat.toString();
+	if (pathStr === memoryBankFolder) {
+		return { isDirectory: () => true, isFile: () => false } as Stats;
+	}
+	const isAParentDir = Object.values(MemoryBankFileType).some((ft) => {
+		const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
+		return dirname(expectedFilePath) === pathStr;
+	});
+	if (isAParentDir) {
+		return { isDirectory: () => true, isFile: () => false } as Stats;
+	}
+	return { isDirectory: () => false, isFile: () => true } as Stats;
+}
+
+// Helper function for the 'folder missing' fs.stat mock implementation
+async function folderMissingStatMockImplementation(
+	pathToStat: PathLike,
+	memoryBankFolder: string,
+): Promise<Stats> {
+	if (pathToStat.toString() === memoryBankFolder) {
+		const error = new Error("ENOENT: No such file or directory") as NodeJS.ErrnoException;
+		error.code = "ENOENT";
+		throw error;
+	}
+	const error = new Error("ENOENT: Path inside missing root") as NodeJS.ErrnoException;
+	error.code = "ENOENT";
+	throw error;
+}
+
+// Helper function for the 'files missing' fs.stat mock implementation
+async function filesMissingStatMockImplementation(
+	pathToStat: PathLike,
+	memoryBankFolder: string,
+): Promise<Stats> {
+	if (pathToStat.toString() === memoryBankFolder) {
+		return { isDirectory: () => true, isFile: () => false } as Stats;
+	}
+	const filePathStr = pathToStat.toString();
+	if (
+		filePathStr.endsWith("core/projectBrief.md") ||
+		filePathStr.endsWith("progress/current.md")
+	) {
+		const error = new Error("ENOENT") as NodeJS.ErrnoException;
+		error.code = "ENOENT";
+		throw error;
+	}
+	if (
+		Object.values(MemoryBankFileType).some(
+			(ft) =>
+				filePathStr.endsWith(ft) &&
+				!filePathStr.endsWith("core/projectBrief.md") &&
+				!filePathStr.endsWith("progress/current.md"),
+		)
+	) {
+		return { isDirectory: () => false, isFile: () => true } as Stats;
+	}
+	return { isDirectory: () => true, isFile: () => false } as Stats;
+}
+
+// Helper function for healthy file operation manager mock
+function createHealthyFileOperationManagerMock(memoryBankFolder: string) {
+	return async (pathToStat: string) => {
+		if (pathToStat.toString() === memoryBankFolder) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		const isAParentDir = Object.values(MemoryBankFileType).some((ft) => {
+			const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
+			return dirname(expectedFilePath) === pathToStat.toString();
+		});
+		if (isAParentDir) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		return {
+			success: true,
+			data: {
+				isDirectory: () => false,
+				isFile: () => true,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
+// Helper function for folder missing file operation manager mock
+function createFolderMissingFileOperationManagerMock(memoryBankFolder: string) {
+	return async (pathToStat: string) => {
+		if (pathToStat.toString() === memoryBankFolder) {
+			const error = new Error("ENOENT: No such file or directory") as NodeJS.ErrnoException;
+			error.code = "ENOENT";
+			return { success: false, error };
+		}
+		// For other files, also return error as they can't be accessed
+		const error = new Error("ENOENT: Path inside missing root") as NodeJS.ErrnoException;
+		error.code = "ENOENT";
+		return { success: false, error };
+	};
+}
+
+// Helper function for files missing file operation manager mock
+function createFilesMissingFileOperationManagerMock(memoryBankFolder: string) {
+	return async (pathToStat: string) => {
+		const pathStr = pathToStat.toString();
+		if (pathStr === memoryBankFolder) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+
+		const isCoreProjectBrief =
+			validateAndConstructFilePath(memoryBankFolder, MemoryBankFileType.ProjectBrief) ===
+			pathStr;
+		const isProgressCurrent =
+			validateAndConstructFilePath(memoryBankFolder, MemoryBankFileType.ProgressCurrent) ===
+			pathStr;
+
+		if (isCoreProjectBrief || isProgressCurrent) {
+			const error = new Error("ENOENT") as NodeJS.ErrnoException;
+			error.code = "ENOENT";
+			return { success: false, error };
+		}
+
+		if (
+			Object.values(MemoryBankFileType).some(
+				(ft) => validateAndConstructFilePath(memoryBankFolder, ft) === pathStr,
+			)
+		) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => false,
+					isFile: () => true,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		if (
+			Object.values(MemoryBankFileType).some(
+				(ft) => dirname(validateAndConstructFilePath(memoryBankFolder, ft)) === pathStr,
+			)
+		) {
+			return {
+				success: true,
+				data: {
+					isDirectory: () => true,
+					isFile: () => false,
+					mtimeMs: Date.now(),
+				} as Stats,
+			};
+		}
+		// Default for unexpected paths in this mock during a test
+		const error = new Error(
+			"Unknown path in mock for filesMissing scenario",
+		) as NodeJS.ErrnoException;
+		error.code = "ENOENT"; // Or some other appropriate error
+		return { success: false, error };
+	};
+}
+
+// Helper function for cache test file operation manager mock
+function createCacheTestFileOperationManagerMock(expectedFilePath: string, cachedMtimeMs: number) {
+	return async (pathArg: string) => {
+		if (pathArg === expectedFilePath) {
+			return {
+				success: true,
+				data: {
+					mtimeMs: cachedMtimeMs,
+					isFile: () => true,
+					isDirectory: () => false,
+					mtime: new Date(cachedMtimeMs),
+				} as Stats,
+			};
+		}
+		// Fallback for directory checks etc.
+		return {
+			success: true,
+			data: {
+				isFile: () => false,
+				isDirectory: () => true,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
+// Helper function for stale cache test file operation manager mock
+function createStaleCacheTestFileOperationManagerMock(
+	expectedFilePath: string,
+	diskMtimeMs: number,
+) {
+	return async (pathArg: string) => {
+		if (pathArg === expectedFilePath) {
+			return {
+				success: true,
+				data: {
+					mtimeMs: diskMtimeMs,
+					isFile: () => true,
+					isDirectory: () => false,
+					mtime: new Date(diskMtimeMs),
+				} as Stats,
+			};
+		}
+		return {
+			success: true,
+			data: {
+				isFile: () => false,
+				isDirectory: () => true,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
+
+// Helper function for file creation test file operation manager mock
+function createFileCreationTestFileOperationManagerMock(
+	expectedFilePath: string,
+	creationMtimeMs: number,
+	fileExistsRef: { value: boolean },
+) {
+	return async (pathArg: string) => {
+		if (pathArg === expectedFilePath) {
+			if (!fileExistsRef.value) {
+				const error = new Error("ENOENT file missing") as NodeJS.ErrnoException;
+				error.code = "ENOENT";
+				return { success: false, error };
+			}
+			// After creation, stat succeeds
+			return {
+				success: true,
+				data: {
+					mtimeMs: creationMtimeMs,
+					isFile: () => true,
+					isDirectory: () => false,
+					mtime: new Date(creationMtimeMs),
+				} as Stats,
+			};
+		}
+		// For directory checks (e.g. by mkdirWithRetry)
+		return {
+			success: true,
+			data: {
+				isDirectory: () => true,
+				isFile: () => false,
+				mtimeMs: Date.now(),
+			} as Stats,
+		};
+	};
+}
 
 // Mock file system operations
 vi.mock("node:fs/promises", () => ({
@@ -28,41 +300,67 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 // Mock templates
-vi.mock("../../lib/memoryBankTemplates.js", () => ({
+vi.mock("../../services/templates/memory-bank-templates.js", () => ({
 	getTemplateForFileType: vi.fn((fileType: string) => `Template for ${fileType}`),
 }));
 
 describe("File Operation Helpers", () => {
 	let mockContext: FileOperationContext;
 	let mockFileCache: Map<string, FileCache>;
-	// TODO: It's deprecated, when are we going to remove it?
-	let mockCacheStats: LegacyCacheStats;
 	let mockLogger: any;
+	let mockStreamingManager: any;
+	let mockFileOperationManager: any;
+
+	const MOCK_MEMORY_BANK_FOLDER = "/test/memory-bank";
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		mockFileCache = new Map();
-		mockCacheStats = {
-			hits: 0,
-			misses: 0,
-			totalFiles: 0,
-			hitRate: 0,
-			lastReset: new Date(),
-			reloads: 0,
-		};
 		mockLogger = {
 			info: vi.fn(),
 			error: vi.fn(),
 			warn: vi.fn(),
 			debug: vi.fn(),
 		};
+		mockStreamingManager = {
+			readFile: vi.fn().mockResolvedValue({
+				success: true,
+				data: { content: "default mock stream content", wasStreamed: true },
+			}),
+		};
+		mockFileOperationManager = {
+			mkdirWithRetry: vi.fn().mockResolvedValue({ success: true }),
+			statWithRetry: vi.fn().mockResolvedValue({
+				success: true,
+				data: {
+					isFile: () => true,
+					isDirectory: () => false,
+					mtimeMs: Date.now(),
+					mtime: new Date(),
+				} as Stats,
+			}),
+			writeFileWithRetry: vi.fn().mockResolvedValue({ success: true }),
+			readFileWithRetry: vi
+				.fn()
+				.mockResolvedValue({ success: true, data: "default mock file content" }),
+			accessWithRetry: vi.fn().mockResolvedValue({ success: true }),
+		};
 
 		mockContext = {
-			memoryBankFolder: "/test/memory-bank",
+			memoryBankFolder: MOCK_MEMORY_BANK_FOLDER,
 			logger: mockLogger,
 			fileCache: mockFileCache,
-			cacheStats: mockCacheStats,
+			cacheStats: {
+				hits: 0,
+				misses: 0,
+				totalFiles: 0,
+				hitRate: 0,
+				lastReset: new Date(),
+				reloads: 0,
+			},
+			streamingManager: mockStreamingManager,
+			fileOperationManager: mockFileOperationManager,
 		};
 	});
 
@@ -70,83 +368,11 @@ describe("File Operation Helpers", () => {
 		vi.restoreAllMocks();
 	});
 
-	describe("CacheManager", () => {
-		let cacheManager: CacheManager;
-
-		beforeEach(() => {
-			cacheManager = new CacheManager(mockFileCache, mockCacheStats);
-		});
-
-		it("should return cached content when available and up-to-date", () => {
-			const filePath = "/test/file.md";
-			const stats = { mtimeMs: 123456 } as any;
-			mockFileCache.set(filePath, { content: "cached content", mtimeMs: 123456 });
-
-			const result = cacheManager.getCachedContent(filePath, stats);
-
-			expect(result).toBe("cached content");
-			expect(mockCacheStats.hits).toBe(1);
-		});
-
-		it("should return null for outdated cache", () => {
-			const filePath = "/test/file.md";
-			const stats = { mtimeMs: 123457 } as any; // Different mtime
-			mockFileCache.set(filePath, { content: "cached content", mtimeMs: 123456 });
-
-			const result = cacheManager.getCachedContent(filePath, stats);
-
-			expect(result).toBeNull();
-		});
-
-		it("should update cache correctly", () => {
-			const filePath = "/test/file.md";
-			const stats = { mtimeMs: 123456 } as any;
-
-			cacheManager.updateCache(filePath, "new content", stats);
-
-			expect(mockFileCache.get(filePath)).toEqual({
-				content: "new content",
-				mtimeMs: 123456,
-			});
-			expect(mockCacheStats.misses).toBe(1);
-		});
-
-		it("should track cache reloads", () => {
-			const filePath = "/test/file.md";
-			const stats = { mtimeMs: 123456 } as any;
-
-			// Set initial cache
-			mockFileCache.set(filePath, { content: "old content", mtimeMs: 123455 });
-
-			cacheManager.updateCache(filePath, "new content", stats);
-
-			expect(mockCacheStats.reloads).toBe(1);
-			expect(mockCacheStats.misses).toBe(0);
-		});
-
-		it("should invalidate specific cache entry", () => {
-			mockFileCache.set("/test/file1.md", { content: "content1", mtimeMs: 123 });
-			mockFileCache.set("/test/file2.md", { content: "content2", mtimeMs: 456 });
-
-			cacheManager.invalidateCache("/test/file1.md");
-
-			expect(mockFileCache.has("/test/file1.md")).toBe(false);
-			expect(mockFileCache.has("/test/file2.md")).toBe(true);
-		});
-
-		it("should invalidate all cache entries", () => {
-			mockFileCache.set("/test/file1.md", { content: "content1", mtimeMs: 123 });
-			mockFileCache.set("/test/file2.md", { content: "content2", mtimeMs: 456 });
-
-			cacheManager.invalidateCache();
-
-			expect(mockFileCache.size).toBe(0);
-		});
-	});
-
 	describe("validateMemoryBankDirectory", () => {
 		it("should return true for valid directory", async () => {
-			vi.mocked(fs.stat).mockResolvedValue({ isDirectory: () => true } as any);
+			vi.mocked(fs.stat).mockResolvedValue({
+				isDirectory: () => true,
+			} as any);
 
 			const result = await validateMemoryBankDirectory(mockContext);
 
@@ -155,7 +381,9 @@ describe("File Operation Helpers", () => {
 		});
 
 		it("should return false for non-directory", async () => {
-			vi.mocked(fs.stat).mockResolvedValue({ isDirectory: () => false } as any);
+			vi.mocked(fs.stat).mockResolvedValue({
+				isDirectory: () => false,
+			} as any);
 
 			const result = await validateMemoryBankDirectory(mockContext);
 
@@ -207,71 +435,143 @@ describe("File Operation Helpers", () => {
 
 	describe("loadFileWithTemplate", () => {
 		const fileType = MemoryBankFileType.ProjectBrief;
-		let cacheManager: CacheManager;
+		const expectedFilePath = validateAndConstructFilePath(MOCK_MEMORY_BANK_FOLDER, fileType);
 
 		beforeEach(() => {
-			cacheManager = new CacheManager(mockFileCache, mockCacheStats);
+			mockFileOperationManager.statWithRetry.mockReset().mockResolvedValue({
+				// Reset and set a default
+				success: true,
+				data: {
+					isFile: () => true,
+					isDirectory: () => false,
+					mtimeMs: Date.now(),
+					mtime: new Date(),
+				} as Stats,
+			});
+			mockFileOperationManager.writeFileWithRetry
+				.mockReset()
+				.mockResolvedValue({ success: true });
+			mockFileOperationManager.mkdirWithRetry
+				.mockReset()
+				.mockResolvedValue({ success: true });
+			mockStreamingManager.readFile.mockReset().mockResolvedValue({
+				success: true,
+				data: { content: "default mock stream content", wasStreamed: true },
+			});
+			mockFileCache.clear(); // Clear cache before each test
 		});
 
 		it("should load existing file from cache", async () => {
-			const stats = { mtimeMs: 123456, mtime: new Date() } as any;
+			const cachedMtimeMs = 123456;
 
-			vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
-			vi.mocked(fs.stat).mockResolvedValue(stats);
-
-			// Set up cache
-			mockFileCache.set("/test/memory-bank/core/projectBrief.md", {
+			// Set up cache first
+			mockFileCache.set(expectedFilePath, {
 				content: "cached content",
-				mtimeMs: 123456,
+				mtimeMs: cachedMtimeMs,
 			});
 
-			const result = await loadFileWithTemplate(fileType, mockContext, cacheManager);
+			// Mock mkdir to succeed for directory creation
+			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({ success: true });
+
+			// Mock stat to return the same mtime as cached
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createCacheTestFileOperationManagerMock(expectedFilePath, cachedMtimeMs),
+			);
+
+			const result = await loadFileWithTemplate(fileType, mockContext);
 
 			expect(result.content).toBe("cached content");
 			expect(result.wasCreated).toBe(false);
-			expect(mockCacheStats.hits).toBe(1);
+			expect(mockStreamingManager.readFile).not.toHaveBeenCalled();
+			expect(mockFileOperationManager.statWithRetry).toHaveBeenCalledWith(expectedFilePath);
 		});
 
-		it("should read existing file from disk", async () => {
-			const stats = { mtimeMs: 123456, mtime: new Date() } as any;
+		it("should read existing file from disk when cache is stale or missing", async () => {
+			const diskMtimeMs = 789012;
+			// Cache is empty or has old mtimeMs
+			mockFileCache.set(expectedFilePath, {
+				content: "stale cached content",
+				mtimeMs: 111111, // Older than diskMtimeMs
+			});
 
-			vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
-			vi.mocked(fs.stat).mockResolvedValue(stats);
-			vi.mocked(fs.readFile).mockResolvedValue("file content" as any);
+			// Mock mkdir to succeed for directory creation
+			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({ success: true });
 
-			const result = await loadFileWithTemplate(fileType, mockContext, cacheManager);
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createStaleCacheTestFileOperationManagerMock(expectedFilePath, diskMtimeMs),
+			);
+
+			mockStreamingManager.readFile.mockResolvedValue({
+				success: true,
+				data: { content: "file content", wasStreamed: false },
+			});
+
+			const result = await loadFileWithTemplate(fileType, mockContext);
 
 			expect(result.content).toBe("file content");
 			expect(result.wasCreated).toBe(false);
-			expect(mockCacheStats.misses).toBe(1);
+			expect(mockStreamingManager.readFile).toHaveBeenCalledWith(expectedFilePath);
+			expect(mockFileOperationManager.statWithRetry).toHaveBeenCalledWith(expectedFilePath);
+			// Check cache update
+			const cachedEntry = mockFileCache.get(expectedFilePath);
+			expect(cachedEntry).toBeDefined();
+			expect(cachedEntry?.content).toBe("file content");
+			expect(cachedEntry?.mtimeMs).toBe(diskMtimeMs);
 		});
 
 		it("should create file from template when missing", async () => {
-			const { getTemplateForFileType } = await import("../../lib/memoryBankTemplates.js");
-			const stats = { mtimeMs: 123456, mtime: new Date() } as any;
+			const { getTemplateForFileType } = await import(
+				"../../services/templates/memory-bank-templates.js"
+			);
+			const creationMtimeMs = 999999;
 
-			vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
-			vi.mocked(fs.stat)
-				.mockRejectedValueOnce(new Error("ENOENT")) // First call fails
-				.mockResolvedValueOnce(stats); // Second call after creation succeeds
-			vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+			const fileExistsRef = { value: false };
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createFileCreationTestFileOperationManagerMock(
+					expectedFilePath,
+					creationMtimeMs,
+					fileExistsRef,
+				),
+			);
+
+			mockFileOperationManager.writeFileWithRetry.mockImplementation(async () => {
+				fileExistsRef.value = true; // Simulate file creation
+				return { success: true };
+			});
+			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({ success: true });
+
 			vi.mocked(getTemplateForFileType).mockReturnValue("template content");
 
-			const result = await loadFileWithTemplate(fileType, mockContext, cacheManager);
+			const result = await loadFileWithTemplate(fileType, mockContext);
 
 			expect(result.content).toBe("template content");
 			expect(result.wasCreated).toBe(true);
-			expect(fs.writeFile).toHaveBeenCalledWith(
-				"/test/memory-bank/core/projectBrief.md",
+			expect(mockFileOperationManager.mkdirWithRetry).toHaveBeenCalledWith(
+				dirname(expectedFilePath),
+				{ recursive: true },
+			);
+			expect(mockFileOperationManager.writeFileWithRetry).toHaveBeenCalledWith(
+				expectedFilePath,
 				"template content",
 			);
+			// Check cache update
+			const cachedEntry = mockFileCache.get(expectedFilePath);
+			expect(cachedEntry).toBeDefined();
+			expect(cachedEntry?.content).toBe("template content");
+			// The mtimeMs in cache should come from the stat call *after* creation.
+			// If writeFileWithRetry doesn't internally stat and update mtime, this might be tricky.
+			// For now, let's assume the subsequent stat call in loadFileWithTemplate handles it.
+			// If statWithRetry is not called again after writeFileWithRetry by loadFileWithTemplate,
+			// this part of the test might need adjustment based on implementation details.
 		});
 	});
 
 	describe("performHealthCheck", () => {
 		it("should return healthy result when all files exist", async () => {
-			vi.mocked(fs.stat).mockResolvedValue({} as any);
-			vi.mocked(fs.access).mockResolvedValue(undefined);
+			const memoryBankFolder = mockContext.memoryBankFolder;
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createHealthyFileOperationManagerMock(memoryBankFolder),
+			);
 
 			const result = await performHealthCheck(mockContext);
 
@@ -281,24 +581,45 @@ describe("File Operation Helpers", () => {
 		});
 
 		it("should return unhealthy result when folder is missing", async () => {
-			vi.mocked(fs.stat).mockRejectedValue(new Error("ENOENT"));
-			vi.mocked(fs.access).mockResolvedValue(undefined);
+			const memoryBankFolder = mockContext.memoryBankFolder;
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createFolderMissingFileOperationManagerMock(memoryBankFolder),
+			);
 
 			const result = await performHealthCheck(mockContext);
 
 			expect(result.isHealthy).toBe(false);
-			expect(result.issues).toContain("Missing folder: /test/memory-bank");
+			// Updated assertion to match actual error message structure
+			expect(result.issues[0]).toBe(
+				"Error accessing root memory bank folder: ENOENT: No such file or directory",
+			);
+			for (const fileType of Object.values(MemoryBankFileType)) {
+				expect(result.issues).toContain(
+					`Missing or unreadable file ${fileType}: ENOENT: Path inside missing root`,
+				);
+			}
 			expect(result.summary).toContain("❌");
 		});
 
 		it("should return unhealthy result when files are missing", async () => {
-			vi.mocked(fs.stat).mockResolvedValue({} as any);
-			vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+			const memoryBankFolder = mockContext.memoryBankFolder;
+			mockFileOperationManager.statWithRetry.mockImplementation(
+				createFilesMissingFileOperationManagerMock(memoryBankFolder),
+			);
 
 			const result = await performHealthCheck(mockContext);
 
 			expect(result.isHealthy).toBe(false);
-			expect(result.issues.length).toBeGreaterThan(0);
+			expect(result.issues).toContain(
+				`Missing or unreadable file ${MemoryBankFileType.ProjectBrief}: ENOENT`,
+			);
+			expect(result.issues).toContain(
+				`Missing or unreadable file ${MemoryBankFileType.ProgressCurrent}: ENOENT`,
+			);
+			// Check that ActiveContext (which should exist based on the mock) is not listed as an issue
+			expect(result.issues).not.toContain(
+				`Missing or unreadable file ${MemoryBankFileType.ActiveContext}: ENOENT`,
+			);
 			expect(result.summary).toContain("❌");
 		});
 	});

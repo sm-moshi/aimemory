@@ -54,7 +54,7 @@ Access these via Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
 
 The extension creates a modular folder structure:
 
-```
+```text
 memory-bank/
 ├── core/                    # Essential project information
 │   ├── projectBrief.md     # Project overview and goals

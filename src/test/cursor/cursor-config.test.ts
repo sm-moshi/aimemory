@@ -2,7 +2,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { type Mock, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { updateCursorMCPConfig } from "../../utils/cursor-config.js";
+import { updateCursorMCPConfig } from "../../services/cursor/config.js";
 
 // Mock dependencies
 const mockMkdir = vi.fn(); // Keep for tests to reference, but factory won't use this directly
@@ -102,7 +102,6 @@ describe("cursor-config", () => {
 	const mockConfigPath = "/mock/home/.cursor/mcp.json";
 	const mockCursorDir = "/mock/home/.cursor";
 	const mockExtensionPath = "/mock/extension/path";
-	const mockWorkspacePath = "/mock/workspace"; // Same as in the vscode mock
 
 	let expectedStdioServerConfig: any;
 
@@ -115,14 +114,7 @@ describe("cursor-config", () => {
 		}
 
 		// Define expectedStdioServerConfig using the actual path join logic
-		// TODO: Why is this reported as "useless" by the linter?
-
-		expectedStdioServerConfig = {
-			name: "AI Memory",
-			command: "node",
-			args: [actualNodePath.join(mockExtensionPath, "dist", "index.cjs"), mockWorkspacePath],
-			cwd: mockExtensionPath,
-		};
+		// The variable expectedStdioServerConfig was previously here but deemed unused by the linter.
 
 		(os.homedir as Mock).mockReturnValue(mockHomeDir);
 

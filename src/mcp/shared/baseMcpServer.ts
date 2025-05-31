@@ -1,9 +1,10 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
-import { registerMemoryBankPrompts } from "../../lib/mcp-prompts-registry.js";
-import type { MCPServerConfig } from "../../types/mcpTypes.js";
-import type { MemoryBankFileType } from "../../types/types.js";
+import { registerMemoryBankPrompts } from "../../services/cursor/mcp-prompts-registry.js";
+import { validateFileType } from "../../services/validation/type-guards.js";
+import type { MemoryBankFileType } from "../../types/core.js";
+import type { MCPServerInstanceConfig as MCPServerConfig } from "../../types/mcpTypes.js";
 import { UpdateMemoryBankFileSchema, validateMCPToolParams } from "../../types/validation.js";
 import {
 	MemoryBankOperations,
@@ -11,7 +12,6 @@ import {
 	createSimpleMemoryBankTool,
 	ensureMemoryBankReady,
 } from "./mcpToolHelpers.js";
-import { validateFileType } from "./typeGuards.js";
 
 /**
  * Base MCP Server class that provides common functionality

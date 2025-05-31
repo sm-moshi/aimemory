@@ -1,12 +1,12 @@
 import type { Stats } from "node:fs";
 import * as fs from "node:fs/promises";
-import type { Result } from "../types/errorHandling.js";
 import type {
 	FileError,
 	FileOperationManagerConfig,
+	MemoryBankLogger,
+	Result,
 	RetryConfig,
-} from "../types/fileOperations.js";
-import type { MemoryBankLogger } from "../types/types.js";
+} from "../types/index.js";
 
 /**
  * FileOperationManager provides robust file operations with retry logic,

@@ -1,4 +1,4 @@
-import { updateCursorMCPServerConfig } from "./cursorConfigHelpers.js";
+import { updateCursorMCPServerConfig } from "./config-helpers.js";
 
 /**
  * Updates the Cursor MCP config to point to our MCP server (STDIO mode)

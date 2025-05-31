@@ -1,15 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod"; // TODO: Why is this unused?
-import type { MemoryBankFileType } from "../../types/core.js";
-import { ValidationError } from "../../types/errorHandling.js"; // TODO: Why is this unused?
-import {
-	MemoryBankFileTypeSchema,
-	UpdateMemoryBankFileSchema,
-	isSafePath,
-	isValidFileType,
-	validateMCPToolParams,
-	validateWebviewMessage,
-} from "../../types/validation.js";
 import {
 	auditInput,
 	sanitizeFileContent,
@@ -20,7 +9,16 @@ import {
 	validateMemoryBankPath,
 	validatePort,
 	validateProcessConfig,
-} from "../../utils/securityValidation.js";
+} from "../../services/validation/security.js";
+import type { MemoryBankFileType } from "../../types/core.js";
+import {
+	MemoryBankFileTypeSchema,
+	UpdateMemoryBankFileSchema,
+	isSafePath,
+	isValidFileType,
+	validateMCPToolParams,
+	validateWebviewMessage,
+} from "../../types/validation.js";
 
 describe("Validation Schemas", () => {
 	describe("MemoryBankFileTypeSchema", () => {

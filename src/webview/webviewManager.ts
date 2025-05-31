@@ -4,16 +4,18 @@ import * as http from "node:http";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
-import type { CursorRulesService } from "../lib/cursor-rules-service.js";
-import { getCursorMemoryBankRulesFile } from "../lib/cursor-rules.js";
-import type { MCPServerInterface } from "../types/mcpTypes.js";
-import type { CursorMCPConfig, CursorMCPServerConfig } from "../types/types.js";
-import { LogLevel, Logger } from "../utils/log.js";
+import { LogLevel, type Logger } from "../infrastructure/logging/vscode-logger.js";
+import type { CursorRulesService } from "../services/cursor/rules-service.js";
+import { getCursorMemoryBankRulesFile } from "../services/cursor/rules.js";
+import type { CursorMCPConfig, MCPServerConfig } from "../types/config.js";
+import type { MCPServerInterface, MemoryBankFile } from "../types/index.js";
 import type {
 	ServerAlreadyRunningMessage,
 	WebviewLogMessage,
 	WebviewToExtensionMessage,
 } from "./src/types/messages.js";
+
+const SELECT_FOLDER_COMMAND = "aimemory.selectWPFolder";
 
 /**
  * Extract port number from a URL string
@@ -43,22 +45,19 @@ function extractPortsFromArgs(args: unknown[]): number[] {
 /**
  * Extract ports from a single server configuration
  */
-function extractPortsFromServer(server: CursorMCPServerConfig): number[] {
+function extractPortsFromServer(server: MCPServerConfig): number[] {
 	const ports: number[] = [];
-
-	if (!server) {
-		return ports;
-	}
-
-	if (typeof server.url === "string") {
-		const port = extractPortFromUrl(server.url);
-		if (port) {
-			ports.push(port);
+	if (server.url) {
+		try {
+			const url = new URL(server.url);
+			if (url.port) {
+				ports.push(Number.parseInt(url.port, 10));
+			}
+		} catch (e) {
+			// Invalid URL, ignore but log for debugging
+			console.warn(`Failed to parse URL for port extraction: ${server.url}`, e);
 		}
-	} else if (Array.isArray(server.args)) {
-		ports.push(...extractPortsFromArgs(server.args));
 	}
-
 	return ports;
 }
 
@@ -92,17 +91,51 @@ export class WebviewManager {
 	private readonly memoryBankService: VSCodeMemoryBankService;
 	private readonly cursorRulesService: CursorRulesService;
 	private readonly logger: Logger;
+	// private readonly webviewPanelManager?: WebviewPanelManager; // Commented out as type is not available
+	private readonly extensionContext: vscode.ExtensionContext;
+	private readonly mcpAdapter: MCPServerInterface;
+	private readonly currentMemoryBankFiles: MemoryBankFile[] = [];
+	private readonly lastError: string | null = null;
+	private readonly mcpServerStatus: "running" | "stopped" | "starting" | "error" = "stopped";
+	private readonly isWebviewReady = false;
+	private readonly disposables: vscode.Disposable[] = [];
+	private static readonly viewType = "aiMemoryWebview";
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly mcpServer: MCPServerInterface,
 		memoryBankService: VSCodeMemoryBankService,
 		cursorRulesService: CursorRulesService,
+		mcpAdapter: MCPServerInterface,
+		logger: Logger,
 	) {
 		this.extensionUri = context.extensionUri;
 		this.memoryBankService = memoryBankService;
 		this.cursorRulesService = cursorRulesService;
-		this.logger = Logger.getInstance();
+		this.logger = logger;
+		this.extensionContext = context;
+		this.mcpAdapter = mcpAdapter;
+		this.setupCommands();
+	}
+
+	private setupCommands() {
+		this.disposables.push(
+			vscode.commands.registerCommand("aimemory.refreshWebview", () => this.refreshAllData()),
+		);
+	}
+
+	// Placeholder method to satisfy linter, actual implementation needed separately.
+	private async refreshAllData(): Promise<void> {
+		this.logger.info("WebviewManager.refreshAllData called (placeholder)");
+		// Implement data refreshing logic here.
+		// This would involve fetching current statuses (MCP, MemoryBank, Rules)
+		// and posting them to the webview.
+		// Example calls (if methods exist and are appropriate):
+		// if (this.panel) {
+		//   await this.handleGetRulesStatus();
+		//   await this.handleRequestMemoryBankStatus();
+		//   await this.sendCurrentMCPServerStatus();
+		// }
 	}
 
 	// Checks if an MCP server is already running on a specific port

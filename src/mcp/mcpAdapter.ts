@@ -1,10 +1,10 @@
 import type { ChildProcess } from "node:child_process";
 import type { ExtensionContext } from "vscode";
 import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
+import type { Logger } from "../infrastructure/logging/vscode-logger.js";
+import { launchMCPServerProcess } from "../infrastructure/process/helpers.js";
+import type { MemoryBankFileType } from "../types/core.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
-import type { MemoryBankFileType } from "../types/types.js";
-import type { Logger } from "../utils/log.js";
-import { launchMCPServerProcess } from "./shared/processHelpers.js";
 
 /**
  * Adapter that provides the same interface as MemoryBankMCPServer
@@ -122,6 +122,15 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 */
 	async updateMemoryBankFile(fileType: string, content: string): Promise<void> {
 		try {
+			if (this.isServerRunning()) {
+				this.logger.info(
+					`MCP Adapter WARNING: Child MCP server is running. 'updateMemoryBankFile' for '${fileType}' is being handled directly by the adapter. This is a temporary implementation. Ideally, this should be an MCP tool call to the child server.`,
+				);
+			} else {
+				this.logger.info(
+					`MCP Adapter: Child MCP server is not running. Handling 'updateMemoryBankFile' for '${fileType}' directly.`,
+				);
+			}
 			await this.memoryBank.updateFile(fileType as MemoryBankFileType, content);
 			this.logger.info(`Updated memory bank file: ${fileType}`);
 		} catch (error) {
@@ -137,23 +146,51 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 * Note: This delegates to the memory bank service directly for now
 	 */
 	async handleCommand(command: string, args: string[]): Promise<string> {
-		this.logger.info(`Handling command: ${command} with args: ${args.join(", ")}`);
+		this.logger.info(`MCP Adapter: Handling command: ${command} with args: ${args.join(", ")}`);
 
+		const isChildServerRunning = this.isServerRunning();
+
+		if (isChildServerRunning) {
+			this.logger.info(
+				`MCP Adapter WARNING: Child MCP server is running. Command '${command}' is being handled directly by the adapter. This is a temporary implementation. Ideally, this command should be dispatched to the child server as an MCP tool call.`,
+			);
+		} else {
+			this.logger.info(
+				`MCP Adapter: Child MCP server is not running. Handling command '${command}' directly as a fallback.`,
+			);
+		}
+
+		// Original comment:
 		// For now, delegate to memory bank service
 		// In a full implementation, this could communicate with the STDIO server
-		switch (command) {
-			case "init":
-				await this.memoryBank.initializeFolders();
-				await this.memoryBank.loadFiles();
-				return "Memory bank initialized successfully";
+		try {
+			switch (command) {
+				case "init":
+					this.logger.debug(`MCP Adapter: Executing 'init' directly.`);
+					await this.memoryBank.initializeFolders();
+					await this.memoryBank.loadFiles(); // Assuming this handles its own readiness checks or throws
+					return "Memory bank initialized successfully";
 
-			case "status": {
-				const health = await this.memoryBank.checkHealth();
-				return `Memory bank status: ${health}`;
+				case "status": {
+					this.logger.debug(`MCP Adapter: Executing 'status' directly.`);
+					// Assuming this.memoryBank.checkHealth() returns a string or Promise<string>
+					// And that it ensures readiness or that readiness is checked before calling this.
+					const health = await this.memoryBank.checkHealth();
+					return `Memory bank status: ${health}`;
+				}
+
+				default:
+					this.logger.info(
+						`MCP Adapter NOTE: Unknown command '${command}' being handled by default case.`,
+					);
+					return `Unknown command: ${command}`;
 			}
-
-			default:
-				return `Unknown command: ${command}`;
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			this.logger.error(
+				`MCP Adapter: Error handling command '${command}' directly: ${errorMessage}`,
+			);
+			return `Error executing command '${command}': ${errorMessage}`;
 		}
 	}
 

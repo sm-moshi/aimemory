@@ -1,8 +1,8 @@
 /**
- * Error Handling Utilities
+ * Generic Error Handling Utilities
  *
- * Standardized error handling patterns to eliminate code duplication
- * across the AI Memory extension codebase.
+ * Pure error handling functions with no external dependencies.
+ * These utilities can be used across any environment.
  */
 
 /**
@@ -25,19 +25,6 @@ export function getErrorMessage(error: unknown): string {
  */
 export function formatErrorMessage(context: string, error: unknown): string {
 	return `${context}: ${getErrorMessage(error)}`;
-}
-
-/**
- * VSCode-specific error display utility
- * Shows error message to user via VSCode's UI
- *
- * @param message - The error message to display
- * @param error - Optional error object for additional context
- */
-export async function showVSCodeError(message: string, error?: unknown): Promise<void> {
-	const { window } = await import("vscode");
-	const fullMessage = error ? formatErrorMessage(message, error) : message;
-	window.showErrorMessage(fullMessage);
 }
 
 /**

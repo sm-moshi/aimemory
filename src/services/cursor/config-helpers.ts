@@ -9,9 +9,13 @@ import fs from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { window } from "vscode";
-import { validateWorkspace } from "../mcp/shared/processHelpers.js";
-import type { ConfigComparisonResult, CursorMCPConfig, MCPServerConfig } from "../types/config.js";
-import { Logger } from "./log.js";
+import { Logger } from "../../infrastructure/logging/vscode-logger.js";
+import { validateWorkspace } from "../../infrastructure/process/helpers.js";
+import type {
+	ConfigComparisonResult,
+	CursorMCPConfig,
+	MCPServerConfig,
+} from "../../types/config.js";
 
 /**
  * Ensures the .cursor directory exists in the user's home directory.

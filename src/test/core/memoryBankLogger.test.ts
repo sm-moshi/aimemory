@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryBankLoggerFactory, createStderrLogger } from "../../utils/MemoryBankLogger.js";
+import {
+	MemoryBankLoggerFactory,
+	createStderrLogger,
+} from "../../infrastructure/logging/memory-bank-logger.js";
 
 describe("MemoryBankLogger", () => {
 	let stderrSpy: any;

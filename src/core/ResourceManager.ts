@@ -1,272 +1,78 @@
-import type { Resource, ResourceManagerConfig, ResourceStats } from "../types/system.js";
-import type { MemoryBankLogger } from "../types/types.js";
+import type { IDisposable } from "../types/core.js";
+import type { MemoryBankLogger } from "../types/logging.js";
 
 /**
- * ResourceManager handles lifecycle management and cleanup of resources
- * such as file handles, timers, and other disposable objects.
+ * Manages the lifecycle of disposable resources.
+ * Ensures that all registered resources are properly cleaned up.
  */
-export class ResourceManager {
-	private readonly resources: Map<string, Resource> = new Map();
-	private readonly maxIdleTime: number;
-	private readonly cleanupInterval: number;
-	private readonly enableAutoCleanup: boolean;
-	private cleanupTimer: NodeJS.Timeout | null = null;
-	private isShuttingDown = false;
+export class ResourceManager implements IDisposable {
+	private readonly disposables: Set<IDisposable> = new Set();
+	private disposed = false;
 
-	private readonly stats: ResourceStats = {
-		totalResources: 0,
-		activeResources: 0,
-		cleanedUpResources: 0,
-		lastCleanupAt: null,
-		avgResourceLifetime: 0,
-	};
-
-	constructor(
-		private readonly logger: MemoryBankLogger,
-		config?: ResourceManagerConfig,
-	) {
-		this.maxIdleTime = config?.maxIdleTime ?? 30 * 60 * 1000; // 30 minutes default
-		this.cleanupInterval = config?.cleanupInterval ?? 5 * 60 * 1000; // 5 minutes default
-		this.enableAutoCleanup = config?.enableAutoCleanup ?? true;
-
-		if (this.enableAutoCleanup) {
-			this.startAutoCleanup();
-		}
-
-		this.logger.debug(
-			`ResourceManager initialized with maxIdleTime: ${this.maxIdleTime}ms, cleanupInterval: ${this.cleanupInterval}ms`,
-		);
-	}
+	constructor(private readonly logger: MemoryBankLogger) {}
 
 	/**
-	 * Register a resource for lifecycle management
+	 * Adds a disposable resource to be managed.
+	 * @param disposable The resource to manage.
 	 */
-	registerResource(id: string, type: string, cleanup: () => Promise<void> | void): void {
-		if (this.isShuttingDown) {
-			this.logger.warn(`Cannot register resource ${id} during shutdown`);
+	public add(disposable: IDisposable): void {
+		if (this.disposed) {
+			this.logger.warn(
+				"ResourceManager: Attempted to add disposable to already disposed manager.",
+			);
+			// Optionally, dispose it immediately or throw an error
+			Promise.resolve(disposable.dispose()).catch((err) =>
+				this.logger.error(
+					`Error disposing immediately added disposable: ${err instanceof Error ? err.message : String(err)}`,
+				),
+			);
 			return;
 		}
-
-		const resource: Resource = {
-			id,
-			type,
-			cleanup,
-			isActive: true,
-			createdAt: new Date(),
-			lastAccessed: new Date(),
-		};
-
-		// Clean up existing resource with same ID if it exists
-		const existing = this.resources.get(id);
-		if (existing) {
-			this.logger.warn(`Resource ${id} already exists, cleaning up old instance`);
-			this.cleanupResource(existing).catch((error) => {
-				this.logger.error(`Error cleaning up existing resource ${id}: ${error}`);
-			});
-		}
-
-		this.resources.set(id, resource);
-		this.stats.totalResources++;
-		this.stats.activeResources++;
-
-		this.logger.debug(`Registered resource: ${id} (${type})`);
+		this.disposables.add(disposable);
 	}
 
 	/**
-	 * Update last accessed time for a resource
+	 * Removes a disposable resource from management.
+	 * This does NOT dispose the resource, only stops tracking it.
+	 * @param disposable The resource to remove.
 	 */
-	touchResource(id: string): void {
-		const resource = this.resources.get(id);
-		if (resource?.isActive) {
-			resource.lastAccessed = new Date();
-		}
+	public remove(disposable: IDisposable): void {
+		this.disposables.delete(disposable);
 	}
 
 	/**
-	 * Manually cleanup a specific resource
+	 * Disposes all managed resources.
+	 * After calling this, the manager itself is considered disposed and should not be reused.
 	 */
-	async cleanupResourceById(id: string): Promise<boolean> {
-		const resource = this.resources.get(id);
-		if (!resource) {
-			this.logger.warn(`Resource ${id} not found for cleanup`);
-			return false;
+	public async dispose(): Promise<void> {
+		if (this.disposed) {
+			return;
 		}
+		this.disposed = true;
+		this.logger.info("Disposing all managed resources...");
 
-		await this.cleanupResource(resource);
-		this.resources.delete(id);
-		return true;
-	}
-
-	/**
-	 * Cleanup all idle resources (those not accessed recently)
-	 */
-	async cleanupIdleResources(): Promise<number> {
-		const now = new Date();
-		const idleResources: Resource[] = [];
-
-		for (const resource of this.resources.values()) {
-			if (
-				resource.isActive &&
-				now.getTime() - resource.lastAccessed.getTime() > this.maxIdleTime
-			) {
-				idleResources.push(resource);
-			}
-		}
-
-		let cleanedCount = 0;
-		for (const resource of idleResources) {
+		const disposePromises: Array<Promise<void>> = [];
+		for (const disposable of this.disposables) {
 			try {
-				await this.cleanupResource(resource);
-				this.resources.delete(resource.id);
-				cleanedCount++;
-			} catch (error) {
-				this.logger.error(`Error cleaning up idle resource ${resource.id}: ${error}`);
-			}
-		}
-
-		if (cleanedCount > 0) {
-			this.stats.lastCleanupAt = now;
-			this.logger.debug(`Cleaned up ${cleanedCount} idle resources`);
-		}
-
-		return cleanedCount;
-	}
-
-	/**
-	 * Cleanup all resources (typically called during shutdown)
-	 */
-	async cleanupAllResources(): Promise<void> {
-		this.isShuttingDown = true;
-		this.stopAutoCleanup();
-
-		const allResources = Array.from(this.resources.values());
-		this.logger.info(`Cleaning up ${allResources.length} resources during shutdown`);
-
-		const cleanupPromises = allResources.map(async (resource) => {
-			try {
-				await this.cleanupResource(resource);
-			} catch (error) {
+				const result = disposable.dispose();
+				if (result instanceof Promise) {
+					disposePromises.push(
+						result.catch((err) =>
+							this.logger.error(
+								`Error during async disposal: ${err instanceof Error ? err.message : String(err)}`,
+							),
+						),
+					);
+				}
+			} catch (err) {
 				this.logger.error(
-					`Error cleaning up resource ${resource.id} during shutdown: ${error}`,
+					`Error during sync disposal: ${err instanceof Error ? err.message : String(err)}`,
 				);
 			}
-		});
-
-		await Promise.allSettled(cleanupPromises);
-		this.resources.clear();
-		this.stats.activeResources = 0;
-		this.logger.info("All resources cleaned up");
-	}
-
-	/**
-	 * Get resource statistics
-	 */
-	getStats(): ResourceStats {
-		this.updateStats();
-		return { ...this.stats };
-	}
-
-	/**
-	 * Get detailed information about all resources
-	 */
-	getResourceInfo(): Array<{
-		id: string;
-		type: string;
-		isActive: boolean;
-		ageMs: number;
-		idleMs: number;
-	}> {
-		const now = new Date();
-		return Array.from(this.resources.values()).map((resource) => ({
-			id: resource.id,
-			type: resource.type,
-			isActive: resource.isActive,
-			ageMs: now.getTime() - resource.createdAt.getTime(),
-			idleMs: now.getTime() - resource.lastAccessed.getTime(),
-		}));
-	}
-
-	/**
-	 * Force cleanup cycle (useful for testing or manual management)
-	 */
-	async forceCleanup(): Promise<number> {
-		this.logger.debug("Force cleanup requested");
-		return await this.cleanupIdleResources();
-	}
-
-	/**
-	 * Private: Cleanup a single resource
-	 */
-	private async cleanupResource(resource: Resource): Promise<void> {
-		if (!resource.isActive) {
-			return; // Already cleaned up
 		}
 
-		resource.isActive = false;
-		this.stats.activeResources--;
-		this.stats.cleanedUpResources++;
-
-		const startTime = Date.now();
-		try {
-			this.logger.debug(`Cleaning up resource: ${resource.id} (${resource.type})`);
-			await resource.cleanup();
-			const duration = Date.now() - startTime;
-			this.logger.debug(`Successfully cleaned up resource ${resource.id} in ${duration}ms`);
-		} catch (error) {
-			const duration = Date.now() - startTime;
-			this.logger.error(
-				`Failed to cleanup resource ${resource.id} after ${duration}ms: ${error}`,
-			);
-			throw error;
-		}
-	}
-
-	/**
-	 * Private: Start automatic cleanup timer
-	 */
-	private startAutoCleanup(): void {
-		if (this.cleanupTimer) {
-			return; // Already started
-		}
-
-		this.cleanupTimer = setInterval(async () => {
-			try {
-				await this.cleanupIdleResources();
-			} catch (error) {
-				this.logger.error(`Error during automatic cleanup: ${error}`);
-			}
-		}, this.cleanupInterval);
-
-		this.logger.debug("Automatic cleanup started");
-	}
-
-	/**
-	 * Private: Stop automatic cleanup timer
-	 */
-	private stopAutoCleanup(): void {
-		if (this.cleanupTimer) {
-			clearInterval(this.cleanupTimer);
-			this.cleanupTimer = null;
-			this.logger.debug("Automatic cleanup stopped");
-		}
-	}
-
-	/**
-	 * Private: Update calculated statistics
-	 */
-	private updateStats(): void {
-		const now = new Date();
-		let totalLifetime = 0;
-		let resourceCount = 0;
-
-		for (const resource of this.resources.values()) {
-			if (!resource.isActive) {
-				// Calculate lifetime for cleaned up resources
-				totalLifetime += now.getTime() - resource.createdAt.getTime();
-				resourceCount++;
-			}
-		}
-
-		this.stats.avgResourceLifetime = resourceCount > 0 ? totalLifetime / resourceCount : 0;
+		await Promise.allSettled(disposePromises);
+		this.disposables.clear();
+		this.logger.info("All managed resources disposed.");
 	}
 }

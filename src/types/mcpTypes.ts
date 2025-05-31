@@ -69,7 +69,7 @@ export type MCPResponse = MCPSuccessResponse | MCPErrorResponse;
 /**
  * Configuration for base MCP server implementations
  */
-export interface MCPServerConfig {
+export interface MCPServerInstanceConfig {
 	name: string;
 	version: string;
 	memoryBank: MemoryBankServiceCore;
