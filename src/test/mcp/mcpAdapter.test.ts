@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
-import { MemoryBankMCPAdapter } from "../mcp/mcpAdapter.js";
+import { VSCodeMemoryBankService } from "../../core/vsCodeMemoryBankService.js";
+import { MemoryBankMCPAdapter } from "../../mcp/mcpAdapter.js";
 
 // Mock vscode API
 vi.mock("vscode", () => ({
@@ -41,7 +41,7 @@ vi.mock("node:path", async () => {
 	};
 });
 
-vi.mock("../core/vsCodeMemoryBankService.js", () => ({
+vi.mock("../../core/vsCodeMemoryBankService.js", () => ({
 	// This mock implementation now correctly accepts constructor arguments
 	VSCodeMemoryBankService: vi
 		.fn()
@@ -54,7 +54,7 @@ vi.mock("../core/vsCodeMemoryBankService.js", () => ({
 		})),
 }));
 
-vi.mock("../utils/log.js", () => ({
+vi.mock("../../utils/log.js", () => ({
 	Logger: {
 		getInstance: vi.fn(() => ({
 			info: vi.fn(),

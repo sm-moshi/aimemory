@@ -19,7 +19,6 @@
 	},
 	"include": [
 		"src/**/*",
-		"rollup.config.js",
 		"vitest.config.ts",
 		"scripts/build-check.ts",
 		"scripts/update-docs-date.ts",

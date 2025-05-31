@@ -8,7 +8,7 @@ import {
 	MEMORY_BANK_UPDATE_CONFIRMATION_PROMPT,
 	MEMORY_BANK_USAGE_TIP_PROMPT,
 	REVIEW_AND_UPDATE_MEMORY_BANK_PROMPT,
-} from "../lib/mcp-prompts.js";
+} from "../../lib/mcp-prompts.js";
 
 // Unit tests for mcp-prompts.ts
 

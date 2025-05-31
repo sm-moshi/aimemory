@@ -1,33 +1,131 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch Extension",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/dist/**/*.{js,cjs}"
-      ],
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Debug MCP CLI Server",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/dist/index.cjs",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Attach to Process",
-      "type": "node",
-      "request": "attach",
-      "processId": "${command:PickProcess}",
-      "cwd": "${workspaceFolder}"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}", "--disable-extensions"],
+			"outFiles": ["${workspaceFolder}/dist/**/*.{js,cjs}"],
+			"cwd": "${workspaceFolder}",
+			"env": {
+				"NODE_ENV": "development"
+			},
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"],
+			"preLaunchTask": "build:dev"
+		},
+		{
+			"name": "Launch Extension (Production)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"outFiles": ["${workspaceFolder}/dist/**/*.{js,cjs}"],
+			"cwd": "${workspaceFolder}",
+			"env": {
+				"NODE_ENV": "production"
+			},
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"],
+			"preLaunchTask": "build:prod"
+		},
+		{
+			"name": "Debug MCP CLI Server",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/dist/index.cjs",
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"],
+			"env": {
+				"NODE_ENV": "development",
+				"DEBUG": "mcp:*"
+			},
+			"preLaunchTask": "build:dev"
+		},
+		{
+			"name": "Debug MCP Server with Inspector",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/@modelcontextprotocol/inspector/dist/index.js",
+			"args": ["${workspaceFolder}/dist/index.cjs"],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"],
+			"env": {
+				"NODE_ENV": "development",
+				"DEBUG": "mcp:*"
+			},
+			"preLaunchTask": "build:dev"
+		},
+		{
+			"name": "Debug Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/dist/test"
+			],
+			"outFiles": ["${workspaceFolder}/dist/**/*.{js,cjs}"],
+			"cwd": "${workspaceFolder}",
+			"env": {
+				"NODE_ENV": "test"
+			},
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"],
+			"preLaunchTask": "build:dev"
+		},
+		{
+			"name": "Debug Unit Tests",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+			"args": ["run", "--reporter=verbose"],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"],
+			"env": {
+				"NODE_ENV": "test"
+			}
+		},
+		{
+			"name": "Debug Webview",
+			"type": "chrome",
+			"request": "attach",
+			"port": 9222,
+			"webRoot": "${workspaceFolder}/src/webview/src",
+			"sourceMaps": true,
+			"smartStep": true
+		},
+		{
+			"name": "Attach to Process",
+			"type": "node",
+			"request": "attach",
+			"processId": "${command:PickProcess}",
+			"cwd": "${workspaceFolder}",
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": ["<node_internals>/**"]
+		}
+	],
+	"compounds": [
+		{
+			"name": "Launch Extension + Watch",
+			"configurations": ["Launch Extension"],
+			"preLaunchTask": "dev:parallel",
+			"stopAll": true
+		}
+	]
 }

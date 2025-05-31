@@ -15,7 +15,7 @@ export default defineConfig({
 			exclude: [
 				"src/**/*.test.ts",
 				"src/**/*.d.ts",
-				"src/test/**",
+				"src/test/extension/**", // Only exclude VS Code extension tests
 				"src/webview/**",
 				"dist/**",
 				"node_modules/**",

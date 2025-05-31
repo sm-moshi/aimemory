@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LogLevel, Logger } from "../utils/log.js";
+import { LogLevel, Logger } from "../../utils/log.js";
 
 // Mock vscode OutputChannel
 const appendLine = vi.fn();

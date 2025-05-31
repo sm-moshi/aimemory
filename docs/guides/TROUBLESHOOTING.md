@@ -1,6 +1,6 @@
 # AI Memory Extension Troubleshooting Guide
 
-> _Last updated: 2025-05-30_
+> _Last updated: 2025-05-31_
 
 This guide helps you diagnose and resolve common issues with the AI Memory extension for Cursor and VS Code. The extension uses stdio transport for MCP communication and provides a modular memory bank system.
 
