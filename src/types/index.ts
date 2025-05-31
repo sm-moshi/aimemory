@@ -3,14 +3,17 @@
  * Barrel export file that provides a single entry point for all types
  */
 
-// Result Pattern Types
-export * from "./result.js";
-
 // Core Memory Bank Types
 export * from "./core.js";
 
 // File Operations Types
 export * from "./fileOperations.js";
+
+// System Infrastructure Types (cache, resources, DI)
+export * from "./system.js";
+
+// Error Handling and Result Pattern Types
+export * from "./errorHandling.js";
 
 // Configuration Types (excluding MCPServerConfig to avoid conflict)
 export type {
@@ -25,12 +28,6 @@ export type {
 
 // Re-export MCPServerConfig from config.ts specifically for Cursor configuration
 export type { MCPServerConfig as CursorMCPServerConfig } from "./config.js";
-
-// Dependency Injection Types
-export * from "./di.js";
-
-// Error Types
-export * from "./errors.js";
 
 // MCP Types (from existing focused file)
 export * from "./mcpTypes.js";

@@ -40,6 +40,7 @@ node_modules/
 # Optional: local memory and artifacts
 .cursor/
 memory-bank/
+archive/
 
 # Exclude local files and docs as they are not needed for VSIX
 out/

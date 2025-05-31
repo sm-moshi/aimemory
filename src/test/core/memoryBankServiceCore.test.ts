@@ -1,8 +1,8 @@
 import type { PathLike, Stats } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
-import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
-import { MemoryBankFileType, isSuccess } from "../types/types.js";
+import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
+import { MemoryBankFileType, isSuccess } from "../../types/types.js";
 
 // This will hold the globally mocked fs.stat function instance
 let globalFsStatMock: Mock;
@@ -231,7 +231,7 @@ vi.mock("node:path", async () => {
 	};
 });
 
-vi.mock("../utils/log.js", () => ({
+vi.mock("../../utils/log.js", () => ({
 	Logger: {
 		getInstance: () => ({
 			info: vi.fn(),
@@ -242,12 +242,12 @@ vi.mock("../utils/log.js", () => ({
 	},
 	LogLevel: { Info: "info", Error: "error", Warn: "warn", Debug: "debug" },
 }));
-vi.mock("../lib/memoryBankTemplates.js", () => ({
+vi.mock("../../lib/memoryBankTemplates.js", () => ({
 	getTemplateForFileType: () => "template content",
 }));
 
 // Mock the file operation helpers
-vi.mock("../utils/fileOperationHelpers.js", () => ({
+vi.mock("../../utils/fileOperationHelpers.js", () => ({
 	ensureMemoryBankFolders: mockHelperFunctions.mockEnsureMemoryBankFolders,
 	loadAllMemoryBankFiles: mockHelperFunctions.mockLoadAllMemoryBankFiles,
 	performHealthCheck: mockHelperFunctions.mockPerformHealthCheck,

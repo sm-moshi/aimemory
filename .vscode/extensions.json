@@ -1,11 +1,42 @@
 {
 	"recommendations": [
+		// Core Development Tools
 		"biomejs.biome",
-		"ms-vscode.vscode-typescript-next",
 		"bradlc.vscode-tailwindcss",
-		"esbenp.prettier-vscode",
 		"ms-vscode.test-adapter-converter",
 		"formulahendry.auto-rename-tag",
-		"christian-kohler.path-intellisense"
+		"christian-kohler.path-intellisense",
+		"anysphere.remote-ssh",
+		// Testing and Coverage
+		"vitest.explorer",
+		"ryanluker.vscode-coverage-gutters",
+		"hbenl.vscode-test-explorer",
+		"ms-vscode.vscode-jest",
+		// TypeScript and JavaScript
+		"ms-typescript.vscode-typescript-next",
+		"usernamehw.errorlens",
+		"ms-vscode.vscode-json",
+		// Extension Development
+		"ms-vscode.extension-test-runner",
+		"ms-vscode.vscode-extension-samples",
+		"ms-vscode.references-view",
+		// Quality and Performance
+		"sonarsource.sonarlint-vscode",
+		"ambar.bundle-size",
+		"kisstkondoros.vscode-codemetrics",
+		"pflannery.vscode-versionlens",
+		"wayou.vscode-todo-highlight",
+		// Git and Version Control
+		"eamodio.gitlens",
+		// UI, Theme and Markdown
+		"eliverlara.andromeda",
+		"yzhang.markdown-all-in-one",
+		"bierner.markdown-mermaid"
+	],
+	"unwantedRecommendations": [
+		"ms-vscode.vscode-typescript",
+		"hookyqr.beautify",
+		"ms-vscode.node-debug",
+		"dbaeumer.vscode-eslint"
 	]
 }

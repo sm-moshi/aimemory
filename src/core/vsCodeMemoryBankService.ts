@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
 import type { CursorRulesService } from "../lib/cursor-rules-service.js";
-import { CURSOR_MEMORY_BANK_FILENAME, CURSOR_MEMORY_BANK_RULES_FILE } from "../lib/cursor-rules.js";
+import { CURSOR_MEMORY_BANK_FILENAME, getCursorMemoryBankRulesFile } from "../lib/cursor-rules.js";
 import type {
 	AsyncResult,
 	MemoryBank,
@@ -34,10 +34,8 @@ export class VSCodeMemoryBankService implements MemoryBank {
 
 	// VS Code-specific methods
 	async createMemoryBankRulesIfNotExists(): Promise<void> {
-		await this.cursorRulesService.createRulesFile(
-			CURSOR_MEMORY_BANK_FILENAME,
-			CURSOR_MEMORY_BANK_RULES_FILE,
-		);
+		const rulesContent = await getCursorMemoryBankRulesFile();
+		await this.cursorRulesService.createRulesFile(CURSOR_MEMORY_BANK_FILENAME, rulesContent);
 	}
 
 	// Delegate to core with VS Code-specific error handling

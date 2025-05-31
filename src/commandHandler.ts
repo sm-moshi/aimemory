@@ -254,7 +254,7 @@ export class CommandHandler {
 
 	/**
 	 * Process mode commands like /plan
-	 * This is a placeholder for future plan command functionality
+	 * TODO:This is a placeholder for future plan command functionality
 	 */
 	async processModesCommand(text: string): Promise<string | undefined> {
 		if (!text.trim().startsWith("/plan")) {

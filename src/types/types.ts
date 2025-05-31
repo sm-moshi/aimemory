@@ -43,21 +43,13 @@ export interface ProcessEventHandlers {
 }
 
 /**
- * File cache entry structure
- */
-export interface FileCache {
-	content: string;
-	mtimeMs: number;
-}
-
-/**
  * Context for file operations in memory bank services
  */
 export interface FileOperationContext {
 	memoryBankFolder: string;
 	logger: MemoryBankLogger;
 	fileCache: Map<string, FileCache>;
-	cacheStats: CacheStats;
+	cacheStats: LegacyCacheStats;
 }
 
 /**
@@ -70,5 +62,5 @@ export interface FileValidationResult {
 	error?: string;
 }
 
-// Note: Import MemoryBankFileType and CacheStats from the new location
-import type { CacheStats, MemoryBankFileType } from "./core.js";
+// Note: Import MemoryBankFileType and LegacyCacheStats from the new location
+import type { FileCache, LegacyCacheStats, MemoryBankFileType } from "./index.js";

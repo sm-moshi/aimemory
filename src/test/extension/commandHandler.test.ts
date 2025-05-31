@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CommandHandler } from "../commandHandler.js";
-import { MemoryBankFileType } from "../types/types.js";
+import { CommandHandler } from "../../commandHandler.js";
+import { MemoryBankFileType } from "../../types/types.js";
 
 const mockMemoryBank = {
 	getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true, data: true }),

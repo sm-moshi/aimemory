@@ -5,14 +5,14 @@
 
 import fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CursorMCPConfig, MCPServerConfig } from "../types/config.js";
+import type { CursorMCPConfig, MCPServerConfig } from "../../types/config.js";
 import {
 	compareServerConfigs,
 	createAIMemoryServerConfig,
 	ensureCursorDirectory,
 	readCursorMCPConfig,
 	writeCursorMCPConfig,
-} from "../utils/cursorConfigHelpers.js";
+} from "../../utils/cursorConfigHelpers.js";
 
 // Mock file system operations
 vi.mock("node:fs/promises", () => ({
@@ -40,14 +40,14 @@ const mockLoggerInstance = {
 };
 
 // Mock Logger to return the consistent instance
-vi.mock("../utils/log.js", () => ({
+vi.mock("../../utils/log.js", () => ({
 	Logger: {
 		getInstance: () => mockLoggerInstance,
 	},
 }));
 
 // Mock process helpers
-vi.mock("../mcp/shared/processHelpers.js", () => ({
+vi.mock("../../mcp/shared/processHelpers.js", () => ({
 	validateWorkspace: vi.fn().mockReturnValue("/test/workspace"),
 }));
 

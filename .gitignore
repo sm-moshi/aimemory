@@ -16,7 +16,6 @@ dist/
 node_modules/
 
 # Editor
-.vscode/
 .idea/
 .DS_Store
 .secrets

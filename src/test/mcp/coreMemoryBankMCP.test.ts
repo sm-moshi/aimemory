@@ -4,9 +4,9 @@
  * The test only uses the mocked versions, not the actual SDK types.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { registerMemoryBankPrompts } from "../lib/mcp-prompts-registry.js";
-import { CoreMemoryBankMCP } from "../mcp/coreMemoryBankMCP.js";
-import { MemoryBankFileType } from "../types/types.js";
+import { registerMemoryBankPrompts } from "../../lib/mcp-prompts-registry.js";
+import { CoreMemoryBankMCP } from "../../mcp/coreMemoryBankMCP.js";
+import { MemoryBankFileType } from "../../types/types.js";
 
 // Mock MemoryBankServiceCore
 const mockMemoryBankService = {
@@ -21,7 +21,7 @@ const mockMemoryBankService = {
 	isReady: vi.fn(),
 };
 
-vi.mock("../core/memoryBankServiceCore.js", () => ({
+vi.mock("../../core/memoryBankServiceCore.js", () => ({
 	MemoryBankServiceCore: vi.fn(() => mockMemoryBankService),
 }));
 
@@ -52,7 +52,7 @@ vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => {
 	};
 });
 
-vi.mock("../lib/mcp-prompts-registry.js", () => ({
+vi.mock("../../lib/mcp-prompts-registry.js", () => ({
 	registerMemoryBankPrompts: vi.fn(),
 }));
 
