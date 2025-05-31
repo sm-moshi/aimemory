@@ -37,8 +37,8 @@ export class MCPServerCLI extends BaseMCPServer {
 		const memoryBankDir = resolve(config.workspacePath, "memory-bank");
 
 		const cacheManager = new CacheManager(logger);
-		const streamingManager = new StreamingManager(logger);
-		const fileOperationManager = new FileOperationManager(logger);
+		const streamingManager = new StreamingManager(logger, memoryBankDir);
+		const fileOperationManager = new FileOperationManager(logger, memoryBankDir);
 		const memoryBank = new MemoryBankServiceCore(
 			memoryBankDir,
 			logger, // Pass the defined logger

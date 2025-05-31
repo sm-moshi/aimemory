@@ -53,11 +53,39 @@ export function activate(context: vscode.ExtensionContext) {
 
 	container.register("CacheManager", (c) => new CacheManager(c.resolve("Logger")), true);
 
-	container.register("StreamingManager", (c) => new StreamingManager(c.resolve("Logger")), true);
+	container.register(
+		"StreamingManager",
+		(c) => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				throw new Error("Cannot initialize StreamingManager: No workspace folder found");
+			}
+			const memoryBankFolder = path.join(
+				workspaceFolders[0].uri.fsPath,
+				".aimemory",
+				"memory-bank",
+			);
+			return new StreamingManager(c.resolve("Logger"), memoryBankFolder);
+		},
+		true,
+	);
 
 	container.register(
 		"FileOperationManager",
-		(c) => new FileOperationManager(c.resolve("Logger")),
+		(c) => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				throw new Error(
+					"Cannot initialize FileOperationManager: No workspace folder found",
+				);
+			}
+			const memoryBankFolder = path.join(
+				workspaceFolders[0].uri.fsPath,
+				".aimemory",
+				"memory-bank",
+			);
+			return new FileOperationManager(c.resolve("Logger"), memoryBankFolder);
+		},
 		true,
 	);
 

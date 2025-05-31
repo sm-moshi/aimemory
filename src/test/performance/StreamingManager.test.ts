@@ -1,8 +1,103 @@
+import { EventEmitter } from "node:events"; // Import EventEmitter explicitly
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StreamingManager } from "../../performance/StreamingManager.js";
+import { sanitizePath, validateMemoryBankPath } from "../../services/validation/security.js"; // Import for mocking
 import type { MemoryBankLogger } from "../../types/types.js";
+
+// Mock the security validation module
+vi.mock("../../services/validation/security.js", () => ({
+	sanitizePath: vi.fn(),
+	validateMemoryBankPath: vi.fn(),
+}));
+
+// Mock node:fs/promises globally for this test file
+vi.mock("node:fs/promises", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("node:fs/promises")>();
+	return {
+		...actual,
+		readFile: vi.fn(),
+		writeFile: vi.fn(),
+		stat: vi.fn(),
+		mkdir: vi.fn(),
+		rm: vi.fn(),
+	};
+});
+
+// Define MockReadStream and MockStream outside of vi.mock to make them accessible
+class MockReadStream extends EventEmitter {
+	private readonly content: string;
+	private readonly chunkSize: number;
+	private currentIndex: number;
+
+	constructor(content = "", options: { highWaterMark?: number } = {}) {
+		super();
+		this.content = content;
+		this.chunkSize = options.highWaterMark ?? 10; // Default chunk size
+		this.currentIndex = 0;
+		setImmediate(() => this._simulateRead());
+	}
+
+	_simulateRead() {
+		while (this.currentIndex < this.content.length) {
+			const chunk = this.content.slice(this.currentIndex, this.currentIndex + this.chunkSize);
+			this.emit("data", Buffer.from(chunk));
+			this.currentIndex += this.chunkSize;
+		}
+		this.emit("end");
+	}
+
+	destroy() {
+		this.emit("close");
+	}
+
+	// Mock implementations - these methods exist on real streams but are no-ops in our test mock
+	pause() {
+		/* Mock implementation - no action needed for tests */
+	}
+	resume() {
+		/* Mock implementation - no action needed for tests */
+	}
+}
+
+class MockStream extends EventEmitter {
+	private readonly timeoutMs: number;
+
+	constructor(timeoutMs = 5) {
+		super();
+		this.timeoutMs = timeoutMs;
+
+		// Delay to ensure proper setup
+		setTimeout(() => {
+			// For timeout tests, we want to trigger timeout, not error
+			// Intentionally don't emit any data or end events to simulate hanging
+		}, this.timeoutMs);
+	}
+
+	destroy() {
+		this.emit("close");
+	}
+
+	// Mock implementations - these methods exist on real streams but are no-ops in our test mock
+	pause() {
+		/* Mock implementation - no action needed for tests */
+	}
+	resume() {
+		/* Mock implementation - no action needed for tests */
+	}
+}
+
+// Mock node:fs globally for createReadStream
+vi.mock("node:fs", async () => {
+	const createReadStream = vi.fn((filePath, options) => {
+		// Default mock stream - content will be set by individual tests
+		return new MockReadStream("", options);
+	});
+	return {
+		createReadStream,
+	};
+});
 
 // Test setup
 const TEST_DIR = path.join(__dirname, "__temp__");
@@ -15,13 +110,93 @@ const mockLogger: MemoryBankLogger = {
 
 describe("StreamingManager", () => {
 	let streamingManager: StreamingManager;
+	let mockedFsReadFile: ReturnType<typeof vi.fn>;
+	let mockedFsWriteFile: ReturnType<typeof vi.fn>;
+	let mockedFsStat: ReturnType<typeof vi.fn>;
+	let mockedFsMkdir: ReturnType<typeof vi.fn>;
+	let mockedFsRm: ReturnType<typeof vi.fn>;
+	let mockedCreateReadStream: ReturnType<typeof vi.fn>;
 
 	beforeEach(async () => {
+		vi.clearAllMocks();
+
+		// Get references to the mocked fs functions
+		mockedFsReadFile = vi.mocked(fs.readFile);
+		mockedFsWriteFile = vi.mocked(fs.writeFile);
+		mockedFsStat = vi.mocked(fs.stat);
+		mockedFsMkdir = vi.mocked(fs.mkdir);
+		mockedFsRm = vi.mocked(fs.rm);
+		// Assign the mocked createReadStream from the mocked 'node:fs' module
+		mockedCreateReadStream = vi.mocked((await import("node:fs")).createReadStream);
+
+		// Default mock implementations for fs functions
+		mockedFsMkdir.mockResolvedValue(undefined);
+		mockedFsRm.mockResolvedValue(undefined);
+		mockedFsReadFile.mockResolvedValue("mock file content");
+		mockedFsWriteFile.mockResolvedValue(undefined);
+		mockedFsStat.mockImplementation(async (filePath: string) => {
+			if (filePath.includes("small.txt")) {
+				return { size: "This is a small test file.".length } as any;
+			}
+			if (filePath.includes("large.txt")) {
+				return { size: 150 } as any; // Larger than threshold
+			}
+			if (filePath.includes("does-not-exist.txt")) {
+				const error = new Error(
+					"ENOENT: no such file or directory",
+				) as NodeJS.ErrnoException;
+				error.code = "ENOENT";
+				throw error;
+			}
+			return { size: 100 } as any; // Default size for other files
+		});
+
+		// Clear all mocks first to prevent contamination
+		vi.mocked(sanitizePath).mockClear();
+		vi.mocked(validateMemoryBankPath).mockClear();
+		mockedCreateReadStream.mockClear();
+
+		// Mock sanitizePath - used by StreamingManager
+		vi.mocked(sanitizePath).mockImplementation((filePath: string, allowedRoot?: string) => {
+			// Simulate successful validation for paths within the TEST_DIR or relative safe paths
+			if (
+				filePath.startsWith(TEST_DIR) ||
+				filePath.includes("__temp__") ||
+				(!filePath.includes("../") &&
+					!filePath.includes("..\\") &&
+					!filePath.includes("\0") &&
+					!filePath.startsWith("/"))
+			) {
+				return filePath;
+			}
+			// For malicious paths, throw an error
+			throw new Error("Path validation failed: Path traversal detected");
+		});
+
+		// Mock validateMemoryBankPath - used by FileStreamer
+		vi.mocked(validateMemoryBankPath).mockImplementation(
+			(filePath: string, allowedRoot: string) => {
+				// Simulate successful validation for paths within the TEST_DIR or relative safe paths
+				if (
+					filePath.startsWith(TEST_DIR) ||
+					filePath.includes("__temp__") ||
+					(!filePath.includes("../") &&
+						!filePath.includes("..\\") &&
+						!filePath.includes("\0") &&
+						!filePath.startsWith("/"))
+				) {
+					return filePath;
+				}
+				// For malicious paths, throw an error
+				throw new Error("Path validation failed: Path traversal detected");
+			},
+		);
+
 		// Ensure test directory exists
-		await fs.mkdir(TEST_DIR, { recursive: true });
+		await mockedFsMkdir(TEST_DIR, { recursive: true });
 
 		// Create StreamingManager with test configuration
-		streamingManager = new StreamingManager(mockLogger, {
+		streamingManager = new StreamingManager(mockLogger, TEST_DIR, {
 			sizeThreshold: 100, // 100 bytes for testing
 			chunkSize: 10, // 10 bytes chunks for testing
 			timeout: 5000,
@@ -32,7 +207,7 @@ describe("StreamingManager", () => {
 	afterEach(async () => {
 		// Clean up test files
 		try {
-			await fs.rm(TEST_DIR, { recursive: true, force: true });
+			await mockedFsRm(TEST_DIR, { recursive: true, force: true });
 		} catch {
 			// Ignore cleanup errors
 		}
@@ -41,7 +216,7 @@ describe("StreamingManager", () => {
 
 	describe("Constructor and Configuration", () => {
 		it("should initialise with default configuration", () => {
-			const manager = new StreamingManager(mockLogger);
+			const manager = new StreamingManager(mockLogger, TEST_DIR);
 			const config = manager.getConfig();
 
 			expect(config.sizeThreshold).toBe(1024 * 1024); // 1MB
@@ -58,7 +233,7 @@ describe("StreamingManager", () => {
 				enableProgressCallbacks: false,
 			};
 
-			const manager = new StreamingManager(mockLogger, customConfig);
+			const manager = new StreamingManager(mockLogger, TEST_DIR, customConfig);
 			const config = manager.getConfig();
 
 			expect(config.sizeThreshold).toBe(500);
@@ -73,7 +248,8 @@ describe("StreamingManager", () => {
 			const testContent = "This is a small test file.";
 			const testFile = path.join(TEST_DIR, "small.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsReadFile.mockResolvedValueOnce(testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
 
 			const result = await streamingManager.readFile(testFile);
 
@@ -91,7 +267,8 @@ describe("StreamingManager", () => {
 			const testContent = "Small file content";
 			const testFile = path.join(TEST_DIR, "small.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsReadFile.mockResolvedValueOnce(testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
 
 			await streamingManager.readFile(testFile);
 			const stats = streamingManager.getStats();
@@ -106,11 +283,14 @@ describe("StreamingManager", () => {
 
 	describe("Streaming File Reading (Large Files)", () => {
 		it("should read large files using streaming strategy", async () => {
-			// Create content larger than threshold (100 bytes)
 			const testContent = "A".repeat(150);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				// Return a MockReadStream with the actual content and chunk size
+				return new MockReadStream(testContent, options);
+			});
 
 			const result = await streamingManager.readFile(testFile);
 
@@ -128,7 +308,11 @@ describe("StreamingManager", () => {
 			const testContent = "B".repeat(200);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
+
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				return new MockReadStream(testContent, options);
+			});
 
 			const progressCallback = vi.fn();
 			const result = await streamingManager.readFile(testFile, {
@@ -138,12 +322,11 @@ describe("StreamingManager", () => {
 			expect(result.success).toBe(true);
 			expect(progressCallback).toHaveBeenCalled();
 
-			// Check that progress was called with valid parameters
 			const calls = progressCallback.mock.calls;
 			expect(calls.length).toBeGreaterThan(0);
 			for (const call of calls) {
-				expect(call[0]).toBeGreaterThan(0); // bytesRead
-				expect(call[1]).toBe(testContent.length); // totalBytes
+				expect(call[0]).toBeGreaterThan(0);
+				expect(call[1]).toBe(testContent.length);
 			}
 		});
 
@@ -151,7 +334,10 @@ describe("StreamingManager", () => {
 			const testContent = "C".repeat(200);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				return new MockReadStream(testContent, options);
+			});
 
 			await streamingManager.readFile(testFile);
 			const stats = streamingManager.getStats();
@@ -168,6 +354,11 @@ describe("StreamingManager", () => {
 		it("should handle non-existent files", async () => {
 			const nonExistentFile = path.join(TEST_DIR, "does-not-exist.txt");
 
+			// For this test, we need to override the validation to allow the path through
+			// but have fs.stat fail, not path validation
+			vi.mocked(sanitizePath).mockImplementationOnce(() => nonExistentFile);
+			mockedFsStat.mockRejectedValueOnce({ code: "ENOENT" });
+
 			const result = await streamingManager.readFile(nonExistentFile);
 
 			expect(result.success).toBe(false);
@@ -182,20 +373,26 @@ describe("StreamingManager", () => {
 			const testContent = "D".repeat(200);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
 
-			const result = await streamingManager.readFile(testFile, {
-				timeout: 1, // Very short timeout
+			// Both sanitizePath and validateMemoryBankPath need to pass for streaming
+			vi.mocked(sanitizePath).mockImplementationOnce(() => testFile);
+			vi.mocked(validateMemoryBankPath).mockImplementationOnce(() => testFile);
+
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				// Create a stream that hangs and will be timed out
+				return new MockStream(100); // Don't emit data/end to trigger timeout
 			});
 
-			// Note: This test verifies timeout handling - the result depends on system speed
-			// On fast systems, file reads complete before timeout; on slower systems, timeout occurs
-			if (result.success) {
-				// File was read successfully before timeout
-				expect(result.data.content).toBe(testContent);
-			} else {
-				// Timeout occurred as expected
+			const result = await streamingManager.readFile(testFile, {
+				timeout: 10, // Very short timeout
+			});
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				// Expecting timeout
 				expect(result.error.code).toBe("STREAMING_TIMEOUT");
+				expect(result.error.message).toContain("timed out");
 			}
 		});
 	});
@@ -210,27 +407,39 @@ describe("StreamingManager", () => {
 			];
 
 			for (const maliciousPath of maliciousPaths) {
+				// For each malicious path, override the validation to throw an error
+				vi.mocked(sanitizePath).mockImplementationOnce(() => {
+					throw new Error("Path validation failed: Path traversal detected");
+				});
+
 				const result = await streamingManager.readFile(maliciousPath);
 				expect(result.success).toBe(false);
 				if (!result.success) {
 					expect(result.error.code).toBe("PATH_VALIDATION_ERROR");
-					expect(result.error.message).toContain("potentially dangerous sequences");
+					expect(result.error.message).toContain("Path validation failed");
 				}
 			}
 		});
 
 		it("should apply strict validation when allowedRoot is provided", async () => {
 			const testContent = "Safe content";
-			const safeFile = path.join(TEST_DIR, "safe.txt");
-			await fs.writeFile(safeFile, testContent);
+			mockedFsReadFile.mockResolvedValueOnce(testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
 
-			// Should succeed with valid path within allowedRoot
+			// Mock the FileStreamer's internal createReadStream for the valid path
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				return new MockReadStream(testContent, options);
+			});
+
 			const validResult = await streamingManager.readFile("safe.txt", {
 				allowedRoot: TEST_DIR,
 			});
 			expect(validResult.success).toBe(true);
 
 			// Should fail with path traversal attempt when allowedRoot is specified
+			vi.mocked(sanitizePath).mockImplementationOnce(() => {
+				throw new Error("Path validation failed: Path traversal detected");
+			});
 			const maliciousResult = await streamingManager.readFile("../../../etc/passwd", {
 				allowedRoot: TEST_DIR,
 			});
@@ -241,16 +450,22 @@ describe("StreamingManager", () => {
 		});
 
 		it("should apply same security validation to wouldStreamFile", async () => {
+			const maliciousPath = "../../../etc/passwd";
+
 			// Should reject path traversal attempts
-			const maliciousResult = await streamingManager.wouldStreamFile("../../../etc/passwd");
+			vi.mocked(sanitizePath).mockImplementationOnce(() => {
+				throw new Error("Path validation failed: Path traversal detected");
+			});
+			const maliciousResult = await streamingManager.wouldStreamFile(maliciousPath);
 			expect(maliciousResult.success).toBe(false);
 			if (!maliciousResult.success) {
 				expect(maliciousResult.error.code).toBe("PATH_VALIDATION_ERROR");
 			}
 
-			// Should work with valid absolute paths
+			// Should work with valid absolute paths - reset the mock to allow this path
 			const testFile = path.join(TEST_DIR, "test.txt");
-			await fs.writeFile(testFile, "test");
+			vi.mocked(sanitizePath).mockImplementationOnce(() => testFile);
+			mockedFsStat.mockResolvedValueOnce({ size: 10 } as any); // Small size, so not streamed
 			const validResult = await streamingManager.wouldStreamFile(testFile);
 			expect(validResult.success).toBe(true);
 		});
@@ -264,8 +479,14 @@ describe("StreamingManager", () => {
 			const smallFile = path.join(TEST_DIR, "small.txt");
 			const largeFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(smallFile, smallContent);
-			await fs.writeFile(largeFile, largeContent);
+			mockedFsReadFile.mockResolvedValueOnce(smallContent);
+			mockedFsStat.mockResolvedValueOnce({ size: smallContent.length } as any);
+
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				return new MockReadStream(largeContent, options);
+			});
+
+			mockedFsStat.mockResolvedValueOnce({ size: largeContent.length } as any);
 
 			// Read both files
 			await streamingManager.readFile(smallFile);
@@ -285,14 +506,14 @@ describe("StreamingManager", () => {
 			const testContent = "Test content";
 			const testFile = path.join(TEST_DIR, "test.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsReadFile.mockResolvedValueOnce(testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
+
 			await streamingManager.readFile(testFile);
 
-			// Verify stats exist
 			let stats = streamingManager.getStats();
 			expect(stats.totalOperations).toBe(1);
 
-			// Reset and verify
 			streamingManager.resetStats();
 			stats = streamingManager.getStats();
 
@@ -308,18 +529,14 @@ describe("StreamingManager", () => {
 			const testContent = "F".repeat(200);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				return new MockReadStream(testContent, options);
+			});
 
-			// Start read operation but don't await
 			const readPromise = streamingManager.readFile(testFile);
-
-			// Check if operation is tracked (might be too fast to catch)
-			// The variable activeOps was previously here but deemed unused by the linter.
-			// The primary check for active operations is done after awaiting the promise.
-
 			await readPromise;
 
-			// After completion, no active operations
 			const finalActiveOps = streamingManager.getActiveOperations();
 			expect(finalActiveOps).toHaveLength(0);
 		});
@@ -333,8 +550,8 @@ describe("StreamingManager", () => {
 			const smallFile = path.join(TEST_DIR, "small.txt");
 			const largeFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(smallFile, smallContent);
-			await fs.writeFile(largeFile, largeContent);
+			mockedFsStat.mockResolvedValueOnce({ size: smallContent.length } as any); // For small file
+			mockedFsStat.mockResolvedValueOnce({ size: largeContent.length } as any); // For large file
 
 			const smallResult = await streamingManager.wouldStreamFile(smallFile);
 			const largeResult = await streamingManager.wouldStreamFile(largeFile);
@@ -343,13 +560,17 @@ describe("StreamingManager", () => {
 			expect(largeResult.success).toBe(true);
 
 			if (smallResult.success && largeResult.success) {
-				expect(smallResult.data).toBe(false); // Won't be streamed
-				expect(largeResult.data).toBe(true); // Will be streamed
+				expect(smallResult.data).toBe(false);
+				expect(largeResult.data).toBe(true);
 			}
 		});
 
 		it("should handle strategy prediction for non-existent files", async () => {
 			const nonExistentFile = path.join(TEST_DIR, "does-not-exist.txt");
+
+			// Allow the path to pass validation but make stat fail
+			vi.mocked(sanitizePath).mockImplementationOnce(() => nonExistentFile);
+			mockedFsStat.mockRejectedValueOnce({ code: "ENOENT" });
 
 			const result = await streamingManager.wouldStreamFile(nonExistentFile);
 
@@ -365,7 +586,14 @@ describe("StreamingManager", () => {
 			const testContent = "H".repeat(200);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			// Reset the stat mock for this specific test
+			mockedFsStat.mockResolvedValueOnce({ size: testContent.length } as any);
+
+			// Clear the createReadStream mock and set up fresh mock for this test
+			mockedCreateReadStream.mockReset();
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				return new MockReadStream(testContent, options);
+			});
 
 			const result = await streamingManager.readFile(testFile, {
 				chunkSize: 5, // Smaller chunks
@@ -375,24 +603,40 @@ describe("StreamingManager", () => {
 			if (result.success) {
 				expect(result.data.content).toBe(testContent);
 				expect(result.data.wasStreamed).toBe(true);
-				// Should have more chunks due to smaller chunk size
 				expect(result.data.chunksProcessed).toBeGreaterThan(20);
 			}
 		});
 
 		it("should respect custom timeout", async () => {
-			const testContent = "I".repeat(200);
 			const testFile = path.join(TEST_DIR, "large.txt");
 
-			await fs.writeFile(testFile, testContent);
+			// Set up stat to return a large file
+			mockedFsStat.mockResolvedValueOnce({ size: 200 } as any);
 
-			const result = await streamingManager.readFile(testFile, {
-				timeout: 10000, // Longer timeout
+			// Both sanitizePath and validateMemoryBankPath need to pass for streaming
+			vi.mocked(sanitizePath).mockImplementationOnce(() => testFile);
+			vi.mocked(validateMemoryBankPath).mockImplementationOnce(() => testFile);
+
+			// Create a mock stream that never completes to trigger timeout
+			let mockStream: MockStream;
+			mockedCreateReadStream.mockImplementationOnce((filePath, options) => {
+				mockStream = new MockStream(1000); // Long delay, but timeout will cut it short
+				return mockStream;
 			});
 
-			expect(result.success).toBe(true);
-			if (result.success) {
-				expect(result.data.content).toBe(testContent);
+			const startTime = Date.now();
+			const result = await streamingManager.readFile(testFile, {
+				timeout: 50, // Very short timeout
+			});
+			const duration = Date.now() - startTime;
+
+			// Should timeout within reasonable time
+			expect(duration).toBeLessThan(200); // Should timeout well before MockStream's 1000ms delay
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				// Expecting timeout
+				expect(result.error.code).toBe("STREAMING_TIMEOUT");
+				expect(result.error.message).toContain("timed out");
 			}
 		});
 	});

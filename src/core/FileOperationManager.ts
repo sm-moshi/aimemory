@@ -1,5 +1,6 @@
 import type { Stats } from "node:fs";
 import * as fs from "node:fs/promises";
+import { validateMemoryBankPath } from "../services/validation/security.js";
 import type {
 	FileError,
 	FileOperationManagerConfig,
@@ -11,6 +12,8 @@ import type {
 /**
  * FileOperationManager provides robust file operations with retry logic,
  * exponential backoff, and proper error handling following Result<T,E> pattern.
+ *
+ * SECURITY: All file operations validate paths to prevent directory traversal attacks.
  */
 export class FileOperationManager {
 	private readonly retryConfig: RetryConfig = {
@@ -24,65 +27,152 @@ export class FileOperationManager {
 
 	constructor(
 		private readonly logger: MemoryBankLogger,
+		private readonly allowedRoot: string, // SECURITY: Required allowedRoot for path validation
 		config?: FileOperationManagerConfig,
 	) {
+		if (!allowedRoot) {
+			throw new Error(
+				"FileOperationManager requires allowedRoot for security - cannot operate without path restrictions",
+			);
+		}
+
 		if (config?.retryConfig) {
 			this.retryConfig = { ...this.retryConfig, ...config.retryConfig };
 		}
 		this.timeout = config?.timeout ?? 30000; // 30 seconds default
+
+		this.logger.debug(`FileOperationManager initialized with allowedRoot: ${allowedRoot}`);
+	}
+
+	/**
+	 * SECURITY: Validates path before any file operation
+	 */
+	private validatePath(path: string): string {
+		try {
+			const validatedPath = validateMemoryBankPath(path, this.allowedRoot);
+			this.logger.debug(`Path validated: ${path} -> ${validatedPath}`);
+			return validatedPath;
+		} catch (error) {
+			this.logger.error(
+				`Path validation failed for: ${path} - ${error instanceof Error ? error.message : String(error)}`,
+			);
+			throw new Error(
+				`Path validation failed: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
 	}
 
 	/**
 	 * Read file with retry mechanism and timeout
+	 * SECURITY: Path is validated before any file access
 	 */
 	async readFileWithRetry(path: string): Promise<Result<string, FileError>> {
-		return await this.withRetry(async () => {
-			this.logger.debug(`Reading file: ${path}`);
-			return await this.withTimeout(fs.readFile(path, "utf-8"));
-		}, `readFile(${path})`);
+		try {
+			const validatedPath = this.validatePath(path);
+			return await this.withRetry(async () => {
+				this.logger.debug(`Reading file: ${validatedPath}`);
+				return await this.withTimeout(fs.readFile(validatedPath, "utf-8"));
+			}, `readFile(${path})`);
+		} catch (error) {
+			const fileError: FileError = {
+				code: "PATH_VALIDATION_ERROR",
+				message: error instanceof Error ? error.message : String(error),
+				path,
+				originalError: error instanceof Error ? error : new Error(String(error)),
+			};
+			return { success: false, error: fileError };
+		}
 	}
 
 	/**
 	 * Write file with retry mechanism and timeout
+	 * SECURITY: Path is validated before any file access
 	 */
 	async writeFileWithRetry(path: string, content: string): Promise<Result<void, FileError>> {
-		return await this.withRetry(async () => {
-			this.logger.debug(`Writing file: ${path}`);
-			return await this.withTimeout(fs.writeFile(path, content));
-		}, `writeFile(${path})`);
+		try {
+			const validatedPath = this.validatePath(path);
+			return await this.withRetry(async () => {
+				this.logger.debug(`Writing file: ${validatedPath}`);
+				return await this.withTimeout(fs.writeFile(validatedPath, content));
+			}, `writeFile(${path})`);
+		} catch (error) {
+			const fileError: FileError = {
+				code: "PATH_VALIDATION_ERROR",
+				message: error instanceof Error ? error.message : String(error),
+				path,
+				originalError: error instanceof Error ? error : new Error(String(error)),
+			};
+			return { success: false, error: fileError };
+		}
 	}
 
 	/**
 	 * Create directory with retry mechanism
+	 * SECURITY: Path is validated before any file access
 	 */
 	async mkdirWithRetry(
 		path: string,
 		options?: { recursive?: boolean },
 	): Promise<Result<void, FileError>> {
-		return await this.withRetry(async () => {
-			this.logger.debug(`Creating directory: ${path}`);
-			await this.withTimeout(fs.mkdir(path, options));
-		}, `mkdir(${path})`);
+		try {
+			const validatedPath = this.validatePath(path);
+			return await this.withRetry(async () => {
+				this.logger.debug(`Creating directory: ${validatedPath}`);
+				await this.withTimeout(fs.mkdir(validatedPath, options));
+			}, `mkdir(${path})`);
+		} catch (error) {
+			const fileError: FileError = {
+				code: "PATH_VALIDATION_ERROR",
+				message: error instanceof Error ? error.message : String(error),
+				path,
+				originalError: error instanceof Error ? error : new Error(String(error)),
+			};
+			return { success: false, error: fileError };
+		}
 	}
 
 	/**
 	 * Get file stats with retry mechanism
+	 * SECURITY: Path is validated before any file access
 	 */
 	async statWithRetry(path: string): Promise<Result<Stats, FileError>> {
-		return await this.withRetry(async () => {
-			this.logger.debug(`Getting stats for: ${path}`);
-			return await this.withTimeout(fs.stat(path));
-		}, `stat(${path})`);
+		try {
+			const validatedPath = this.validatePath(path);
+			return await this.withRetry(async () => {
+				this.logger.debug(`Getting stats for: ${validatedPath}`);
+				return await this.withTimeout(fs.stat(validatedPath));
+			}, `stat(${path})`);
+		} catch (error) {
+			const fileError: FileError = {
+				code: "PATH_VALIDATION_ERROR",
+				message: error instanceof Error ? error.message : String(error),
+				path,
+				originalError: error instanceof Error ? error : new Error(String(error)),
+			};
+			return { success: false, error: fileError };
+		}
 	}
 
 	/**
 	 * Check file access with retry mechanism
+	 * SECURITY: Path is validated before any file access
 	 */
 	async accessWithRetry(path: string, mode?: number): Promise<Result<void, FileError>> {
-		return await this.withRetry(async () => {
-			this.logger.debug(`Checking access for: ${path}`);
-			return await this.withTimeout(fs.access(path, mode));
-		}, `access(${path})`);
+		try {
+			const validatedPath = this.validatePath(path);
+			return await this.withRetry(async () => {
+				this.logger.debug(`Checking access for: ${validatedPath}`);
+				return await this.withTimeout(fs.access(validatedPath, mode));
+			}, `access(${path})`);
+		} catch (error) {
+			const fileError: FileError = {
+				code: "PATH_VALIDATION_ERROR",
+				message: error instanceof Error ? error.message : String(error),
+				path,
+				originalError: error instanceof Error ? error : new Error(String(error)),
+			};
+			return { success: false, error: fileError };
+		}
 	}
 
 	/**

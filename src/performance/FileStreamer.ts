@@ -1,5 +1,6 @@
 import { createReadStream } from "node:fs";
 import type { ReadStream, Stats } from "node:fs";
+import { validateMemoryBankPath } from "../services/validation/security.js";
 import type { Result } from "../types/errorHandling.js";
 import type { FileError } from "../types/fileOperations.js";
 import type { MemoryBankLogger } from "../types/logging.js";
@@ -10,21 +11,55 @@ import type {
 	StreamingResult,
 } from "../types/streaming.js";
 
+/**
+ * FileStreamer provides secure streaming file operations with path validation
+ * to prevent directory traversal attacks.
+ */
 export class FileStreamer {
 	private readonly logger: MemoryBankLogger;
+	private readonly allowedRoot: string; // SECURITY: Required allowedRoot for path validation
 	private readonly defaultChunkSize: number;
 	private readonly defaultTimeout: number;
 	private readonly defaultEnableProgressCallbacks: boolean;
 
-	constructor(logger: MemoryBankLogger, config: FileStreamerConfig) {
+	constructor(
+		logger: MemoryBankLogger,
+		allowedRoot: string, // SECURITY: Add required allowedRoot parameter
+		config: FileStreamerConfig,
+	) {
+		if (!allowedRoot) {
+			throw new Error(
+				"FileStreamer requires allowedRoot for security - cannot operate without path restrictions",
+			);
+		}
+
 		this.logger = logger;
+		this.allowedRoot = allowedRoot;
 		this.defaultChunkSize = config.defaultChunkSize;
 		this.defaultTimeout = config.defaultTimeout;
 		this.defaultEnableProgressCallbacks = config.defaultEnableProgressCallbacks;
 
 		this.logger.debug(
-			`FileStreamer initialised with defaultChunkSize: ${this.defaultChunkSize}, defaultTimeout: ${this.defaultTimeout}`,
+			`FileStreamer initialised with allowedRoot: ${allowedRoot}, defaultChunkSize: ${this.defaultChunkSize}, defaultTimeout: ${this.defaultTimeout}`,
 		);
+	}
+
+	/**
+	 * SECURITY: Validates path before any file operation
+	 */
+	private validatePath(path: string): string {
+		try {
+			const validatedPath = validateMemoryBankPath(path, this.allowedRoot);
+			this.logger.debug(`FileStreamer path validated: ${path} -> ${validatedPath}`);
+			return validatedPath;
+		} catch (error) {
+			this.logger.error(
+				`FileStreamer path validation failed for: ${path} - ${error instanceof Error ? error.message : String(error)}`,
+			);
+			throw new Error(
+				`Path validation failed: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
 	}
 
 	/**
@@ -142,12 +177,27 @@ export class FileStreamer {
 
 	/**
 	 * Performs streaming file reading for large files.
+	 * SECURITY: Path is validated before creating read stream
 	 */
 	async streamFile(
 		filePath: string,
 		stats: Stats,
 		options?: StreamingOptions,
 	): Promise<Result<StreamingResult, FileError>> {
+		// SECURITY: VALIDATE PATH FIRST
+		let validatedPath: string;
+		try {
+			validatedPath = this.validatePath(filePath);
+		} catch (error) {
+			const fileError: FileError = {
+				code: "PATH_VALIDATION_ERROR",
+				message: `Path validation failed: ${error instanceof Error ? error.message : String(error)}`,
+				path: filePath,
+				originalError: error instanceof Error ? error : new Error(String(error)),
+			};
+			return { success: false, error: fileError };
+		}
+
 		return new Promise((resolve) => {
 			const chunks: Buffer[] = [];
 			const bytesRead = { value: 0 };
@@ -160,8 +210,8 @@ export class FileStreamer {
 			const enableProgress =
 				this.defaultEnableProgressCallbacks && typeof options?.onProgress === "function";
 
-			// Create read stream
-			const stream = createReadStream(filePath, {
+			// Create read stream with VALIDATED path
+			const stream = createReadStream(validatedPath, {
 				highWaterMark: chunkSize,
 			});
 
@@ -198,7 +248,6 @@ export class FileStreamer {
 			// Note: Cancellation logic via options?.enableCancellation would typically involve
 			// an AbortSignal or similar mechanism passed in via options, which would
 			// then be used to call stream.destroy() or similar.
-			// For simplicity, direct cancellation handling is omitted here but can be added.
 		});
 	}
 }
