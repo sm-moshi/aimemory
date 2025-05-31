@@ -80,7 +80,10 @@ describe("CommandHandler", () => {
 			});
 
 			it("returns not initialized status when memory bank is not ready", async () => {
-				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: false });
+				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
+					success: true,
+					data: false,
+				});
 
 				const result = await handler.processMemoryCommand("/memory status");
 				expect(result).toContain("Memory Bank Status: Not initialized");
@@ -88,7 +91,10 @@ describe("CommandHandler", () => {
 			});
 
 			it("shows self-healing message when files were created", async () => {
-				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: true });
+				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
+					success: true,
+					data: true,
+				});
 				mockMemoryBank.loadFiles.mockResolvedValue({
 					success: true,
 					data: ["core/projectbrief.md", "progress/current.md"],
@@ -100,7 +106,10 @@ describe("CommandHandler", () => {
 			});
 
 			it("categorizes files correctly", async () => {
-				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: true });
+				mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
+					success: true,
+					data: true,
+				});
 				mockMemoryBank.loadFiles.mockResolvedValue({ success: true, data: [] });
 				mockMemoryBank.getAllFiles.mockReturnValue([
 					{
@@ -255,7 +264,9 @@ describe("CommandHandler", () => {
 			});
 
 			const result = await handler.processMemoryCommand("/memory status");
-			expect(result).toContain("Error checking memory bank initialization status: General error");
+			expect(result).toContain(
+				"Error checking memory bank initialization status: General error",
+			);
 		});
 	});
 

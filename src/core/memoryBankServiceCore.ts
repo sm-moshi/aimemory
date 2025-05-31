@@ -32,7 +32,14 @@ export class MemoryBankServiceCore implements MemoryBank {
 
 	// Cache management
 	private readonly _fileCache: Map<string, FileCache> = new Map();
-	private readonly _cacheStats: CacheStats = { hits: 0, misses: 0, reloads: 0 };
+	private readonly _cacheStats: CacheStats = {
+		hits: 0,
+		misses: 0,
+		totalFiles: 0,
+		hitRate: 0,
+		lastReset: new Date(),
+		reloads: 0,
+	};
 
 	constructor(memoryBankPath: string, logger?: MemoryBankLogger) {
 		this._memoryBankFolder = memoryBankPath;

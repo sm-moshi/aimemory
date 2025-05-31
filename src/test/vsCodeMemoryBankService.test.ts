@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 import { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
 import { MemoryBankFileType, isSuccess } from "../types/types.js";
 
@@ -191,9 +190,6 @@ describe("VSCodeMemoryBankService", () => {
 		expect(initialFileLoaded).toBeDefined();
 
 		if (initialFileLoaded && initialFileLoaded.lastUpdated instanceof Date) {
-			// TODO: Useless assignement?
-			const initialTime = initialFileLoaded.lastUpdated.getTime();
-
 			await service.updateFile(MemoryBankFileType.ProjectBrief, "new content");
 			// After update, re-fetching the file should ideally show the new content
 			// This test needs refinement to mock the coreService.getFile behavior after update.
@@ -203,6 +199,80 @@ describe("VSCodeMemoryBankService", () => {
 				"new content",
 			);
 		}
+	});
+
+	it("updateFile handles errors from core service", async () => {
+		mockCoreService.updateFile.mockResolvedValue({
+			success: false,
+			error: new Error("Write update failed"),
+		});
+		const service = new VSCodeMemoryBankService(
+			mockContext as unknown as import("vscode").ExtensionContext,
+			mockCoreService,
+			mockCursorRulesService,
+			mockLogger,
+		);
+		const result = await service.updateFile(MemoryBankFileType.ProjectBrief, "new content");
+		expect(result).toEqual({ success: false, error: new Error("Write update failed") });
+		expect(mockCoreService.updateFile).toHaveBeenCalledWith(
+			MemoryBankFileType.ProjectBrief,
+			"new content",
+		);
+	});
+
+	it("can invalidate specific file cache", async () => {
+		const service = new VSCodeMemoryBankService(
+			mockContext as unknown as import("vscode").ExtensionContext,
+			mockCoreService,
+			mockCursorRulesService,
+			mockLogger,
+		);
+		await service.loadFiles();
+		service.invalidateCache("/mock/workspace/.aimemory/memory-bank/core/projectbrief.md");
+		expect(mockCoreService.invalidateCache).toHaveBeenCalledWith(
+			"/mock/workspace/.aimemory/memory-bank/core/projectbrief.md",
+		);
+		const stats = service.getCacheStats();
+		expect(stats).toBeDefined();
+	});
+
+	it("can clear all cache", async () => {
+		const service = new VSCodeMemoryBankService(
+			mockContext as unknown as import("vscode").ExtensionContext,
+			mockCoreService,
+			mockCursorRulesService,
+			mockLogger,
+		);
+		await service.loadFiles();
+		service.invalidateCache();
+		expect(mockCoreService.invalidateCache).toHaveBeenCalledWith(undefined);
+		service.resetCacheStats();
+		expect(mockCoreService.resetCacheStats).toHaveBeenCalled();
+		const stats = service.getCacheStats();
+		expect(mockCoreService.getCacheStats).toHaveBeenCalled();
+		expect(stats).toEqual({});
+	});
+
+	it("invalidates cache for missing files", async () => {
+		mockCoreService.getIsMemoryBankInitialized.mockResolvedValue({
+			success: true,
+			data: false,
+		});
+		const service = new VSCodeMemoryBankService(
+			mockContext as unknown as import("vscode").ExtensionContext,
+			mockCoreService,
+			mockCursorRulesService,
+			mockLogger,
+		);
+		await service.loadFiles();
+		service.invalidateCache();
+		const result = await service.getIsMemoryBankInitialized();
+		expect(isSuccess(result)).toBe(true);
+		if (isSuccess(result)) {
+			expect(result.data).toBe(false);
+		}
+		expect(mockCoreService.getIsMemoryBankInitialized).toHaveBeenCalled();
+		expect(mockCoreService.invalidateCache).toHaveBeenCalled();
 	});
 
 	it("getFilesWithFilenames returns a string with file info", async () => {
@@ -236,6 +306,44 @@ describe("VSCodeMemoryBankService", () => {
 			// Add check here
 			expect(health.data).toBe(mockHealthMessage);
 		}
+	});
+
+	it("checkHealth reports issues found by core service", async () => {
+		mockCoreService.checkHealth.mockResolvedValue({
+			success: true,
+			data: "❌ Issues found:\nMissing folder: /mock/workspace/.aimemory/memory-bank",
+		});
+		const service = new VSCodeMemoryBankService(
+			mockContext as unknown as import("vscode").ExtensionContext,
+			mockCoreService,
+			mockCursorRulesService,
+			mockLogger,
+		);
+		const health = await service.checkHealth();
+		expect(isSuccess(health)).toBe(true);
+		if (isSuccess(health)) {
+			expect(health.data).toContain("❌ Issues found");
+		}
+		expect(mockCoreService.checkHealth).toHaveBeenCalled();
+	});
+
+	it("checkHealth handles errors from core service", async () => {
+		mockCoreService.checkHealth.mockResolvedValue({
+			success: false,
+			error: new Error("Health check failed"),
+		});
+		const service = new VSCodeMemoryBankService(
+			mockContext as unknown as import("vscode").ExtensionContext,
+			mockCoreService,
+			mockCursorRulesService,
+			mockLogger,
+		);
+		const health = await service.checkHealth();
+		expect(isSuccess(health)).toBe(false);
+		if (!isSuccess(health)) {
+			expect(health.error.message).toContain("Health check failed");
+		}
+		expect(mockCoreService.checkHealth).toHaveBeenCalled();
 	});
 
 	describe("getIsMemoryBankInitialized", () => {

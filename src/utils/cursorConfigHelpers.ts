@@ -10,11 +10,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { window } from "vscode";
 import { validateWorkspace } from "../mcp/shared/processHelpers.js";
-import type {
-	ConfigComparisonResult,
-	CursorMCPConfig,
-	CursorMCPServerConfig,
-} from "../types/types.js";
+import type { ConfigComparisonResult, CursorMCPConfig, MCPServerConfig } from "../types/config.js";
 import { Logger } from "./log.js";
 
 /**
@@ -85,47 +81,37 @@ export async function writeCursorMCPConfig(config: CursorMCPConfig): Promise<voi
 }
 
 /**
- * Creates a server configuration object for AI Memory
- * Centralizes server config creation logic
+ * Creates the AI Memory server configuration for Cursor MCP.
+ * This configuration tells Cursor how to run the AI Memory MCP server.
  */
-export function createAIMemoryServerConfig(
-	extensionPath: string,
-	workspacePath: string,
-): CursorMCPServerConfig {
+export function createAIMemoryServerConfig(workspacePath: string): MCPServerConfig {
 	return {
 		name: "AI Memory",
 		command: "node",
-		args: [join(extensionPath, "dist", "index.cjs"), workspacePath],
-		cwd: extensionPath,
+		args: [join(workspacePath, "dist", "mcp-server.js"), "--workspace", workspacePath],
+		cwd: workspacePath,
 	};
 }
 
 /**
- * Compares two server configurations for equality
- * Reduces config comparison complexity from ~4-5 branches to ~1
+ * Compares two server configurations for equivalence
  */
 export function compareServerConfigs(
-	existing: CursorMCPServerConfig | undefined,
-	newConfig: CursorMCPServerConfig,
+	config1: MCPServerConfig,
+	config2: MCPServerConfig,
 ): ConfigComparisonResult {
-	if (!existing) {
-		return { matches: false, differences: ["Config does not exist"] };
-	}
-
 	const differences: string[] = [];
 
-	if (existing.command !== newConfig.command) {
-		differences.push(`command: ${existing.command} → ${newConfig.command}`);
+	if (config1.command !== config2.command) {
+		differences.push(`command: ${config1.command} → ${config2.command}`);
 	}
 
-	if (existing.cwd !== newConfig.cwd) {
-		differences.push(`cwd: ${existing.cwd} → ${newConfig.cwd}`);
+	if (config1.cwd !== config2.cwd) {
+		differences.push(`cwd: ${config1.cwd} → ${config2.cwd}`);
 	}
 
-	if (JSON.stringify(existing.args) !== JSON.stringify(newConfig.args)) {
-		differences.push(
-			`args: ${JSON.stringify(existing.args)} → ${JSON.stringify(newConfig.args)}`,
-		);
+	if (JSON.stringify(config1.args) !== JSON.stringify(config2.args)) {
+		differences.push(`args: ${JSON.stringify(config1.args)} → ${JSON.stringify(config2.args)}`);
 	}
 
 	return {
@@ -138,7 +124,7 @@ export function compareServerConfigs(
  * High-level orchestrator for updating Cursor MCP configuration
  * Reduces updateCursorMCPConfig complexity from ~21 to ~5-6 complexity points
  */
-export async function updateCursorMCPServerConfig(extensionPath: string): Promise<void> {
+export async function updateCursorMCPServerConfig(): Promise<void> {
 	const logger = Logger.getInstance();
 
 	try {
@@ -153,13 +139,13 @@ export async function updateCursorMCPServerConfig(extensionPath: string): Promis
 		existingConfig.mcpServers ??= {};
 
 		// Create our server configuration
-		const ourServerConfig = createAIMemoryServerConfig(extensionPath, workspacePath);
+		const ourServerConfig = createAIMemoryServerConfig(workspacePath);
 
 		// Compare configurations
-		const comparison = compareServerConfigs(
-			existingConfig.mcpServers["AI Memory"],
-			ourServerConfig,
-		);
+		const existingServerConfig = existingConfig.mcpServers["AI Memory"];
+		const comparison = existingServerConfig
+			? compareServerConfigs(existingServerConfig, ourServerConfig)
+			: { matches: false, differences: ["Config does not exist"] };
 
 		// Update configuration if needed
 		if (!comparison.matches) {

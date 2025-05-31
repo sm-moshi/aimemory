@@ -1,4 +1,4 @@
-import { MemoryBankFileType } from "../types/types.js";
+import { MemoryBankFileType } from "../types/core.js";
 
 const defaultTemplate =
 	"# Memory Bank File\n\nThis file should contain project memory or context as appropriate.\n\n*This is a default template*\n";

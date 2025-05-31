@@ -31,6 +31,18 @@ vi.mock("node:fs/promises", () => ({
 	mkdir: vi.fn(),
 }));
 
+// Mock the fs module to return mocked content for cursor-rules constants tests
+vi.mock("node:fs", () => ({
+	readFileSync: vi.fn().mockReturnValue("Mocked Markdown Content"),
+}));
+
+// Import cursor-rules constants for testing
+import {
+	CURSOR_MEMORY_BANK_FILENAME,
+	CURSOR_MEMORY_BANK_RULES_FILE,
+	CURSOR_RULES_PATH,
+} from "../lib/cursor-rules.js";
+
 describe("CursorRulesService", () => {
 	let service: CursorRulesService;
 	let mockContext: any;
@@ -181,5 +193,19 @@ describe("CursorRulesService", () => {
 
 			expect(vscode.workspace.fs.writeFile).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe("cursor-rules constants", () => {
+	it("CURSOR_RULES_PATH ends with memory-bank.mdc", () => {
+		expect(CURSOR_RULES_PATH.endsWith("memory-bank.mdc")).toBe(true);
+	});
+
+	it("CURSOR_MEMORY_BANK_FILENAME is correct", () => {
+		expect(CURSOR_MEMORY_BANK_FILENAME).toBe("memory-bank.mdc");
+	});
+
+	it("CURSOR_MEMORY_BANK_RULES_FILE contains mocked markdown content", () => {
+		expect(CURSOR_MEMORY_BANK_RULES_FILE).toContain("Mocked Markdown Content");
 	});
 });

@@ -5,7 +5,7 @@
  * and eliminate unsafe type assertions throughout the MCP codebase.
  */
 
-import type { MemoryBankFileType } from "../../types/types.js";
+import { MemoryBankFileType } from "../../types/types.js";
 
 // Re-export TypeValidationError from centralized types
 export { TypeValidationError } from "../../types/mcpTypes.js";
@@ -14,38 +14,13 @@ export { TypeValidationError } from "../../types/mcpTypes.js";
  * Valid memory bank file types
  * This should be kept in sync with the actual MemoryBankFileType definition
  */
-const VALID_FILE_TYPES = [
-	// Core
-	"core/projectbrief.md",
-	"core/productContext.md",
-	"core/activeContext.md",
-
-	// System Patterns
-	"systemPatterns/index.md",
-	"systemPatterns/architecture.md",
-	"systemPatterns/patterns.md",
-	"systemPatterns/scanning.md",
-
-	// Tech Context
-	"techContext/index.md",
-	"techContext/stack.md",
-	"techContext/dependencies.md",
-	"techContext/environment.md",
-
-	// Progress
-	"progress/index.md",
-	"progress/current.md",
-	"progress/history.md",
-] as const;
+const VALID_FILE_TYPES = Object.values(MemoryBankFileType);
 
 /**
  * Type guard for MemoryBankFileType with runtime validation
  */
 export function isValidMemoryBankFileType(value: unknown): value is MemoryBankFileType {
-	return (
-		typeof value === "string" &&
-		VALID_FILE_TYPES.includes(value as (typeof VALID_FILE_TYPES)[number])
-	);
+	return typeof value === "string" && VALID_FILE_TYPES.includes(value as MemoryBankFileType);
 }
 
 /**

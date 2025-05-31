@@ -5,5 +5,5 @@ import { updateCursorMCPServerConfig } from "./cursorConfigHelpers.js";
  */
 export async function updateCursorMCPConfig(extensionPath: string): Promise<void> {
 	// Delegate to the new utility function that reduces complexity from ~21 to ~5-6
-	await updateCursorMCPServerConfig(extensionPath);
+	await updateCursorMCPServerConfig();
 }

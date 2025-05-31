@@ -2,14 +2,7 @@
  * Lightweight Dependency Injection Container
  */
 
-// TODO: Move the type to src/types/
-type DependencyFactory<T> = (container: DIContainer) => T;
-
-interface Registration<T> {
-	factory: DependencyFactory<T>;
-	singleton: boolean;
-	instance?: T;
-}
+import type { DependencyFactory, Registration } from "../types/di.js";
 
 export class DIContainer {
 	private readonly registrations = new Map<string, Registration<unknown>>();

@@ -153,22 +153,29 @@ describe("cursor-config", () => {
 
 	describe("updateCursorMCPConfig", () => {
 		it("creates new config file with AI Memory server (STDIO)", async () => {
-			currentFsMocks.readFile.mockRejectedValueOnce(new Error("ENOENT: file not found"));
+			currentFsMocks.readFile.mockRejectedValue(new Error("ENOENT"));
 
 			await updateCursorMCPConfig(mockExtensionPath);
+
+			const expectedConfig = {
+				mcpServers: {
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
+				},
+			};
 
 			expect(currentFsMocks.mkdir).toHaveBeenCalledWith(mockCursorDir, { recursive: true });
 			expect(currentFsMocks.writeFile).toHaveBeenCalledWith(
 				mockConfigPath,
-				JSON.stringify(
-					{
-						mcpServers: {
-							"AI Memory": expectedStdioServerConfig,
-						},
-					},
-					null,
-					2,
-				),
+				JSON.stringify(expectedConfig, null, 2),
 			);
 			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
 				"Cursor MCP config updated for AI Memory (STDIO).",
@@ -179,8 +186,7 @@ describe("cursor-config", () => {
 			const existingConfig = {
 				mcpServers: {
 					"Other Server": {
-						name: "Other Server",
-						url: "http://localhost:8080/sse",
+						command: "other-command",
 					},
 				},
 			};
@@ -191,16 +197,27 @@ describe("cursor-config", () => {
 			const expectedConfig = {
 				mcpServers: {
 					"Other Server": {
-						name: "Other Server",
-						url: "http://localhost:8080/sse",
+						command: "other-command",
 					},
-					"AI Memory": expectedStdioServerConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
 				},
 			};
 
 			expect(currentFsMocks.writeFile).toHaveBeenCalledWith(
 				mockConfigPath,
 				JSON.stringify(expectedConfig, null, 2),
+			);
+			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+				"Cursor MCP config updated for AI Memory (STDIO).",
 			);
 		});
 
@@ -213,7 +230,16 @@ describe("cursor-config", () => {
 			const expectedConfig = {
 				someOtherProperty: "value",
 				mcpServers: {
-					"AI Memory": expectedStdioServerConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
 				},
 			};
 
@@ -221,12 +247,24 @@ describe("cursor-config", () => {
 				mockConfigPath,
 				JSON.stringify(expectedConfig, null, 2),
 			);
+			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+				"Cursor MCP config updated for AI Memory (STDIO).",
+			);
 		});
 
 		it("skips update when AI Memory server already exists with same STDIO config", async () => {
 			const existingConfig = {
 				mcpServers: {
-					"AI Memory": expectedStdioServerConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
 				},
 			};
 			currentFsMocks.readFile.mockResolvedValue(JSON.stringify(existingConfig));
@@ -238,15 +276,18 @@ describe("cursor-config", () => {
 		});
 
 		it("updates AI Memory server when STDIO config differs (e.g. different extensionPath)", async () => {
-			const differentStdioConfig = {
-				name: "AI Memory",
-				command: "node",
-				args: [actualNodePath.join("/different/path", "dist", "index.cjs")],
-				cwd: "/different/path",
-			};
 			const existingConfig = {
 				mcpServers: {
-					"AI Memory": differentStdioConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/old/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/old/workspace",
+						],
+						cwd: "/old/workspace",
+					},
 				},
 			};
 			currentFsMocks.readFile.mockResolvedValue(JSON.stringify(existingConfig));
@@ -255,7 +296,16 @@ describe("cursor-config", () => {
 
 			const expectedConfig = {
 				mcpServers: {
-					"AI Memory": expectedStdioServerConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
 				},
 			};
 
@@ -263,22 +313,37 @@ describe("cursor-config", () => {
 				mockConfigPath,
 				JSON.stringify(expectedConfig, null, 2),
 			);
+			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+				"Cursor MCP config updated for AI Memory (STDIO).",
+			);
 		});
 
 		it("handles invalid JSON in existing config file (STDIO)", async () => {
-			currentFsMocks.readFile.mockResolvedValue("invalid json content");
+			currentFsMocks.readFile.mockResolvedValue("invalid json");
 
 			await updateCursorMCPConfig(mockExtensionPath);
 
 			const expectedConfig = {
 				mcpServers: {
-					"AI Memory": expectedStdioServerConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
 				},
 			};
 
 			expect(currentFsMocks.writeFile).toHaveBeenCalledWith(
 				mockConfigPath,
 				JSON.stringify(expectedConfig, null, 2),
+			);
+			expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
+				"Cursor MCP config updated for AI Memory (STDIO).",
 			);
 		});
 
@@ -338,7 +403,16 @@ describe("cursor-config", () => {
 
 			const expectedConfig = {
 				mcpServers: {
-					"AI Memory": expectedStdioServerConfig,
+					"AI Memory": {
+						name: "AI Memory",
+						command: "node",
+						args: [
+							"/mock/workspace/dist/mcp-server.js",
+							"--workspace",
+							"/mock/workspace",
+						],
+						cwd: "/mock/workspace",
+					},
 				},
 			};
 
