@@ -132,4 +132,4 @@ This file will be read by `cursor-rules-service.ts` and compiled into a `.mdc` f
 
 Cursor agents should regularly check the .cursor/rules/ directory for other rulesets that may affect project behaviour.
 
->_Last updated: 2025-05-27 🐹_
+> _Last updated: 2025-05-27 🐹_

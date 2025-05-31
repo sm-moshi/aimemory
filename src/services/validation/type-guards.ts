@@ -1,8 +1,8 @@
 /**
- * Type Guards and Runtime Validation for MCP Server
+ * Type Guards and Runtime Validation
  *
  * Provides runtime type checking to improve type safety
- * and eliminate unsafe type assertions throughout the MCP codebase.
+ * and eliminate unsafe type assertions throughout the codebase.
  */
 
 import { MemoryBankFileType } from "../../types/types.js";

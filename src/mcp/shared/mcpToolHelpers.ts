@@ -217,4 +217,35 @@ export const MemoryBankOperations = {
 
 		return { success: true, data: `Updated ${fileType} successfully` };
 	},
+
+	/**
+	 * Core logic for reviewing and updating memory bank files.
+	 * Returns the structure for the MCPResponse's content and nextAction fields.
+	 */
+	buildReviewResponsePayload(memoryBank: MemoryBankServiceCore): {
+		content: MCPResponse["content"];
+		nextAction?: MCPResponse["nextAction"];
+	} {
+		const files = memoryBank.getAllFiles();
+		if (files.length === 0) {
+			return {
+				content: [{ type: "text", text: "Memory bank is empty. No files to review." }],
+				nextAction: { type: "idle" },
+			};
+		}
+		const reviewMessages: MCPResponse["content"] = files.map((file) => ({
+			type: "text" as const,
+			text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
+		}));
+
+		const nextActionPayload: MCPResponse["nextAction"] = {
+			type: "collect-updates",
+			files: files.map((file) => file.type as string),
+		};
+
+		return {
+			content: reviewMessages,
+			nextAction: nextActionPayload,
+		};
+	},
 };

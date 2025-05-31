@@ -229,3 +229,38 @@ export type ValidatedMCPParams = {
 };
 
 export type ValidatedWebviewMessage = z.infer<typeof WebviewFileOperationSchema>;
+
+// =============================================================================
+// Security Configuration Interfaces
+// =============================================================================
+
+/**
+ * Safe process execution configuration
+ */
+export interface SafeProcessConfig {
+	command: string;
+	args: string[];
+	cwd?: string;
+	timeout?: number;
+	env?: Record<string, string>;
+}
+
+/**
+ * Security audit result structure
+ */
+export interface SecurityAuditResult {
+	isSecure: boolean;
+	warnings: string[];
+	errors: string[];
+	sanitizedInput?: string;
+}
+
+/**
+ * Result of file validation operation (from types.ts)
+ */
+export interface FileValidationResult {
+	isValid: boolean;
+	filePath: string;
+	fileType?: MemoryBankFileType;
+	error?: string;
+}

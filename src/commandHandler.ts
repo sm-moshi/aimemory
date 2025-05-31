@@ -1,7 +1,7 @@
 import type { MCPServerInterface } from "./types/mcpTypes.js";
 import type { MemoryBankError, MemoryBankFile, MemoryBankFileType, Result } from "./types/types.js";
 import { isError, isSuccess } from "./types/types.js";
-import { formatErrorMessage } from "./utils/errorHelpers.js";
+import { formatErrorMessage } from "./utils/common/error-helpers.js";
 
 export class CommandHandler {
 	constructor(private readonly mcpServer: MCPServerInterface) {}

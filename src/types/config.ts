@@ -117,3 +117,23 @@ export interface RuntimeConfig {
 	version: string;
 	isDevelopment: boolean;
 }
+
+/**
+ * Configuration for spawning MCP server process (from types.ts)
+ */
+export interface ProcessSpawnConfig {
+	serverPath: string;
+	workspacePath: string;
+	nodeExecutable: string;
+	cwd: string;
+	env?: Record<string, string>;
+}
+
+/**
+ * Process event handlers configuration (from types.ts)
+ */
+export interface ProcessEventHandlers {
+	onError: (error: Error) => void;
+	onExit: (code: number | null, signal: NodeJS.Signals | null) => void;
+	onStderr?: (data: Buffer) => void;
+}

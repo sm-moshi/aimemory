@@ -17,6 +17,29 @@ import {
 // =============================================================================
 
 /**
+ * Validates if a given path stays within an allowed root directory.
+ */
+function _validatePathWithinRoot(normalizedPath: string, allowedRoot: string): void {
+	const resolvedRoot = resolve(allowedRoot);
+	const resolvedPath = resolve(allowedRoot, normalizedPath);
+
+	// Check if path is within the allowed root directory
+	// Use platform-specific path separator and ensure consistent trailing separator handling
+	const rootWithSeparator = resolvedRoot.endsWith(sep) ? resolvedRoot : resolvedRoot + sep;
+	const isWithinRoot =
+		resolvedPath.startsWith(rootWithSeparator) || resolvedPath === resolvedRoot;
+
+	if (!isWithinRoot) {
+		throw new ValidationError("Path resolves outside allowed directory", "PATH_OUTSIDE_ROOT", {
+			path: normalizedPath,
+			root: allowedRoot,
+			resolvedPath,
+			resolvedRoot,
+		});
+	}
+}
+
+/**
  * Enhanced path sanitization with comprehensive security checks
  * Prevents path traversal, null byte injection, and other path-based attacks
  */
@@ -51,22 +74,7 @@ export function sanitizePath(inputPath: string, allowedRoot?: string): string {
 
 	// If allowedRoot is specified, ensure the path stays within it
 	if (allowedRoot) {
-		const resolvedRoot = resolve(allowedRoot);
-		const resolvedPath = resolve(allowedRoot, normalizedPath);
-
-		// Check if path is within the allowed root directory
-		// Use platform-specific path separator and ensure consistent trailing separator handling
-		const rootWithSeparator = resolvedRoot.endsWith(sep) ? resolvedRoot : resolvedRoot + sep;
-		const isWithinRoot =
-			resolvedPath.startsWith(rootWithSeparator) || resolvedPath === resolvedRoot;
-
-		if (!isWithinRoot) {
-			throw new ValidationError(
-				"Path resolves outside allowed directory",
-				"PATH_OUTSIDE_ROOT",
-				{ path: normalizedPath, root: allowedRoot, resolvedPath, resolvedRoot },
-			);
-		}
+		_validatePathWithinRoot(normalizedPath, allowedRoot);
 	}
 
 	return normalizedPath;

@@ -8,8 +8,8 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { join } from "node:path";
 import { type ExtensionContext, workspace } from "vscode";
-import type { ProcessEventHandlers, ProcessSpawnConfig } from "../../types/types.js";
-import type { Logger } from "../../utils/log.js";
+import type { ProcessEventHandlers, ProcessSpawnConfig } from "../../types/config.js";
+import type { Logger } from "../logging/vscode-logger.js";
 
 /**
  * Validates workspace and returns the workspace path

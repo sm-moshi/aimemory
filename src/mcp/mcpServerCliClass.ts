@@ -1,14 +1,21 @@
 import { resolve } from "node:path";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { CacheManager } from "../core/CacheManager.js";
+import { FileOperationManager } from "../core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
+import { StreamingManager } from "../performance/StreamingManager.js";
 import {
 	INITIALIZE_MEMORY_BANK_PROMPT,
 	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
-} from "../lib/mcp-prompts.js";
-import type { CLIServerConfig, MCPServerConfig } from "../types/mcpTypes.js";
-import type { AsyncResult, MemoryBankFileType, Result } from "../types/types.js";
-import { MemoryBankError, isError, tryCatchAsync } from "../types/types.js";
+} from "../services/cursor/mcp-prompts.js";
+import type { MemoryBankFileType } from "../types/core.js";
+import { MemoryBankError, isError, tryCatchAsync } from "../types/index.js";
+import type { AsyncResult, Result } from "../types/index.js";
+import type {
+	CLIServerConfig,
+	MCPServerInstanceConfig as MCPServerConfig,
+} from "../types/mcpTypes.js";
 import { BaseMCPServer } from "./shared/baseMcpServer.js";
 import {
 	MemoryBankOperations,
@@ -26,14 +33,25 @@ export class MCPServerCLI extends BaseMCPServer {
 	private readonly workspacePath: string;
 
 	constructor(config: CLIServerConfig) {
+		const logger = config.logger ?? console; // Ensure logger is defined
 		const memoryBankDir = resolve(config.workspacePath, "memory-bank");
-		const memoryBank = new MemoryBankServiceCore(memoryBankDir, config.logger);
+
+		const cacheManager = new CacheManager(logger);
+		const streamingManager = new StreamingManager(logger);
+		const fileOperationManager = new FileOperationManager(logger);
+		const memoryBank = new MemoryBankServiceCore(
+			memoryBankDir,
+			logger, // Pass the defined logger
+			cacheManager,
+			streamingManager,
+			fileOperationManager,
+		);
 
 		const serverConfig: MCPServerConfig = {
 			name: "AI Memory MCP Server",
 			version: "0.8.0-dev.1",
 			memoryBank,
-			logger: config.logger,
+			logger, // Pass the defined logger to BaseMCPServer config
 		};
 
 		super(serverConfig);
@@ -41,10 +59,9 @@ export class MCPServerCLI extends BaseMCPServer {
 	}
 
 	/**
-	 * Register CLI-specific tools with custom initialization logic
+	 * Registers the 'init-memory-bank' tool with custom prompt handling.
 	 */
-	protected registerCustomTools(): void {
-		// Override init-memory-bank with custom prompt handling
+	private _registerInitMemoryBankTool(): void {
 		this.server.tool("init-memory-bank", {}, async () => {
 			this.logger.info?.("Initializing memory bank") ??
 				console.log("Initializing memory bank");
@@ -66,8 +83,12 @@ export class MCPServerCLI extends BaseMCPServer {
 				return createErrorResponse(error, "Error initializing memory bank");
 			}
 		});
+	}
 
-		// Add read-memory-bank-file tool specific to CLI
+	/**
+	 * Registers the 'read-memory-bank-file' tool.
+	 */
+	private _registerReadMemoryBankFileTool(): void {
 		this.server.tool(
 			"read-memory-bank-file",
 			{ fileType: z.string() },
@@ -106,8 +127,40 @@ export class MCPServerCLI extends BaseMCPServer {
 				"Error reading memory bank file",
 			),
 		);
+	}
 
-		// Override tools with enhanced logging
+	/**
+	 * Registers the 'review-and-update-memory-bank' tool.
+	 */
+	private _registerReviewAndUpdateTool(): void {
+		this.server.tool("review-and-update-memory-bank", {}, async () => {
+			try {
+				const readyResult = await ensureMemoryBankReady(this.memoryBank);
+				if (isError(readyResult)) {
+					return createErrorResponse(
+						readyResult.error,
+						"Error preparing memory bank for review",
+					);
+				}
+
+				const payload = MemoryBankOperations.buildReviewResponsePayload(this.memoryBank);
+
+				return {
+					content: payload.content,
+					nextAction: payload.nextAction,
+				};
+			} catch (error) {
+				this.logger.error?.("Unexpected error in review-and-update-memory-bank:", error) ??
+					console.error("Unexpected error in review-and-update-memory-bank:", error);
+				return createErrorResponse(error, "Unexpected error reviewing memory bank");
+			}
+		});
+	}
+
+	/**
+	 * Registers tools that use the enhanced logging helper.
+	 */
+	private _registerLoggingEnhancedTools(): void {
 		this.registerToolWithLogging("read-memory-bank-files", async () => {
 			this.logger.info?.("Reading memory bank files") ??
 				console.log("Reading memory bank files");
@@ -125,27 +178,16 @@ export class MCPServerCLI extends BaseMCPServer {
 				console.log("Memory Bank Files Listed Successfully.");
 			return result;
 		});
+	}
 
-		// review-and-update-memory-bank with readiness check
-		this.server.tool("review-and-update-memory-bank", {}, async () => {
-			try {
-				await ensureMemoryBankReady(this.memoryBank);
-				const files = this.memoryBank.getAllFiles();
-				const reviewMessages = files.map((file) => ({
-					type: "text" as const,
-					text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
-				}));
-				return {
-					content: reviewMessages,
-					nextAction: {
-						type: "collect-updates",
-						files: files.map((file) => file.type),
-					},
-				};
-			} catch (error) {
-				return createErrorResponse(error, "Error reviewing memory bank");
-			}
-		});
+	/**
+	 * Register CLI-specific tools with custom initialization logic
+	 */
+	protected registerCustomTools(): void {
+		this._registerInitMemoryBankTool();
+		this._registerReadMemoryBankFileTool();
+		this._registerLoggingEnhancedTools();
+		this._registerReviewAndUpdateTool();
 	}
 
 	/**

@@ -1,8 +1,12 @@
 import type { PathLike, Stats } from "node:fs";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
+import { CacheManager } from "../../core/CacheManager.js";
+import { FileOperationManager } from "../../core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
-import { MemoryBankFileType, isSuccess } from "../../types/types.js";
+import { StreamingManager } from "../../performance/StreamingManager.js";
+import { MemoryBankFileType } from "../../types/core.js";
+import { isSuccess } from "../../types/errorHandling.js";
+import type { MemoryBankLogger } from "../../types/logging.js";
 
 // This will hold the globally mocked fs.stat function instance
 let globalFsStatMock: Mock;
@@ -247,33 +251,38 @@ vi.mock("../../lib/memoryBankTemplates.js", () => ({
 }));
 
 // Mock the file operation helpers
-vi.mock("../../utils/fileOperationHelpers.js", () => ({
-	ensureMemoryBankFolders: mockHelperFunctions.mockEnsureMemoryBankFolders,
+vi.mock("../../core/memory-bank-file-helpers.js", () => ({
+	validateMemoryBankDirectory: mockHelperFunctions.mockValidateMemoryBankDirectory,
+	validateAllMemoryBankFiles: mockHelperFunctions.mockValidateAllMemoryBankFiles,
 	loadAllMemoryBankFiles: mockHelperFunctions.mockLoadAllMemoryBankFiles,
 	performHealthCheck: mockHelperFunctions.mockPerformHealthCheck,
+	ensureMemoryBankFolders: mockHelperFunctions.mockEnsureMemoryBankFolders,
 	updateMemoryBankFile: mockHelperFunctions.mockUpdateMemoryBankFileHelper,
-	validateAllMemoryBankFiles: mockHelperFunctions.mockValidateAllMemoryBankFiles,
-	validateMemoryBankDirectory: mockHelperFunctions.mockValidateMemoryBankDirectory,
-	validateAndConstructArbitraryFilePath: vi.fn(),
-	CacheManager: vi.fn().mockImplementation(() => ({
-		getCachedContent: vi.fn(),
-		updateCache: vi.fn(),
-		invalidateCache: vi.fn(),
-		getStats: vi.fn(),
-		resetStats: vi.fn(),
-	})),
 }));
 
-const mockMemoryBankLogger = {
+const mockMemoryBankLogger: MemoryBankLogger = {
 	info: vi.fn(),
 	error: vi.fn(),
 	warn: vi.fn(),
 	debug: vi.fn(),
 };
 
+let mockCacheManager: CacheManager;
+let mockStreamingManager: StreamingManager;
+let mockFileOperationManager: FileOperationManager;
+
 describe("MemoryBankServiceCore", () => {
 	beforeEach(async () => {
 		vi.clearAllMocks();
+		(mockMemoryBankLogger.info as Mock).mockClear();
+		(mockMemoryBankLogger.error as Mock).mockClear();
+		(mockMemoryBankLogger.warn as Mock).mockClear();
+		(mockMemoryBankLogger.debug as Mock).mockClear();
+
+		mockCacheManager = new CacheManager(mockMemoryBankLogger);
+		mockStreamingManager = new StreamingManager(mockMemoryBankLogger);
+		mockFileOperationManager = new FileOperationManager(mockMemoryBankLogger);
+
 		// Get references to the shared mocked fs functions
 		globalFsStatMock = vi.mocked(mockFunctions.mockStat);
 		globalFsAccessMock = vi.mocked(mockFunctions.mockAccess);
@@ -312,19 +321,33 @@ describe("MemoryBankServiceCore", () => {
 
 	describe("getIsMemoryBankInitialized edge cases", () => {
 		it("returns false when main directory doesn't exist", async () => {
-			// Set up the helper function to indicate directory doesn't exist
-			mockHelperFunctions.mockValidateMemoryBankDirectory.mockResolvedValue(false);
+			const memoryBankDirectoryPath = await getPath();
+			const enoentError = new Error(
+				"ENOENT: Main directory missing",
+			) as NodeJS.ErrnoException;
+			enoentError.code = "ENOENT";
+			// Mock fs.stat to throw an error for the main directory
+			configureFsStatBehavior([{ path: memoryBankDirectoryPath, error: enoentError }]);
 
 			const service = new MemoryBankServiceCore(
-				"/mock/workspace/.aimemory/memory-bank",
+				memoryBankDirectoryPath,
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			service.invalidateCache(); // Ensure fresh check
 			const result = await service.getIsMemoryBankInitialized();
-			expect(isSuccess(result)).toBe(false);
-			if (!isSuccess(result)) {
-				expect(result.error.message).toContain("Memory bank directory is invalid");
+
+			// Expect the operation to be successful, but initialization status to be false
+			expect(isSuccess(result)).toBe(true);
+			if (isSuccess(result)) {
+				expect(result.data).toBe(false);
 			}
+			// Verify that the logger was called with a warning about the invalid directory
+			expect(mockMemoryBankLogger.warn).toHaveBeenCalledWith(
+				"Memory bank directory is invalid or not found.",
+			);
 		});
 
 		it("returns false when a required sub-directory (core) doesn't exist", async () => {
@@ -338,6 +361,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			service.invalidateCache();
 			const result = await service.getIsMemoryBankInitialized();
@@ -358,6 +384,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			service.invalidateCache();
 			const result = await service.getIsMemoryBankInitialized();
@@ -378,6 +407,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			service.invalidateCache();
 			const result = await service.getIsMemoryBankInitialized();
@@ -398,6 +430,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			service.invalidateCache();
 			const result = await service.getIsMemoryBankInitialized();
@@ -421,6 +456,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			const health = await service.checkHealth();
 			expect(isSuccess(health)).toBe(true);
@@ -446,6 +484,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			const health = await service.checkHealth();
 			expect(isSuccess(health)).toBe(true);
@@ -468,6 +509,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			const health = await service.checkHealth();
 			expect(isSuccess(health)).toBe(true);
@@ -485,6 +529,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			// Need to mock core service's internal cache for this test or rely on integration tests
 			// For now, just ensure the method can be called without errors.
@@ -499,6 +546,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			// Need to mock core service's internal cache for this test or rely on integration tests
 			// For now, just ensure the method can be called without errors.
@@ -528,6 +578,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			service.invalidateCache(); // Clear the cache - this calls core.invalidateCache
 
@@ -551,6 +604,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 
 			await expect(service.loadFiles()).resolves.toEqual({
@@ -573,6 +629,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 
 			const createdFilesResult = await service.loadFiles();
@@ -602,6 +661,9 @@ describe("MemoryBankServiceCore", () => {
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOperationManager,
 			);
 			await expect(
 				service.updateFile(MemoryBankFileType.ProjectBrief, "new content"),
@@ -617,19 +679,45 @@ describe("MemoryBankServiceCore", () => {
 
 	describe("initializeFolders", () => {
 		it("creates all required subfolders", async () => {
-			// Set up the helper function to be called
-			mockHelperFunctions.mockEnsureMemoryBankFolders.mockResolvedValue(undefined);
+			// Create a mock FileOperationManager for this test
+			const mockFileOpManager = {
+				mkdirWithRetry: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+				statWithRetry: vi.fn(),
+				readFileWithRetry: vi.fn(),
+				writeFileWithRetry: vi.fn(),
+				accessWithRetry: vi.fn(),
+			};
 
 			const service = new MemoryBankServiceCore(
 				"/mock/workspace/.aimemory/memory-bank",
 				mockMemoryBankLogger,
+				mockCacheManager,
+				mockStreamingManager,
+				mockFileOpManager as any,
 			);
-			await expect(service.initializeFolders()).resolves.toEqual({ success: true });
+			await expect(service.initializeFolders()).resolves.toEqual({
+				success: true,
+				data: undefined,
+			});
 
-			// Verify the helper function was called with the correct path
-			expect(mockHelperFunctions.mockEnsureMemoryBankFolders).toHaveBeenCalledWith(
-				"/mock/workspace/.aimemory/memory-bank",
-			);
+			// Verify mkdirWithRetry was called for each subfolder
+			const expectedSubfolders = [
+				"", // root folder
+				"core",
+				"systemPatterns",
+				"techContext",
+				"progress",
+			];
+
+			for (const subfolder of expectedSubfolders) {
+				const expectedPath =
+					subfolder === ""
+						? "/mock/workspace/.aimemory/memory-bank"
+						: `/mock/workspace/.aimemory/memory-bank/${subfolder}`;
+				expect(mockFileOpManager.mkdirWithRetry).toHaveBeenCalledWith(expectedPath, {
+					recursive: true,
+				});
+			}
 		});
 	});
 });

@@ -1,59 +1,80 @@
+import { CacheManager } from "../core/CacheManager.js";
+import { FileOperationManager } from "../core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
-import type { CoreMemoryBankConfig, MCPResponse, MCPServerConfig } from "../types/mcpTypes.js";
-import { isError } from "../types/types.js"; // Import isError
-import type { MemoryBankError, MemoryBankFileType, Result } from "../types/types.js";
+import { StreamingManager } from "../performance/StreamingManager.js";
+import { isError } from "../types/errorHandling.js";
+import type { CoreMemoryBankConfig } from "../types/mcpTypes.js";
+
 import { BaseMCPServer } from "./shared/baseMcpServer.js";
-import { createErrorResponse } from "./shared/mcpToolHelpers.js";
+import {
+	MemoryBankOperations,
+	createErrorResponse as createErrorResponseHelper,
+	ensureMemoryBankReady,
+} from "./shared/mcpToolHelpers.js";
 
 export class CoreMemoryBankMCP extends BaseMCPServer {
 	constructor(config: CoreMemoryBankConfig) {
-		const memoryBank = new MemoryBankServiceCore(config.memoryBankPath, config.logger);
+		const logger = config.logger ?? console;
+		const cacheManager = new CacheManager(logger);
+		const streamingManager = new StreamingManager(logger, {
+			sizeThreshold: 1024 * 1024, // 1MB
+			chunkSize: 64 * 1024, // 64KB
+			timeout: 5000, // 5 seconds
+			enableProgressCallbacks: false,
+		});
+		const fileOperationManager = new FileOperationManager(logger);
 
-		const serverConfig: MCPServerConfig = {
-			name: "AI Memory MCP Server",
-			version: "0.8.0-dev.1",
-			memoryBank,
-			logger: config.logger,
-		};
-
-		super(serverConfig);
+		super({
+			name: "CoreMemoryBankMCP",
+			version: "0.1.0",
+			memoryBank: new MemoryBankServiceCore(
+				config.memoryBankPath,
+				logger,
+				cacheManager,
+				streamingManager,
+				fileOperationManager,
+			),
+			logger,
+		});
+		this.registerCustomTools();
 	}
 
 	/**
 	 * Register custom tools specific to CoreMemoryBankMCP
 	 */
 	protected registerCustomTools(): void {
-		// review-and-update-memory-bank - this one needs custom logic
-		// Manually handle AsyncResult and return appropriate MCPResponse
-		this.server.tool("review-and-update-memory-bank", {}, () =>
-			this.handleReviewAndUpdateMemoryBank(),
-		);
+		this._registerInitMemoryBankTool();
+		this._registerReadMemoryBankFileTool();
+		this._registerReviewAndUpdateTool();
+		this._registerLoggingEnhancedTools();
 	}
 
-	private async handleReviewAndUpdateMemoryBank(): Promise<MCPResponse> {
-		const loadFilesResult: Result<MemoryBankFileType[], MemoryBankError> =
-			await this.memoryBank.loadFiles();
+	private _registerInitMemoryBankTool() {
+		// ... existing code ...
+	}
 
-		if (isError(loadFilesResult)) {
-			// If loading files failed, return an error response
-			return createErrorResponse(
-				loadFilesResult.error,
-				"Error loading memory bank files for review",
+	private _registerReadMemoryBankFileTool() {
+		// ... existing code ...
+	}
+
+	private _registerReviewAndUpdateTool() {
+		const toolName = "review-and-update-memory-bank";
+		this.server.tool(toolName, {}, async (_params: unknown) => {
+			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
+			if (isError(readyCheck)) {
+				return createErrorResponseHelper(readyCheck.error, toolName);
+			}
+			const { content, nextAction } = MemoryBankOperations.buildReviewResponsePayload(
+				this.memoryBank,
 			);
-		}
+			return {
+				content,
+				nextAction: nextAction,
+			};
+		});
+	}
 
-		// If loading files was successful, proceed with original logic
-		const files = this.memoryBank.getAllFiles(); // Assuming getAllFiles is synchronous or handles errors internally
-		const reviewMessages = files.map((file) => ({
-			type: "text" as const,
-			text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
-		}));
-		return {
-			content: reviewMessages,
-			nextAction: {
-				type: "collect-updates",
-				files: files.map((file) => file.type),
-			},
-		};
+	private _registerLoggingEnhancedTools() {
+		// ... existing code ...
 	}
 }

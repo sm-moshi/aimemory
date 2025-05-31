@@ -1,7 +1,11 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
-import type { CursorRulesService } from "../lib/cursor-rules-service.js";
-import { CURSOR_MEMORY_BANK_FILENAME, getCursorMemoryBankRulesFile } from "../lib/cursor-rules.js";
+import { Logger } from "../infrastructure/logging/vscode-logger.js";
+import type { CursorRulesService } from "../services/cursor/rules-service.js";
+import {
+	CURSOR_MEMORY_BANK_FILENAME,
+	getCursorMemoryBankRulesFile,
+} from "../services/cursor/rules.js";
 import type {
 	AsyncResult,
 	MemoryBank,
@@ -11,7 +15,6 @@ import type {
 	MemoryBankLogger,
 } from "../types/types.js";
 import { isSuccess } from "../types/types.js";
-import { Logger } from "../utils/log.js";
 import type { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
 
 export class VSCodeMemoryBankService implements MemoryBank {

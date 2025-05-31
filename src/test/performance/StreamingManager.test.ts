@@ -314,10 +314,8 @@ describe("StreamingManager", () => {
 			const readPromise = streamingManager.readFile(testFile);
 
 			// Check if operation is tracked (might be too fast to catch)
-			// TODO: Why is this reported as "useless" by the linter?
-			const activeOps = streamingManager.getActiveOperations();
-			// Note: This test might not consistently catch active operations
-			// due to the speed of modern systems
+			// The variable activeOps was previously here but deemed unused by the linter.
+			// The primary check for active operations is done after awaiting the promise.
 
 			await readPromise;
 

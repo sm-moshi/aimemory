@@ -1,17 +1,18 @@
 import * as path from "node:path";
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { CommandHandler } from "./commandHandler.js";
+import { CacheManager } from "./core/CacheManager.js";
 import { DIContainer } from "./core/DIContainer.js";
+import { FileOperationManager } from "./core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "./core/memoryBankServiceCore.js";
 import { VSCodeMemoryBankService } from "./core/vsCodeMemoryBankService.js";
-import { CursorRulesService } from "./lib/cursor-rules-service.js";
+import { LogLevel, Logger } from "./infrastructure/logging/vscode-logger.js";
+import { showVSCodeError } from "./infrastructure/vscode/error-display.js";
 import { MemoryBankMCPAdapter } from "./mcp/mcpAdapter.js";
+import { StreamingManager } from "./performance/StreamingManager.js";
+import { updateCursorMCPConfig } from "./services/cursor/config.js";
+import { CursorRulesService } from "./services/cursor/rules-service.js";
 import type { MCPServerInterface } from "./types/mcpTypes.js";
-import { updateCursorMCPConfig } from "./utils/cursor-config.js";
-import { showVSCodeError } from "./utils/errorHelpers.js";
-import { LogLevel, Logger } from "./utils/log.js";
 import { WebviewManager } from "./webview/webviewManager.js";
 
 // Default MCP server options (for compatibility with existing interface)
@@ -50,9 +51,19 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register core services and dependencies with the container
 	container.register("Logger", () => logger, true); // Register existing singleton instance
 
+	container.register("CacheManager", (c) => new CacheManager(c.resolve("Logger")), true);
+
+	container.register("StreamingManager", (c) => new StreamingManager(c.resolve("Logger")), true);
+
+	container.register(
+		"FileOperationManager",
+		(c) => new FileOperationManager(c.resolve("Logger")),
+		true,
+	);
+
 	container.register(
 		"MemoryBankServiceCore",
-		() => {
+		(c) => {
 			const workspaceFolders = vscode.workspace.workspaceFolders;
 			if (!workspaceFolders) {
 				throw new Error(
@@ -64,8 +75,13 @@ export function activate(context: vscode.ExtensionContext) {
 				".aimemory",
 				"memory-bank",
 			);
-			// MemoryBankServiceCore constructor needs memoryBankPath and optional logger
-			return new MemoryBankServiceCore(memoryBankFolder, container.resolve("Logger"));
+			return new MemoryBankServiceCore(
+				memoryBankFolder,
+				c.resolve("Logger"),
+				c.resolve("CacheManager"),
+				c.resolve("StreamingManager"),
+				c.resolve("FileOperationManager"),
+			);
 		},
 		true,
 	); // Register as singleton
@@ -111,12 +127,14 @@ export function activate(context: vscode.ExtensionContext) {
 	container.register(
 		"WebviewManager",
 		(c) => {
-			// WebviewManager constructor needs context, mcpServer, memoryBankService, cursorRulesService
+			// WebviewManager constructor needs context, mcpServer, memoryBankService, cursorRulesService, mcpAdapter, logger
 			return new WebviewManager(
 				context,
 				c.resolve("MCPServerInterface"),
 				c.resolve("VSCodeMemoryBankService"),
 				c.resolve("CursorRulesService"),
+				c.resolve("MCPServerInterface"), // mcpAdapter is the same as MCPServerInterface here
+				c.resolve("Logger"),
 			);
 		},
 		true,

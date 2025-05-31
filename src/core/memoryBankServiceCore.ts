@@ -1,27 +1,27 @@
-import { promises as fs } from "node:fs";
 import * as path from "node:path";
-import { MemoryBankError, isError, tryCatchAsync } from "../types/types.js";
+import type { StreamingManager } from "../performance/StreamingManager.js";
+import {
+	validateAllMemoryBankFiles,
+	validateMemoryBankDirectory,
+} from "../services/validation/file-validation.js";
+import type { FileCache, LegacyCacheStats } from "../types/cache.js";
 import type {
-	AsyncResult,
-	FileCache,
 	FileOperationContext,
-	LegacyCacheStats,
 	MemoryBank,
 	MemoryBankFile,
 	MemoryBankFileType,
-	MemoryBankLogger,
-} from "../types/types.js";
-import { MemoryBankLoggerFactory } from "../utils/MemoryBankLogger.js";
+} from "../types/core.js";
+import { MemoryBankError, isError, tryCatchAsync } from "../types/errorHandling.js";
+import type { AsyncResult } from "../types/errorHandling.js";
+import type { MemoryBankLogger } from "../types/logging.js";
+import { validateAndConstructArbitraryFilePath } from "../utils/files/path-validation.js";
+import type { CacheManager } from "./CacheManager.js";
+import type { FileOperationManager } from "./FileOperationManager.js";
 import {
-	CacheManager,
-	ensureMemoryBankFolders,
 	loadAllMemoryBankFiles,
 	performHealthCheck,
 	updateMemoryBankFile as updateMemoryBankFileHelper,
-	validateAllMemoryBankFiles,
-	validateAndConstructArbitraryFilePath,
-	validateMemoryBankDirectory,
-} from "../utils/fileOperationHelpers.js";
+} from "./memory-bank-file-helpers.js";
 
 export class MemoryBankServiceCore implements MemoryBank {
 	private readonly _memoryBankFolder: string;
@@ -29,6 +29,8 @@ export class MemoryBankServiceCore implements MemoryBank {
 	private ready = false;
 	private readonly logger: MemoryBankLogger;
 	private readonly cacheManager: CacheManager;
+	private readonly streamingManager: StreamingManager;
+	private readonly fileOperationManager: FileOperationManager;
 
 	// Cache management
 	private readonly _fileCache: Map<string, FileCache> = new Map();
@@ -41,19 +43,29 @@ export class MemoryBankServiceCore implements MemoryBank {
 		reloads: 0,
 	};
 
-	constructor(memoryBankPath: string, logger?: MemoryBankLogger) {
+	constructor(
+		memoryBankPath: string,
+		logger: MemoryBankLogger,
+		cacheManager: CacheManager,
+		streamingManager: StreamingManager,
+		fileOperationManager: FileOperationManager,
+	) {
 		this._memoryBankFolder = memoryBankPath;
-		this.logger = logger || MemoryBankLoggerFactory.createLogger();
-		this.cacheManager = new CacheManager(this._fileCache, this._cacheStats);
+		this.logger = logger;
+		this.cacheManager = cacheManager;
+		this.streamingManager = streamingManager;
+		this.fileOperationManager = fileOperationManager;
 	}
 
 	async getIsMemoryBankInitialized(): AsyncResult<boolean, MemoryBankError> {
 		const result = await tryCatchAsync<boolean>(async () => {
 			const context = this.createContext();
-			const isValid = await validateMemoryBankDirectory(context);
+			const isValidDirectory = await validateMemoryBankDirectory(context);
 
-			if (!isValid) {
-				throw new MemoryBankError("Memory bank directory is invalid.", "INVALID_DIRECTORY");
+			if (!isValidDirectory) {
+				// Directory validation failed, but this is a valid check result, not an unexpected error.
+				this.logger.warn("Memory bank directory is invalid or not found.");
+				return false;
 			}
 
 			const { missingFiles, filesToInvalidate } = await validateAllMemoryBankFiles(context);
@@ -70,31 +82,61 @@ export class MemoryBankServiceCore implements MemoryBank {
 		});
 
 		if (isError(result)) {
+			// This block now only catches truly unexpected errors during the process.
+			const originalErrorCode =
+				result.error instanceof MemoryBankError ? result.error.code : "UNKNOWN_ERROR";
 			return {
 				success: false,
 				error: new MemoryBankError(
-					`Operation failed: ${result.error.message}`,
-					"UNKNOWN_ERROR",
+					`Operation failed during getIsMemoryBankInitialized: ${result.error.message}`,
+					originalErrorCode,
 					{ originalError: result.error },
 				),
 			};
 		}
 
+		// If tryCatchAsync succeeded (meaning validations returned boolean, not threw), result is { success: true, data: boolean }
 		return result;
 	}
 
 	async initializeFolders(): AsyncResult<void, MemoryBankError> {
 		const result = await tryCatchAsync<void>(async () => {
-			await ensureMemoryBankFolders(this._memoryBankFolder);
+			const subfolders = [
+				"", // root for legacy files. Ensures memoryBankFolder itself is checked/created if needed by mkdir.
+				"core",
+				"systemPatterns",
+				"techContext",
+				"progress",
+			];
+
+			for (const subfolder of subfolders) {
+				const folderPath = path.join(this._memoryBankFolder, subfolder);
+				this.logger.debug(
+					`[MemoryBankServiceCore.initializeFolders] Ensuring folder: ${folderPath}`,
+				);
+				const mkdirResult = await this.fileOperationManager.mkdirWithRetry(folderPath, {
+					recursive: true,
+				});
+				if (!mkdirResult.success) {
+					// If a specific folder creation fails, wrap and throw to be caught by tryCatchAsync
+					throw new MemoryBankError(
+						`Failed to create directory ${folderPath}: ${mkdirResult.error.message}`,
+						"MKDIR_ERROR",
+						{ originalError: mkdirResult.error.originalError },
+					);
+				}
+			}
 		});
 
 		if (isError(result)) {
-			// Wrap generic errors in a MemoryBankError
+			// This catches errors from tryCatchAsync, including our wrapped MemoryBankError
 			return {
 				success: false,
 				error: new MemoryBankError(
-					`Initialization failed: ${result.error.message}`,
-					"INIT_ERROR",
+					`Initialization of folders failed: ${result.error.message}`,
+					result.error instanceof MemoryBankError
+						? result.error.code
+						: "INIT_FOLDERS_ERROR",
 					{ originalError: result.error },
 				),
 			};
@@ -112,18 +154,18 @@ export class MemoryBankServiceCore implements MemoryBank {
 		});
 
 		if (isError(result)) {
-			// Wrap generic errors in a MemoryBankError
+			this.ready = false;
 			return {
 				success: false,
 				error: new MemoryBankError(
 					`Failed to load files: ${result.error.message}`,
-					"LOAD_ERROR",
+					result.error instanceof MemoryBankError ? result.error.code : "LOAD_ERROR",
 					{ originalError: result.error },
 				),
 			};
 		}
 
-		return result; // It's a success result
+		return result;
 	}
 
 	isReady(): boolean {
@@ -168,11 +210,42 @@ export class MemoryBankServiceCore implements MemoryBank {
 				this._memoryBankFolder,
 				relativePath,
 			);
-			await fs.mkdir(path.dirname(fullPath), { recursive: true });
-			await fs.writeFile(fullPath, content);
+			// Ensure directory exists using FileOperationManager
+			const mkdirResult = await this.fileOperationManager.mkdirWithRetry(
+				path.dirname(fullPath),
+				{ recursive: true },
+			);
+			if (!mkdirResult.success) {
+				throw new MemoryBankError(
+					`Failed to create directory for ${relativePath}: ${mkdirResult.error.message}`,
+					"MKDIR_ERROR",
+					{ originalError: mkdirResult.error.originalError },
+				);
+			}
 
-			const stats = await fs.stat(fullPath);
-			this._fileCache.set(fullPath, { content, mtimeMs: stats.mtimeMs });
+			// Write file using FileOperationManager
+			const writeResult = await this.fileOperationManager.writeFileWithRetry(
+				fullPath,
+				content,
+			);
+			if (!writeResult.success) {
+				throw new MemoryBankError(
+					`Failed to write file to ${relativePath}: ${writeResult.error.message}`,
+					"WRITE_FILE_ERROR",
+					{ originalError: writeResult.error.originalError },
+				);
+			}
+
+			// Stat file using FileOperationManager to get mtime for cache
+			const statResult = await this.fileOperationManager.statWithRetry(fullPath);
+			if (!statResult.success) {
+				// Log warning if stat fails, but proceed as write was successful
+				this.logger.warn(
+					`Failed to stat file ${fullPath} after writing: ${statResult.error.message}`,
+				);
+			} else {
+				this._fileCache.set(fullPath, { content, mtimeMs: statResult.data.mtimeMs });
+			}
 			this.logger.info(`Written file by path: ${relativePath}`);
 		});
 
@@ -250,6 +323,8 @@ export class MemoryBankServiceCore implements MemoryBank {
 			logger: this.logger,
 			fileCache: this._fileCache,
 			cacheStats: this._cacheStats,
+			streamingManager: this.streamingManager,
+			fileOperationManager: this.fileOperationManager,
 		};
 	}
 

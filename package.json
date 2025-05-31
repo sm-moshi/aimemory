@@ -62,8 +62,9 @@
 	},
 	"scripts": {
 		"dev": "npm-run-all -p watch:rollup webview:dev",
-		"build": "pnpm run build:extension && pnpm run build:webview && pnpm run build:mcp-server",
-		"build:extension": "rollup -c rollup.config.js --configExtension",
+		"build": "pnpm run build:extension && pnpm run build:webview",
+		"build:extension": "rollup -c rollup.config.js",
+		"build:webview": "cd src/webview && pnpm run build",
 		"build:prod": "pnpm run check-types && NODE_ENV=production rollup -c && cd src/webview && pnpm run build",
 		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
 		"watch:rollup": "rollup -c --watch",
