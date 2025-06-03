@@ -1,26 +1,26 @@
+import { z } from "zod";
 import { CacheManager } from "../core/CacheManager.js";
 import { FileOperationManager } from "../core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import { MetadataIndexManager } from "../metadata/MetadataIndexManager.js";
 import { MetadataSearchEngine } from "../metadata/MetadataSearchEngine.js";
 import { StreamingManager } from "../performance/StreamingManager.js";
-import { MemoryBankFileType } from "../types/core.js";
 import { isError } from "../types/errorHandling.js";
 import type { CoreMemoryBankConfig } from "../types/mcpTypes.js";
-
-import { z } from "zod";
 import { BaseMCPServer } from "./shared/baseMcpServer.js";
 import {
-	MemoryBankOperations,
 	createErrorResponse as createErrorResponseHelper,
 	createSuccessResponse,
 	ensureMemoryBankReady,
 } from "./shared/mcpToolHelpers.js";
 
-export class CoreMemoryBankMCP extends BaseMCPServer {
+/**
+ * MCP Server providing metadata operations for memory bank files
+ * Includes search, validation, and indexing capabilities
+ */
+export class MetadataMemoryBankMCP extends BaseMCPServer {
 	private readonly metadataIndexManager: MetadataIndexManager;
 	private readonly metadataSearchEngine: MetadataSearchEngine;
-	private metadataInitialized = false;
 
 	constructor(config: CoreMemoryBankConfig) {
 		const logger = config.logger ?? console;
@@ -33,23 +33,21 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 		});
 		const fileOperationManager = new FileOperationManager(logger, config.memoryBankPath);
 
-		const memoryBank = new MemoryBankServiceCore(
-			config.memoryBankPath,
-			logger,
-			cacheManager,
-			streamingManager,
-			fileOperationManager,
-		);
-
 		super({
-			name: "CoreMemoryBankMCP",
+			name: "MetadataMemoryBankMCP",
 			version: "0.1.0",
-			memoryBank,
+			memoryBank: new MemoryBankServiceCore(
+				config.memoryBankPath,
+				logger,
+				cacheManager,
+				streamingManager,
+				fileOperationManager,
+			),
 			logger,
 		});
 
 		// Initialize metadata components
-		this.metadataIndexManager = new MetadataIndexManager(memoryBank, logger, {
+		this.metadataIndexManager = new MetadataIndexManager(this.memoryBank, logger, {
 			memoryBankPath: config.memoryBankPath,
 		});
 		this.metadataSearchEngine = new MetadataSearchEngine(this.metadataIndexManager);
@@ -58,102 +56,50 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 	}
 
 	/**
-	 * Register custom tools specific to CoreMemoryBankMCP
+	 * Register metadata-specific MCP tools
 	 */
 	protected registerCustomTools(): void {
-		this._registerInitMemoryBankTool();
-		this._registerReadMemoryBankFileTool();
-		this._registerReviewAndUpdateTool();
-		this._registerMetadataTools();
-		this._registerLoggingEnhancedTools();
-	}
-
-	private _registerInitMemoryBankTool() {
-		// ... existing code ...
-	}
-
-	private _registerReadMemoryBankFileTool() {
-		const toolName = "read-memory-bank-file";
-		const paramsSchema = z.object({
-			fileType: z.nativeEnum(MemoryBankFileType),
-			tokens: z.number().optional(),
-		});
-
-		this.server.tool(toolName, paramsSchema.shape, async (params) => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponseHelper(readyCheck.error, toolName);
-			}
-
-			const file = this.memoryBank.getFile(params.fileType);
-
-			if (!file) {
-				return createErrorResponseHelper(
-					new Error(`File ${params.fileType} not found in memory bank.`),
-					toolName,
-				);
-			}
-
-			let contentToReturn = file.content;
-			if (params.tokens) {
-				// Basic token approximation (e.g., ~4 chars per token)
-				const charLimit = params.tokens * 4;
-				contentToReturn = contentToReturn.substring(0, charLimit);
-				if (contentToReturn.length < file.content.length) {
-					contentToReturn += "\n... (content truncated)";
-				}
-			}
-
-			// Format metadata as text and return structured MCP response
-			const metadataText = JSON.stringify(
-				{
-					metadata: file.metadata || {},
-					validationStatus: file.validationStatus ?? "unchecked",
-					validationErrors: file.validationErrors,
-					actualSchemaUsed: file.actualSchemaUsed,
-				},
-				null,
-				2,
-			);
-
-			return createSuccessResponse(`${contentToReturn}\n\n--- Metadata ---\n${metadataText}`);
-		});
-	}
-
-	private _registerReviewAndUpdateTool() {
-		const toolName = "review-and-update-memory-bank";
-		this.server.tool(toolName, {}, async (_params: unknown) => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponseHelper(readyCheck.error, toolName);
-			}
-			const { content, nextAction } = MemoryBankOperations.buildReviewResponsePayload(
-				this.memoryBank,
-			);
-			return {
-				content,
-				nextAction: nextAction,
-			};
-		});
-	}
-
-	private _registerMetadataTools() {
 		this._registerQueryMemoryIndexTool();
 		this._registerValidateMemoryFileTool();
 		this._registerRebuildMetadataIndexTool();
 	}
 
+	/**
+	 * Search and query the metadata index
+	 * Chat aliases: "search memory", "find files", "query index"
+	 */
 	private _registerQueryMemoryIndexTool() {
 		const toolName = "query-memory-index";
 		const paramsSchema = z.object({
-			type: z.string().optional(),
-			tags: z.array(z.string()).optional(),
+			type: z
+				.string()
+				.optional()
+				.describe("Filter by file type (e.g., 'projectBrief', 'researchNote')"),
+			tags: z
+				.array(z.string())
+				.optional()
+				.describe("Filter by tags (files must have ALL specified tags)"),
 			validationStatus: z
 				.enum(["valid", "invalid", "unchecked", "schema_not_found"])
-				.optional(),
-			limit: z.number().min(1).max(100).default(50).optional(),
-			offset: z.number().min(0).default(0).optional(),
-			query: z.string().optional().describe("Text search in title and file paths"),
+				.optional()
+				.describe("Filter by validation status"),
+			limit: z
+				.number()
+				.min(1)
+				.max(100)
+				.default(50)
+				.optional()
+				.describe("Maximum number of results (1-100, default: 50)"),
+			offset: z
+				.number()
+				.min(0)
+				.default(0)
+				.optional()
+				.describe("Number of results to skip for pagination"),
+			query: z
+				.string()
+				.optional()
+				.describe("Text search in title, description, and file paths"),
 		});
 
 		this.server.tool(toolName, paramsSchema.shape, async (params) => {
@@ -163,10 +109,6 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 			}
 
 			try {
-				// Ensure metadata system is ready
-				await this.ensureMetadataReady();
-
-				// Use real metadata search engine
 				const searchResults = await this.metadataSearchEngine.search({
 					type: params.type,
 					tags: params.tags,
@@ -184,7 +126,11 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 						limit: params.limit ?? 50,
 						offset: params.offset ?? 0,
 						query: params.query,
-						filters: searchResults.filters,
+						filters: {
+							type: params.type,
+							tags: params.tags,
+							validationStatus: params.validationStatus,
+						},
 					},
 					null,
 					2,
@@ -204,10 +150,18 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 		});
 	}
 
+	/**
+	 * Validate a specific memory bank file
+	 * Chat aliases: "validate file", "check file", "verify metadata"
+	 */
 	private _registerValidateMemoryFileTool() {
 		const toolName = "validate-memory-file";
 		const paramsSchema = z.object({
-			relativePath: z.string().describe("Relative path to the memory bank file to validate"),
+			relativePath: z
+				.string()
+				.describe(
+					"Relative path to the memory bank file to validate (e.g., 'core/projectBrief.md')",
+				),
 		});
 
 		this.server.tool(toolName, paramsSchema.shape, async (params) => {
@@ -217,42 +171,57 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 			}
 
 			try {
-				// Ensure metadata system is ready
-				await this.ensureMetadataReady();
+				// Check if file exists in the index
+				const entry = this.metadataIndexManager.getEntry(params.relativePath);
+				let result: {
+					validationStatus: string;
+					validationErrors: import("zod").ZodIssue[];
+					schemaUsed: string;
+					errorMessage?: string;
+				};
 
-				// Get or update entry in metadata index
-				let entry = this.metadataIndexManager.getEntry(params.relativePath);
 				if (!entry) {
-					// File not in index, try to add it
+					// File not found in index, try to update/add it
 					await this.metadataIndexManager.updateEntry(params.relativePath);
-					entry = this.metadataIndexManager.getEntry(params.relativePath);
-				}
+					const updatedEntry = this.metadataIndexManager.getEntry(params.relativePath);
 
-				if (!entry) {
-					throw new Error(`File not found: ${params.relativePath}`);
+					if (!updatedEntry) {
+						throw new Error(`File not found: ${params.relativePath}`);
+					}
+
+					result = {
+						validationStatus: updatedEntry.validationStatus,
+						validationErrors: updatedEntry.validationErrors || [],
+						schemaUsed: updatedEntry.actualSchemaUsed ?? "default",
+						errorMessage:
+							updatedEntry.validationStatus === "invalid"
+								? "Validation failed"
+								: undefined,
+					};
+				} else {
+					result = {
+						validationStatus: entry.validationStatus,
+						validationErrors: entry.validationErrors || [],
+						schemaUsed: entry.actualSchemaUsed ?? "default",
+						errorMessage:
+							entry.validationStatus === "invalid" ? "Validation failed" : undefined,
+					};
 				}
 
 				const resultText = JSON.stringify(
 					{
 						relativePath: params.relativePath,
-						validationStatus: entry.validationStatus ?? "unchecked",
-						errors: entry.validationErrors || [],
-						schema: entry.actualSchemaUsed ?? "default",
-						isValid: entry.validationStatus === "valid",
-						type: entry.type,
-						fileMetrics: entry.fileMetrics,
-						lastIndexed: entry.lastIndexed,
+						validationStatus: result.validationStatus,
+						errors: result.validationErrors ?? [],
+						schema: result.schemaUsed ?? "default",
+						isValid: result.validationStatus === "valid",
+						errorMessage: result.errorMessage,
 					},
 					null,
 					2,
 				);
 
-				let statusIcon = "⚠️"; // default for unchecked/unknown
-				if (entry.validationStatus === "valid") {
-					statusIcon = "✅";
-				} else if (entry.validationStatus === "invalid") {
-					statusIcon = "❌";
-				}
+				const statusIcon = result.validationStatus === "valid" ? "✅" : "❌";
 
 				return createSuccessResponse(
 					`${statusIcon} Validation result for ${params.relativePath}:\n\n${resultText}`,
@@ -268,6 +237,10 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 		});
 	}
 
+	/**
+	 * Rebuild the metadata index
+	 * Chat aliases: "rebuild index", "refresh metadata", "update index"
+	 */
 	private _registerRebuildMetadataIndexTool() {
 		const toolName = "rebuild-metadata-index";
 		const paramsSchema = z.object({
@@ -275,7 +248,7 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 				.boolean()
 				.default(false)
 				.optional()
-				.describe("Force rebuild even if index exists"),
+				.describe("Force rebuild even if index exists and is recent"),
 		});
 
 		this.server.tool(toolName, paramsSchema.shape, async (params) => {
@@ -285,15 +258,10 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 			}
 
 			try {
-				// Ensure metadata system is ready
-				await this.ensureMetadataReady();
-
-				// Rebuild the metadata index
 				const startTime = Date.now();
 				const rebuildResult = await this.metadataIndexManager.buildIndex();
 				const duration = Date.now() - startTime;
 
-				// Get updated stats
 				const stats = await this.metadataIndexManager.getIndexStats();
 
 				const resultText = JSON.stringify(
@@ -309,8 +277,6 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 							invalidFiles: stats.invalidFiles,
 							uncheckedFiles: stats.uncheckedFiles,
 							lastBuildTime: stats.lastBuildTime,
-							totalSizeBytes: stats.totalSizeBytes,
-							totalLineCount: stats.totalLineCount,
 						},
 						errors: rebuildResult.errors,
 					},
@@ -330,19 +296,5 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 				);
 			}
 		});
-	}
-
-	private _registerLoggingEnhancedTools() {
-		// TODO: ... existing code ...
-	}
-
-	/**
-	 * Ensure metadata system is initialized before use
-	 */
-	private async ensureMetadataReady(): Promise<void> {
-		if (!this.metadataInitialized) {
-			await this.metadataIndexManager.initialize();
-			this.metadataInitialized = true;
-		}
 	}
 }

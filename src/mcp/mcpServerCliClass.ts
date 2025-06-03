@@ -4,6 +4,8 @@ import { z } from "zod";
 import { CacheManager } from "../core/CacheManager.js";
 import { FileOperationManager } from "../core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
+import { MetadataIndexManager } from "../metadata/MetadataIndexManager.js";
+import { MetadataSearchEngine } from "../metadata/MetadataSearchEngine.js";
 import { StreamingManager } from "../performance/StreamingManager.js";
 import {
 	INITIALIZE_MEMORY_BANK_PROMPT,
@@ -31,6 +33,9 @@ import {
  */
 export class MCPServerCLI extends BaseMCPServer {
 	private readonly workspacePath: string;
+	private readonly metadataIndexManager: MetadataIndexManager;
+	private readonly metadataSearchEngine: MetadataSearchEngine;
+	private metadataInitialized = false;
 
 	constructor(config: CLIServerConfig) {
 		const logger = config.logger ?? console; // Ensure logger is defined
@@ -56,6 +61,12 @@ export class MCPServerCLI extends BaseMCPServer {
 
 		super(serverConfig);
 		this.workspacePath = config.workspacePath;
+
+		// Initialize metadata components
+		this.metadataIndexManager = new MetadataIndexManager(memoryBank, logger, {
+			memoryBankPath: memoryBankDir,
+		});
+		this.metadataSearchEngine = new MetadataSearchEngine(this.metadataIndexManager);
 	}
 
 	/**
@@ -188,6 +199,7 @@ export class MCPServerCLI extends BaseMCPServer {
 		this._registerReadMemoryBankFileTool();
 		this._registerLoggingEnhancedTools();
 		this._registerReviewAndUpdateTool();
+		this._registerMetadataTools();
 	}
 
 	/**
@@ -233,5 +245,222 @@ export class MCPServerCLI extends BaseMCPServer {
 			workspacePath: workspaceArg,
 			logger: console,
 		});
+	}
+
+	/**
+	 * Register metadata-specific tools
+	 */
+	private _registerMetadataTools(): void {
+		this._registerQueryMemoryIndexTool();
+		this._registerValidateMemoryFileTool();
+		this._registerRebuildMetadataIndexTool();
+	}
+
+	/**
+	 * Register query-memory-index tool
+	 */
+	private _registerQueryMemoryIndexTool(): void {
+		const toolName = "query-memory-index";
+		const paramsSchema = z.object({
+			type: z.string().optional(),
+			tags: z.array(z.string()).optional(),
+			validationStatus: z
+				.enum(["valid", "invalid", "unchecked", "schema_not_found"])
+				.optional(),
+			limit: z.number().min(1).max(100).default(50).optional(),
+			offset: z.number().min(0).default(0).optional(),
+			query: z.string().optional().describe("Text search in title and file paths"),
+		});
+
+		this.server.tool(toolName, paramsSchema.shape, async (params) => {
+			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
+			if (isError(readyCheck)) {
+				return createErrorResponse(readyCheck.error, toolName);
+			}
+
+			try {
+				// Ensure metadata system is ready
+				await this.ensureMetadataReady();
+
+				// Use real metadata search engine
+				const searchResults = await this.metadataSearchEngine.search({
+					type: params.type,
+					tags: params.tags,
+					validationStatus: params.validationStatus,
+					limit: params.limit ?? 50,
+					offset: params.offset ?? 0,
+					query: params.query,
+				});
+
+				const resultText = JSON.stringify(
+					{
+						results: searchResults.results,
+						total: searchResults.total,
+						hasMore: searchResults.hasMore,
+						limit: params.limit ?? 50,
+						offset: params.offset ?? 0,
+						query: params.query,
+						filters: searchResults.filters,
+					},
+					null,
+					2,
+				);
+
+				return createSuccessResponse(
+					`🔍 Found ${searchResults.results.length} files (${searchResults.total} total):\n\n${resultText}`,
+				);
+			} catch (error) {
+				return createErrorResponse(
+					error instanceof Error
+						? error
+						: new Error("Unknown error during metadata search"),
+					toolName,
+				);
+			}
+		});
+	}
+
+	/**
+	 * Register validate-memory-file tool
+	 */
+	private _registerValidateMemoryFileTool(): void {
+		const toolName = "validate-memory-file";
+		const paramsSchema = z.object({
+			relativePath: z.string().describe("Relative path to the memory bank file to validate"),
+		});
+
+		this.server.tool(toolName, paramsSchema.shape, async (params) => {
+			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
+			if (isError(readyCheck)) {
+				return createErrorResponse(readyCheck.error, toolName);
+			}
+
+			try {
+				// Ensure metadata system is ready
+				await this.ensureMetadataReady();
+
+				// Get or update entry in metadata index
+				let entry = this.metadataIndexManager.getEntry(params.relativePath);
+				if (!entry) {
+					// File not in index, try to add it
+					await this.metadataIndexManager.updateEntry(params.relativePath);
+					entry = this.metadataIndexManager.getEntry(params.relativePath);
+				}
+
+				if (!entry) {
+					throw new Error(`File not found: ${params.relativePath}`);
+				}
+
+				const resultText = JSON.stringify(
+					{
+						relativePath: params.relativePath,
+						validationStatus: entry.validationStatus ?? "unchecked",
+						errors: entry.validationErrors || [],
+						schema: entry.actualSchemaUsed ?? "default",
+						isValid: entry.validationStatus === "valid",
+						type: entry.type,
+						fileMetrics: entry.fileMetrics,
+						lastIndexed: entry.lastIndexed,
+					},
+					null,
+					2,
+				);
+
+				let statusIcon = "⚠️"; // default for unchecked/unknown
+				if (entry.validationStatus === "valid") {
+					statusIcon = "✅";
+				} else if (entry.validationStatus === "invalid") {
+					statusIcon = "❌";
+				}
+
+				return createSuccessResponse(
+					`${statusIcon} Validation result for ${params.relativePath}:\n\n${resultText}`,
+				);
+			} catch (error) {
+				return createErrorResponse(
+					error instanceof Error
+						? error
+						: new Error("Unknown error during file validation"),
+					toolName,
+				);
+			}
+		});
+	}
+
+	/**
+	 * Register rebuild-metadata-index tool
+	 */
+	private _registerRebuildMetadataIndexTool(): void {
+		const toolName = "rebuild-metadata-index";
+		const paramsSchema = z.object({
+			force: z
+				.boolean()
+				.default(false)
+				.optional()
+				.describe("Force rebuild even if index exists"),
+		});
+
+		this.server.tool(toolName, paramsSchema.shape, async (params) => {
+			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
+			if (isError(readyCheck)) {
+				return createErrorResponse(readyCheck.error, toolName);
+			}
+
+			try {
+				// Ensure metadata system is ready
+				await this.ensureMetadataReady();
+
+				// Rebuild the metadata index
+				const startTime = Date.now();
+				const rebuildResult = await this.metadataIndexManager.buildIndex();
+				const duration = Date.now() - startTime;
+
+				// Get updated stats
+				const stats = await this.metadataIndexManager.getIndexStats();
+
+				const resultText = JSON.stringify(
+					{
+						filesProcessed: rebuildResult.filesProcessed,
+						filesIndexed: rebuildResult.filesIndexed,
+						filesErrored: rebuildResult.filesErrored,
+						rebuildTime: `${duration}ms`,
+						indexPath: ".index/metadata.json",
+						stats: {
+							totalFiles: stats.totalFiles,
+							validFiles: stats.validFiles,
+							invalidFiles: stats.invalidFiles,
+							uncheckedFiles: stats.uncheckedFiles,
+							lastBuildTime: stats.lastBuildTime,
+							totalSizeBytes: stats.totalSizeBytes,
+							totalLineCount: stats.totalLineCount,
+						},
+						errors: rebuildResult.errors,
+					},
+					null,
+					2,
+				);
+
+				return createSuccessResponse(
+					`🔄 Metadata index rebuilt successfully:\n\n${resultText}`,
+				);
+			} catch (error) {
+				return createErrorResponse(
+					error instanceof Error
+						? error
+						: new Error("Unknown error during index rebuild"),
+					toolName,
+				);
+			}
+		});
+	}
+
+	/**
+	 * Ensure metadata system is initialized before use
+	 */
+	private async ensureMetadataReady(): Promise<void> {
+		if (!this.metadataInitialized) {
+			await this.metadataIndexManager.initialize();
+			this.metadataInitialized = true;
+		}
 	}
 }

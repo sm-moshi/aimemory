@@ -31,18 +31,28 @@ vi.mock("vscode", () => ({
 	},
 }));
 
-// Define a consistent mock logger instance
+// Define a consistent mock logger instance with proper Vitest mock functions
 const mockLoggerInstance = {
 	info: vi.fn(),
 	error: vi.fn(),
 	debug: vi.fn(),
-	warn: vi.fn(), // Added warn as it's a common log level
+	log: vi.fn(),
+	setLevel: vi.fn(),
+	showOutput: vi.fn(),
 };
 
 // Mock Logger to return the consistent instance
 vi.mock("../../infrastructure/logging/vscode-logger.js", () => ({
 	Logger: {
 		getInstance: () => mockLoggerInstance,
+	},
+	LogLevel: {
+		Trace: 0,
+		Debug: 1,
+		Info: 2,
+		Warning: 3,
+		Error: 4,
+		Off: 5,
 	},
 }));
 
@@ -59,11 +69,8 @@ vi.mock("node:os", () => ({
 describe("Cursor Config Helpers", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Specifically clear mocks on the shared logger instance
-		mockLoggerInstance.info.mockClear();
-		mockLoggerInstance.error.mockClear();
-		mockLoggerInstance.debug.mockClear();
-		mockLoggerInstance.warn.mockClear();
+		// Note: vi.clearAllMocks() should handle clearing all mock functions
+		// including our mockLoggerInstance methods
 	});
 
 	afterEach(() => {
