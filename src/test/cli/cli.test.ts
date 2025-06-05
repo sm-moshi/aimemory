@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { standardBeforeEach } from "../test-utils/index.js";
 
 vi.mock("../../mcp/coreMemoryBankMCP.js", () => ({
 	CoreMemoryBankMCP: vi.fn().mockImplementation(() => ({
@@ -11,7 +12,7 @@ vi.mock("@modelcontextprotocol/sdk/server/stdio.js", () => ({
 
 describe("cli main", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		standardBeforeEach();
 	});
 
 	it("creates CoreMemoryBankMCP and connects transport", async () => {

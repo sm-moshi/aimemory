@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LogLevel, Logger } from "../../infrastructure/logging/vscode-logger.js";
+import { standardAfterEach, standardBeforeEach } from "../test-utils/index.js"; // Import helpers
 
-// Mock vscode OutputChannel
+// Mock vscode OutputChannel with specific requirements for Logger tests
 const appendLine = vi.fn();
 const show = vi.fn();
 vi.mock("vscode", () => ({
@@ -12,8 +13,10 @@ vi.mock("vscode", () => ({
 
 describe("Logger", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		standardBeforeEach(); // Use standardBeforeEach
 	});
+
+	standardAfterEach(); // Add standardAfterEach
 
 	it("returns a singleton instance", () => {
 		const logger1 = Logger.getInstance();

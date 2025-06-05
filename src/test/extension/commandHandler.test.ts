@@ -1,16 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommandHandler } from "../../commandHandler.js";
 import { MemoryBankFileType } from "../../types/index.js";
+import { standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
 
 const mockMemoryBank = {
-	getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true, data: true }),
-	loadFiles: vi.fn().mockResolvedValue({ success: true, data: [] }),
-	getAllFiles: vi.fn().mockReturnValue([]),
-	initializeFolders: vi.fn().mockResolvedValue({ success: true }),
-	checkHealth: vi.fn().mockResolvedValue({
-		success: true,
-		data: "Memory Bank Health: ✅ All files and folders are present and readable.",
-	}),
+	getIsMemoryBankInitialized: vi.fn(),
+	loadFiles: vi.fn(),
+	getAllFiles: vi.fn(),
+	initializeFolders: vi.fn(),
+	checkHealth: vi.fn(),
+	writeFileByPath: vi.fn(),
 };
 const mockMcpServer = {
 	getMemoryBank: () => mockMemoryBank,
@@ -26,8 +25,28 @@ type MemoryBankMCPServer = {
 describe("CommandHandler", () => {
 	let handler: CommandHandler;
 	beforeEach(() => {
+		standardBeforeEach();
+
+		// Reset all mocks and set default return values
 		vi.clearAllMocks();
+
+		// Default mock return values
+		mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({ success: true, data: true });
+		mockMemoryBank.loadFiles.mockResolvedValue({ success: true, data: [] });
+		mockMemoryBank.getAllFiles.mockReturnValue([]);
+		mockMemoryBank.initializeFolders.mockResolvedValue({ success: true });
+		mockMemoryBank.checkHealth.mockResolvedValue({
+			success: true,
+			data: "Memory Bank Health: ✅ All files and folders are present and readable.",
+		});
+		mockMemoryBank.writeFileByPath.mockResolvedValue({ success: true });
+		mockMcpServer.updateMemoryBankFile.mockResolvedValue(undefined);
+
 		handler = new CommandHandler(mockMcpServer as any);
+	});
+
+	afterEach(() => {
+		standardAfterEach();
 	});
 
 	describe("processMemoryCommand", () => {

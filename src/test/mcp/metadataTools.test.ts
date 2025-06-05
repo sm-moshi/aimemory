@@ -28,33 +28,7 @@ vi.mock("@modelcontextprotocol/sdk/server/stdio.js", () => ({
 
 // Import after mocking
 import { CoreMemoryBankMCP } from "../../mcp/coreMemoryBankMCP.js";
-
-// Create proper Console mock that implements Node.js Console interface
-const createMockConsole = (): Console => ({
-	assert: vi.fn(),
-	clear: vi.fn(),
-	count: vi.fn(),
-	countReset: vi.fn(),
-	debug: vi.fn(),
-	dir: vi.fn(),
-	dirxml: vi.fn(),
-	error: vi.fn(),
-	group: vi.fn(),
-	groupCollapsed: vi.fn(),
-	groupEnd: vi.fn(),
-	info: vi.fn(),
-	log: vi.fn(),
-	table: vi.fn(),
-	time: vi.fn(),
-	timeEnd: vi.fn(),
-	timeLog: vi.fn(),
-	trace: vi.fn(),
-	warn: vi.fn(),
-	Console: vi.fn(),
-	profile: vi.fn(),
-	profileEnd: vi.fn(),
-	timeStamp: vi.fn(),
-});
+import { createMockConsole, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
 
 describe("Metadata MCP Tools Integration", () => {
 	let tempDir: string;
@@ -62,8 +36,7 @@ describe("Metadata MCP Tools Integration", () => {
 	let mockConsole: Console;
 
 	beforeEach(async () => {
-		// Clear all mocks before each test
-		vi.clearAllMocks();
+		standardBeforeEach();
 
 		// Create temporary directory for testing
 		tempDir = resolve(process.cwd(), `test-temp-metadata-${Date.now()}`);
@@ -93,7 +66,7 @@ describe("Metadata MCP Tools Integration", () => {
 		} catch {
 			// Ignore cleanup errors
 		}
-		vi.clearAllMocks();
+		standardAfterEach();
 	});
 
 	describe("server initialization", () => {

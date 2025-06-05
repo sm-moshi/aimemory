@@ -1,28 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { setupVSCodeMock, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
 
-// Mock fs promises
-vi.mock("node:fs/promises", () => ({
-	readFile: vi.fn(),
-}));
-
-// Mock vscode
-vi.mock("vscode", () => ({
-	workspace: {
-		workspaceFolders: [{ uri: { fsPath: "/mock/workspace" } }],
-	},
-	window: {
-		createWebviewPanel: vi.fn(),
-		showInformationMessage: vi.fn(),
-		showWarningMessage: vi.fn(),
-		showErrorMessage: vi.fn(),
-	},
-	ViewColumn: { One: 1 },
-	Uri: {
-		joinPath: vi.fn((base, ...paths) => ({ fsPath: `${base.fsPath}/${paths.join("/")}` })),
-		parse: vi.fn((uri) => ({ fsPath: uri })),
-		file: vi.fn((path) => ({ fsPath: path })),
-	},
-}));
+// Setup mocks
+setupVSCodeMock();
 
 // Import the module that contains the port extraction functions
 // We need to test them indirectly through a module that imports them
@@ -31,7 +11,11 @@ import * as fsPromises from "node:fs/promises";
 // Since the functions are not exported, we'll test them indirectly by testing the config parsing behavior
 describe("MCP Port Configuration Parsing", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		standardBeforeEach();
+	});
+
+	afterEach(() => {
+		standardAfterEach();
 	});
 
 	describe("Config file parsing scenarios", () => {

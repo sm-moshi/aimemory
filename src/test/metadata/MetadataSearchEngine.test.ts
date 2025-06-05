@@ -1,17 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MetadataIndexManager } from "../../metadata/MetadataIndexManager.js";
 import { MetadataSearchEngine } from "../../metadata/MetadataSearchEngine.js";
-import type { FileMetrics, MetadataIndexEntry } from "../../types/core.js";
-
-// Helper to create complete FileMetrics objects
-const createFileMetrics = (sizeBytes: number, lineCount: number): FileMetrics => ({
-	sizeBytes,
-	lineCount,
-	sizeFormatted: sizeBytes < 1024 ? `${sizeBytes} B` : `${(sizeBytes / 1024).toFixed(1)} KB`,
-	contentLineCount: Math.max(0, lineCount - 5), // Assume 5 lines for frontmatter
-	wordCount: Math.floor(sizeBytes / 5), // Rough estimate
-	characterCount: sizeBytes,
-});
+import type { MetadataIndexEntry } from "../../types/core.js";
+import { createFileMetrics, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
 
 // Mock MetadataIndexManager
 const mockIndexManager = {
@@ -23,6 +14,7 @@ describe("MetadataSearchEngine", () => {
 	let mockEntries: MetadataIndexEntry[];
 
 	beforeEach(() => {
+		standardBeforeEach();
 		searchEngine = new MetadataSearchEngine(mockIndexManager);
 
 		// Create mock index entries for testing
@@ -86,6 +78,8 @@ describe("MetadataSearchEngine", () => {
 
 		vi.mocked(mockIndexManager.getIndex).mockReturnValue(mockEntries);
 	});
+
+	standardAfterEach();
 
 	describe("search with no filters", () => {
 		it("should return all entries when no filters are applied", async () => {

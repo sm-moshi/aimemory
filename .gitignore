@@ -4,6 +4,8 @@ dist/
 !**/coverage/lcov.info
 .vscode-test/
 *.tsbuildinfo
+pnpm-lock.yaml
+src/webview/pnpm-lock.yaml
 
 # TypeScript - Generated declaration files and source maps
 **/*.d.ts

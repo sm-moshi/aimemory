@@ -1,25 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { VSCodeMemoryBankService } from "../../core/vsCodeMemoryBankService.js";
 import { MemoryBankMCPAdapter } from "../../mcp/mcpAdapter.js";
+import { createMockExtensionContext, setupVSCodeMock } from "../test-utils/index.js";
 
-// Mock vscode API
-vi.mock("vscode", () => ({
-	workspace: {
-		workspaceFolders: [
-			{
-				uri: { fsPath: "/mock/workspace" },
-				name: "Mock Workspace",
-				index: 0,
-			},
-		],
-	},
-	// TODO: Add other vscode parts if needed by the adapter, e.g., window for messages
-	window: {
-		showInformationMessage: vi.fn(),
-		showErrorMessage: vi.fn(),
-		// TODO: ... any other window properties used
-	},
-}));
+// Setup VS Code mock using centralized helper
+setupVSCodeMock();
 
 // Mock dependencies
 vi.mock("node:child_process", () => ({
@@ -84,13 +69,7 @@ const createMockVSCodeMemoryBankService = () =>
 		mockLogger,
 	);
 
-const mockContext = {
-	extensionPath: "/mock/extension/path",
-	extensionUri: { fsPath: "/mock/uri" },
-	workspaceState: { get: vi.fn(), update: vi.fn(), keys: () => [], setKeysForSync: vi.fn() },
-	globalState: { get: vi.fn(), update: vi.fn(), keys: () => [], setKeysForSync: vi.fn() },
-	secrets: { get: vi.fn(), store: vi.fn(), delete: vi.fn(), onDidChange: vi.fn() },
-};
+const mockContext = createMockExtensionContext();
 
 describe("MemoryBankMCPAdapter", () => {
 	describe("constructor", () => {

@@ -1,29 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { deactivate } from "../../extension.js";
+import { setupVSCodeMock } from "../test-utils/index.js";
 
-// Mock vscode module
-vi.mock("vscode", () => ({
-	workspace: {
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn().mockReturnValue("info"),
-			update: vi.fn(),
-		})),
-		onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
-	},
-	commands: {
-		registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-		registerTextEditorCommand: vi.fn(() => ({ dispose: vi.fn() })),
-		executeCommand: vi.fn(),
-	},
-	window: {
-		showInformationMessage: vi.fn(),
-		showErrorMessage: vi.fn(),
-		showQuickPick: vi.fn(),
-	},
-	ConfigurationTarget: {
-		Global: 1,
-	},
-}));
+// Setup VS Code mock
+setupVSCodeMock();
 
 // Mock all dependencies
 vi.mock("../../commandHandler.js", () => ({

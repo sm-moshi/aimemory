@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CoreMemoryBankMCP } from "../../mcp/coreMemoryBankMCP.js";
 import { registerMemoryBankPrompts } from "../../services/cursor/mcp-prompts-registry.js";
 import { MemoryBankFileType } from "../../types/index.js";
+import { createMockLogger, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
 
 // Mock MemoryBankServiceCore
 const mockMemoryBankService = {
@@ -86,7 +87,10 @@ const setupMCPInstance = () => {
 	// Create instance for side effects (registers resources, tools, and prompts)
 	// Constructor return value intentionally unused
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const _mcpInstance = new CoreMemoryBankMCP({ memoryBankPath: "/mock/path" });
+	const _mcpInstance = new CoreMemoryBankMCP({
+		memoryBankPath: "/mock/path",
+		logger: createMockLogger() as unknown as Console,
+	});
 };
 
 // Helper functions to find specific mock calls
@@ -97,7 +101,7 @@ describe("CoreMemoryBankMCP", () => {
 	let getDirectResourceHandler: (resourceName: string) => (...args: any[]) => Promise<any>;
 
 	beforeEach(() => {
-		vi.resetAllMocks();
+		standardBeforeEach();
 
 		// Setup MCP instance for side effects (registers resources, tools, and prompts)
 		setupMCPInstance();
@@ -381,4 +385,6 @@ describe("CoreMemoryBankMCP", () => {
 			});
 		});
 	});
+
+	standardAfterEach();
 });
