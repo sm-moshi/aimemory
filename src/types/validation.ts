@@ -1,13 +1,5 @@
-// =============================================================================
-// Validation Types and Zod Schemas for AI Memory Extension
-// =============================================================================
-
 import { z } from "zod";
 import { MemoryBankFileType } from "./core.js";
-
-// =============================================================================
-// Core Validation Schemas
-// =============================================================================
 
 /**
  * Schema for validating MemoryBankFileType
@@ -28,7 +20,7 @@ export const SafePathSchema = z
 	.string()
 	.min(1, "Path cannot be empty")
 	.refine(
-		(path) => !path.includes("..") && !path.startsWith("/") && !path.includes("\0"),
+		path => !path.includes("..") && !path.startsWith("/") && !path.includes("\0"),
 		"Path contains unsafe characters or sequences",
 	);
 
@@ -36,10 +28,6 @@ export const SafePathSchema = z
  * Schema for optional content with size limits
  */
 export const ContentSchema = z.string().max(1024 * 1024, "Content exceeds 1MB limit"); // 1MB limit
-
-// =============================================================================
-// MCP Tool Parameter Schemas
-// =============================================================================
 
 /**
  * Schema for init-memory-bank tool (no parameters)
@@ -81,10 +69,6 @@ export const HealthCheckMemoryBankSchema = z.object({});
  */
 export const ReviewAndUpdateMemoryBankSchema = z.object({});
 
-// =============================================================================
-// Webview Communication Schemas
-// =============================================================================
-
 /**
  * Schema for webview message types
  */
@@ -119,10 +103,6 @@ export const WebviewFileOperationSchema = WebviewMessageBaseSchema.extend({
 		.optional(),
 });
 
-// =============================================================================
-// Security Validation Schemas
-// =============================================================================
-
 /**
  * Schema for command validation (prevents injection)
  */
@@ -130,14 +110,13 @@ export const SafeCommandSchema = z
 	.string()
 	.min(1, "Command cannot be empty")
 	.refine(
-		(cmd) =>
-			!cmd.includes(";") && !cmd.includes("|") && !cmd.includes("&") && !cmd.includes("`"),
+		cmd => !cmd.includes(";") && !cmd.includes("|") && !cmd.includes("&") && !cmd.includes("`"),
 		"Command contains potentially unsafe characters",
 	)
-	.refine((cmd) => {
+	.refine(cmd => {
 		// Check for dangerous commands
 		const dangerous = ["rm -rf", "del /", "format", "dd if="];
-		return !dangerous.some((danger) => cmd.includes(danger));
+		return !dangerous.some(danger => cmd.includes(danger));
 	}, "Command contains dangerous operations");
 
 /**
@@ -156,10 +135,6 @@ export const PortNumberSchema = z
 	.min(1, "Port must be greater than 0")
 	.max(65535, "Port must be less than 65536");
 
-// =============================================================================
-// Utility Validation Functions
-// =============================================================================
-
 /**
  * Validates and parses MCP tool parameters using the appropriate schema
  */
@@ -172,9 +147,7 @@ export function validateMCPToolParams<T>(
 		return schema.parse(params);
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			const issues = error.errors
-				.map((err) => `${err.path.join(".")}: ${err.message}`)
-				.join(", ");
+			const issues = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
 			throw new Error(`Invalid parameters for ${toolName}: ${issues}`);
 		}
 		throw new Error(`Validation failed for ${toolName}: ${error}`);
@@ -191,9 +164,7 @@ export function validateWebviewMessage(
 		return WebviewFileOperationSchema.parse(message);
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			const issues = error.errors
-				.map((err) => `${err.path.join(".")}: ${err.message}`)
-				.join(", ");
+			const issues = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
 			throw new Error(`Invalid webview message: ${issues}`);
 		}
 		throw new Error(`Webview message validation failed: ${error}`);
@@ -214,10 +185,6 @@ export function isSafePath(value: unknown): value is string {
 	return SafePathSchema.safeParse(value).success;
 }
 
-// =============================================================================
-// Exported Types
-// =============================================================================
-
 export type ValidatedMCPParams = {
 	initMemoryBank: z.infer<typeof InitMemoryBankSchema>;
 	readMemoryBankFiles: z.infer<typeof ReadMemoryBankFilesSchema>;
@@ -229,10 +196,6 @@ export type ValidatedMCPParams = {
 };
 
 export type ValidatedWebviewMessage = z.infer<typeof WebviewFileOperationSchema>;
-
-// =============================================================================
-// Security Configuration Interfaces
-// =============================================================================
 
 /**
  * Safe process execution configuration
@@ -256,7 +219,7 @@ export interface SecurityAuditResult {
 }
 
 /**
- * Result of file validation operation (from types.ts)
+ * Result of file validation operation
  */
 export interface FileValidationResult {
 	isValid: boolean;

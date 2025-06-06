@@ -41,7 +41,8 @@
 		"yzhang.markdown-all-in-one",
 		"bierner.markdown-mermaid",
 		// Theme (Optional)
-		"eliverlara.andromeda"
+		"eliverlara.andromeda",
+		"nrwl.angular-console"
 	],
 	"unwantedRecommendations": [
 		// Legacy linting/formatting tools (replaced by Biome)

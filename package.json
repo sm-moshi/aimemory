@@ -13,8 +13,23 @@
 		"node": ">=20.19.0"
 	},
 	"packageManager": "pnpm@10.11.1",
+	"type": "module",
 	"pnpm": {
-		"onlyBuiltDependencies": ["@biomejs/biome", "@swc/core", "@vscode/vsce-sign"]
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"@swc/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar",
+			"msw"
+		],
+		"packageExtensions": {
+			"react": {
+				"peerDependencies": {
+					"react-dom": "*"
+				}
+			}
+		}
 	},
 	"icon": "dist/assets/icon.png",
 	"categories": ["Other"],
@@ -67,23 +82,29 @@
 		}
 	},
 	"scripts": {
+		"build:analyze": "ANALYZE=true pnpm build && echo 'Bundle analysis complete'",
 		"build": "pnpm run build:extension && pnpm run build:webview",
 		"build:extension": "rollup -c rollup.config.js",
-		"build:webview": "cd src/webview && pnpm run build",
 		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
-		"webview:dev": "cd src/webview && pnpm run dev",
+		"build:webview": "cd src/webview && pnpm run build",
+		"dev": "npm-run-all -p watch:extension webview:dev",
+		"health": "pnpm check-types && pnpm lint && pnpm test",
+		"perf:build": "time pnpm build && echo '\n📊 Bundle Sizes:' && du -sh dist/*",
+		"perf:test": "vitest run --reporter=verbose --profile",
+		"test:ci": "vitest run --reporter=junit && pnpm webview:test --reporter=junit",
+		"test:coverage": "vitest run --coverage && pnpm webview:test --coverage",
+		"test:extension": "cross-env NODE_ENV=test p vscode-test ...",
 		"test:unit": "vitest run --exclude 'src/test/extension/**'",
-		"test:extension": "cross-env NODE_ENV=test npx vscode-test ...",
-		"test:coverage": "vitest run --coverage && pnpm -C src/webview run test:coverage",
+		"test:watch": "vitest --watch",
+		"test": "vitest run && pnpm webview:test",
 		"lint": "biome check src --write",
 		"format": "biome format src --write",
 		"check-types": "tsgo -p tsconfig.json --noEmit",
 		"check": "pnpm run lint && pnpm run format && pnpm run check-types",
 		"package": "pnpm run build:full && pnpm vsce package --no-dependencies",
-		"vscode:prepublish": "pnpm run build",
-		"update-docs-date": "tsx scripts/update-docs-date.ts",
-		"build-check": "tsx scripts/build-check.ts",
-		"refactor-imports": "tsx scripts/refactor-imports.ts"
+		"watch:extension": "rollup -c -w",
+		"webview:dev": "cd src/webview && pnpm run dev",
+		"vscode:prepublish": "pnpm run build"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
@@ -92,19 +113,23 @@
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@rollup/plugin-swc": "^0.4.0",
+		"@rollup/plugin-typescript": "^12.1.2",
 		"@swc/core": "^1.11.31",
+		"@types/glob": "^8.1.0",
 		"@types/node": "^20.19.0",
 		"@types/vscode": "1.96.0",
-		"@typescript/native-preview": "7.0.0-dev.20250605.1",
+		"@typescript/native-preview": "^7.0.0-dev.20250606.1",
 		"@vitest/coverage-v8": "^3.2.2",
 		"@vscode/test-cli": "^0.0.11",
 		"@vscode/test-electron": "^2.5.2",
 		"@vscode/vsce": "^3.5.0",
 		"cross-env": "^7.0.3",
+		"glob": "^11.0.2",
 		"mcp-testing-kit": "^0.2.0",
 		"msw": "^2.9.0",
 		"npm-run-all": "^4.1.5",
-		"rollup": "^4.41.1",
+		"rollup": "^4.41.2",
+		"rollup-plugin-analyzer": "^4.0.0",
 		"rollup-plugin-copy": "^3.5.0",
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3",
@@ -114,6 +139,6 @@
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.1",
 		"gray-matter": "^4.0.3",
-		"zod": "^3.25.53"
+		"zod": "^3.25.55"
 	}
 }

@@ -7,7 +7,12 @@
 		"allowJs": true,
 		"types": ["vite/client", "@testing-library/jest-dom"],
 		"noEmit": true,
-		"composite": false
+		"composite": false,
+		"skipLibCheck": true
 	},
-	"include": ["src"]
+	"include": [
+		"src/**/*",
+		"*.config.*",
+		"vitest.setup.ts"
+	]
 }

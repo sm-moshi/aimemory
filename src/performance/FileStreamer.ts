@@ -1,29 +1,31 @@
 import { createReadStream } from "node:fs";
 import type { ReadStream, Stats } from "node:fs";
-import { validateMemoryBankPath } from "../services/validation/security.js";
-import type { Result } from "../types/errorHandling.js";
-import type { FileError } from "../types/fileOperations.js";
 import type {
+	FileError,
 	FileStreamerConfig,
-	MemoryBankLogger,
+	Logger,
+	Result,
 	StreamDataHandlerContext,
+	StreamSetupParameters,
+	StreamSetupState,
 	StreamingOptions,
 	StreamingResult,
 } from "../types/index.js";
+import { validateMemoryBankPath } from "../utils/security-helpers.js";
 
 /**
  * FileStreamer provides secure streaming file operations with path validation
  * to prevent directory traversal attacks.
  */
 export class FileStreamer {
-	private readonly logger: MemoryBankLogger;
+	private readonly logger: Logger;
 	private readonly allowedRoot: string; // SECURITY: Required allowedRoot for path validation
 	private readonly defaultChunkSize: number;
 	private readonly defaultTimeout: number;
 	private readonly defaultEnableProgressCallbacks: boolean;
 
 	constructor(
-		logger: MemoryBankLogger,
+		logger: Logger,
 		allowedRoot: string, // SECURITY: Add required allowedRoot parameter
 		config: FileStreamerConfig,
 	) {
@@ -72,13 +74,33 @@ export class FileStreamer {
 		resolvePromise: (value: Result<StreamingResult, FileError>) => void,
 	): NodeJS.Timeout {
 		const timeoutId = setTimeout(() => {
-			stream.destroy(); // Explicitly destroy stream on timeout
 			const fileError: FileError = {
 				code: "STREAMING_TIMEOUT",
 				message: `Streaming read timed out after ${timeoutMs}ms`,
 				path: filePath,
 			};
 			resolvePromise({ success: false, error: fileError });
+
+			// Defensive check for stream object and methods
+			if (
+				stream &&
+				typeof stream.removeAllListeners === "function" &&
+				typeof stream.destroy === "function"
+			) {
+				stream.removeAllListeners("data");
+				stream.removeAllListeners("end");
+				stream.removeAllListeners("error");
+				stream.removeAllListeners("close");
+
+				if (!stream.destroyed) {
+					stream.destroy();
+				}
+			} else {
+				// This log helps if this defensive block is ever hit in a non-test scenario or if mocks are behaving unexpectedly.
+				this.logger.warn(
+					`[FileStreamer] Stream object was undefined or malformed in manageStreamTimeout for ${filePath} after promise resolution. This might indicate a test cleanup race condition or an issue with the stream instance itself.`,
+				);
+			}
 		}, timeoutMs);
 		return timeoutId;
 	}
@@ -86,7 +108,7 @@ export class FileStreamer {
 	/**
 	 * Determines if streaming should pause to manage memory pressure
 	 */
-	private shouldPauseForMemoryPressure(bytesRead: number, chunksProcessed: number): boolean {
+	private shouldPauseForMemoryPressure(_bytesRead: number, chunksProcessed: number): boolean {
 		// Pause every 10 chunks to yield control and prevent memory pressure
 		return chunksProcessed % 10 === 0;
 	}
@@ -175,10 +197,79 @@ export class FileStreamer {
 		resolvePromise({ success: false, error: fileError });
 	}
 
+	private _handleStreamClose(
+		filePath: string,
+		resolve: (value: Result<StreamingResult, FileError>) => void,
+	): void {
+		// The resolve function itself checks if the promise is already resolved.
+		this.logger.warn(`Stream for ${filePath} closed prematurely.`);
+		const fileError: FileError = {
+			code: "STREAM_CLOSED_PREMATURELY",
+			message: "Stream closed prematurely without completing or erroring.",
+			path: filePath,
+		};
+		resolve({ success: false, error: fileError });
+	}
+
+	private _setupStreamAndEvents(
+		params: StreamSetupParameters,
+		state: StreamSetupState,
+	): NodeJS.Timeout | undefined {
+		const totalSize = params.stats.size;
+		// Provide default options to avoid undefined issues
+		const options = params.options ?? {};
+		const chunkSize = options.chunkSize ?? this.defaultChunkSize;
+		const timeoutMs = options.timeout ?? this.defaultTimeout;
+		const enableProgress =
+			this.defaultEnableProgressCallbacks && typeof options.onProgress === "function";
+
+		const stream = createReadStream(params.validatedPath, {
+			highWaterMark: chunkSize,
+		});
+
+		const currentTimeoutId = this.manageStreamTimeout(
+			stream,
+			timeoutMs,
+			params.originalFilePath, // Use originalFilePath for logging/timeout context
+			state.resolve,
+		);
+
+		stream.on("data", (chunk: Buffer | string) => {
+			this._handleStreamData(chunk, stream, state.chunks, {
+				bytesRead: state.bytesRead,
+				chunksProcessed: state.chunksProcessed,
+				totalSize,
+				enableProgress,
+				options, // Now guaranteed to be StreamingOptions, not undefined
+			});
+		});
+
+		stream.on("end", () => {
+			this._handleStreamEnd(
+				state.chunks,
+				params.startTime,
+				state.bytesRead.value,
+				state.chunksProcessed.value,
+				params.originalFilePath,
+				state.resolve,
+			);
+		});
+
+		stream.on("error", error => {
+			this._handleStreamError(error, params.originalFilePath, state.resolve);
+		});
+
+		stream.on("close", () => {
+			this._handleStreamClose(params.originalFilePath, state.resolve);
+		});
+		return currentTimeoutId;
+	}
+
 	/**
 	 * Performs streaming file reading for large files.
 	 * SECURITY: Path is validated before creating read stream
 	 */
+
 	async streamFile(
 		filePath: string,
 		stats: Stats,
@@ -198,52 +289,42 @@ export class FileStreamer {
 			return { success: false, error: fileError };
 		}
 
-		return new Promise((resolve) => {
+		// Wrap the promise resolution to ensure it's only called once
+		// and to centralize timeout clearing.
+		let timeoutId: NodeJS.Timeout | undefined = undefined;
+		return new Promise(resolveOriginal => {
+			let promiseResolved = false;
+			const resolve = (value: Result<StreamingResult, FileError>) => {
+				if (!promiseResolved) {
+					promiseResolved = true;
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+						timeoutId = undefined; // Clear ref
+					}
+					resolveOriginal(value);
+				}
+			};
+
 			const chunks: Buffer[] = [];
 			const bytesRead = { value: 0 };
 			const chunksProcessed = { value: 0 };
 			const startTime = performance.now();
-			const totalSize = stats.size;
 
-			const chunkSize = options?.chunkSize ?? this.defaultChunkSize;
-			const timeoutMs = options?.timeout ?? this.defaultTimeout;
-			const enableProgress =
-				this.defaultEnableProgressCallbacks && typeof options?.onProgress === "function";
-
-			// Create read stream with VALIDATED path
-			const stream = createReadStream(validatedPath, {
-				highWaterMark: chunkSize,
-			});
-
-			// Setup timeout
-			const timeoutId = this.manageStreamTimeout(stream, timeoutMs, filePath, resolve);
-
-			stream.on("data", (chunk: Buffer | string) => {
-				this._handleStreamData(chunk, stream, chunks, {
+			timeoutId = this._setupStreamAndEvents(
+				{
+					validatedPath,
+					stats,
+					options,
+					originalFilePath: filePath, // Pass original filePath
+					startTime,
+				},
+				{
+					resolve,
+					chunks,
 					bytesRead,
 					chunksProcessed,
-					totalSize,
-					enableProgress,
-					options,
-				});
-			});
-
-			stream.on("end", () => {
-				clearTimeout(timeoutId);
-				this._handleStreamEnd(
-					chunks,
-					startTime,
-					bytesRead.value,
-					chunksProcessed.value,
-					filePath,
-					resolve,
-				);
-			});
-
-			stream.on("error", (error) => {
-				clearTimeout(timeoutId);
-				this._handleStreamError(error, filePath, resolve);
-			});
+				},
+			);
 
 			// Note: Cancellation logic via options?.enableCancellation would typically involve
 			// an AbortSignal or similar mechanism passed in via options, which would

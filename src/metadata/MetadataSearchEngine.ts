@@ -11,23 +11,23 @@ import type {
 	SearchOptions,
 	SearchResult,
 	ValidationStatus,
-} from "../types/core.js";
+} from "../types/index.js";
 
-import { applyMetadataFilters, applyTextSearch } from "./MetadataFilter.js";
 import {
+	applyMetadataFilters,
+	applyTextSearch,
+	calculateTagStats,
+	calculateTypeStats,
+	extractAllFileTypes,
+	extractAllTags,
 	findByTags,
 	findByType,
 	findByValidationStatus,
 	findLargestFiles,
 	findRecentlyUpdated,
-} from "./MetadataFinder.js";
-import {
-	calculateTagStats,
-	calculateTypeStats,
-	extractAllFileTypes,
-	extractAllTags,
-} from "./MetadataStats.js";
-import { rankSearchResults, sortEntries } from "./indexUtils.js";
+	rankSearchResults,
+	sortEntries,
+} from "./metadataQueryUtils.js";
 
 import type { MetadataIndexManager } from "./MetadataIndexManager.js";
 
@@ -41,27 +41,20 @@ export class MetadataSearchEngine {
 	 * Perform a comprehensive search with filtering, sorting, and pagination
 	 */
 	async search(options: SearchOptions = {}): Promise<SearchResult> {
-		// Get all entries from the index
 		const allEntries = this.indexManager.getIndex();
 
-		// Apply metadata filters
 		let filteredEntries = applyMetadataFilters(allEntries, options);
 
-		// Apply text search if query provided
 		if (options.query) {
 			filteredEntries = applyTextSearch(filteredEntries, options.query);
 		}
 
-		// Store total count before pagination
 		const total = filteredEntries.length;
 
-		// Apply sorting
 		if (options.sortBy) {
 			if (options.sortBy === "relevance" && options.query) {
-				// For relevance sorting with query, use ranked results
 				filteredEntries = rankSearchResults(options.query, filteredEntries);
 			} else {
-				// For other sort types, use standard sorting
 				filteredEntries = sortEntries(
 					filteredEntries,
 					options.sortBy,
@@ -69,14 +62,11 @@ export class MetadataSearchEngine {
 				);
 			}
 		} else if (options.query) {
-			// Default to relevance sorting when there's a query
 			filteredEntries = rankSearchResults(options.query, filteredEntries);
 		} else {
-			// Default to updated date sorting when no query
 			filteredEntries = sortEntries(filteredEntries, "updated", "desc");
 		}
 
-		// Apply pagination
 		const offset = options.offset ?? 0;
 		const limit = options.limit ?? 50;
 		const paginatedEntries = filteredEntries.slice(offset, offset + limit);

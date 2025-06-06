@@ -1,13 +1,14 @@
 import type { Stats } from "node:fs";
 import * as fs from "node:fs/promises";
-import { validateMemoryBankPath } from "../services/validation/security.js";
 import type {
 	FileError,
 	FileOperationManagerConfig,
-	MemoryBankLogger,
+	Logger,
 	Result,
 	RetryConfig,
-} from "../types/index.js";
+} from "@/types/index.js";
+import { sleep } from "@utils/common/async-helpers.js";
+import { validateMemoryBankPath } from "@utils/security-helpers.js";
 
 /**
  * FileOperationManager provides robust file operations with retry logic,
@@ -26,7 +27,7 @@ export class FileOperationManager {
 	private readonly timeout: number;
 
 	constructor(
-		private readonly logger: MemoryBankLogger,
+		private readonly logger: Logger,
 		private readonly allowedRoot: string, // SECURITY: Required allowedRoot for path validation
 		config?: FileOperationManagerConfig,
 	) {
@@ -200,7 +201,7 @@ export class FileOperationManager {
 					`${operationName} failed, retrying in ${delay}ms. Retries left: ${retries}. Error: ${fileError.message}`,
 				);
 
-				await this.sleep(delay);
+				await sleep(delay);
 				return this.withRetry(operation, operationName, retries - 1);
 			}
 
@@ -259,12 +260,15 @@ export class FileOperationManager {
 	private createFileError(error: unknown, operation: string): FileError {
 		if (error instanceof Error) {
 			const nodeError = error as NodeJS.ErrnoException;
-			return {
+			const fileError: FileError = {
 				code: nodeError.code ?? "UNKNOWN_ERROR",
 				message: `${operation}: ${error.message}`,
-				path: nodeError.path,
 				originalError: error,
 			};
+			if (nodeError.path !== undefined) {
+				fileError.path = nodeError.path;
+			}
+			return fileError;
 		}
 
 		return {
@@ -272,12 +276,5 @@ export class FileOperationManager {
 			message: `${operation}: ${String(error)}`,
 			originalError: error instanceof Error ? error : new Error(String(error)),
 		};
-	}
-
-	/**
-	 * Simple sleep utility
-	 */
-	private sleep(ms: number): Promise<void> {
-		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 }

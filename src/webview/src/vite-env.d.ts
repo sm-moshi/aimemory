@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="react" />
 
-import type { VSCodeAPI } from "./types/vscode.js";
+import type { VSCodeAPI } from "./types/vscode";
 
 // Declare the function provided by VS Code
 declare const acquireVsCodeApi: () => VSCodeAPI;

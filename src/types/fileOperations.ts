@@ -4,10 +4,7 @@
  */
 
 import type { MemoryBankFileType } from "./core.js";
-
-// =============================================================================
-// Streaming Operations Types
-// =============================================================================
+import type { Result } from "./errorHandling.js";
 
 /**
  * Progress callback for streaming operations
@@ -96,10 +93,6 @@ export interface StreamDataHandlerContext {
 	options?: StreamingOptions;
 }
 
-// =============================================================================
-// File Content and Template Types
-// =============================================================================
-
 /**
  * Different strategies for handling file conflicts
  */
@@ -142,10 +135,6 @@ export type FileTemplateMap = {
 	[K in MemoryBankFileType]: FileContentTemplate;
 };
 
-// =============================================================================
-// File Operation Validation and Processing
-// =============================================================================
-
 /**
  * Content validation rules for memory bank files
  */
@@ -175,10 +164,6 @@ export interface ValidationResult {
 	processedContent?: string;
 }
 
-// =============================================================================
-// Batch File Operations
-// =============================================================================
-
 /**
  * Options for batch file operations
  */
@@ -198,10 +183,6 @@ export interface BatchOperationResult {
 	totalProcessed: number;
 	duration: number;
 }
-
-// =============================================================================
-// Enhanced File Operations (Phase 1)
-// =============================================================================
 
 /**
  * Configuration for retry behavior in file operations
@@ -229,4 +210,37 @@ export interface FileError {
 	message: string;
 	path?: string;
 	originalError?: Error;
+}
+
+/**
+ * Cache entry statistics for determining streaming strategy.
+ * Used by StreamingManager to cache file stats.
+ * TODO: Is is still used?
+ */
+export interface CachedFileStats {
+	path: string;
+	size: number;
+	mtime: Date;
+	wouldStream: boolean;
+}
+
+/**
+ * Parameters for the internal _setupStreamAndEvents method in FileStreamer.
+ */
+export interface StreamSetupParameters {
+	validatedPath: string;
+	stats: import("node:fs").Stats;
+	options?: StreamingOptions;
+	originalFilePath: string;
+	startTime: number;
+}
+
+/**
+ * Mutable state for the internal _setupStreamAndEvents method in FileStreamer.
+ */
+export interface StreamSetupState {
+	resolve: (value: Result<StreamingResult, FileError>) => void;
+	chunks: Buffer[];
+	bytesRead: { value: number };
+	chunksProcessed: { value: number };
 }

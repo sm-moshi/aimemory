@@ -1,6 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { VSCodeMemoryBankService } from "../../core/vsCodeMemoryBankService.js";
-import { MemoryBankFileType, isSuccess } from "../../types/index.js";
 import {
 	createMockExtensionContext,
 	createMockLogger,
@@ -9,7 +6,10 @@ import {
 	setupVSCodeMock,
 	standardAfterEach,
 	standardBeforeEach,
-} from "../test-utils/index.js";
+} from "@test-utils/index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { VSCodeMemoryBankService } from "../../core/vsCodeMemoryBankService.js";
+import { MemoryBankFileType, isSuccess } from "../../types/index.js";
 
 // Mock Markdown import to avoid Rollup parse errors
 vi.mock("../../lib/rules/memory-bank-rules.md", () => ({ default: "Mocked Markdown Content" }));

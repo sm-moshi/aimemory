@@ -5,14 +5,13 @@
  * MCP server implementations (mcpServerCli, CoreMemoryBankMCP, MemoryBankMCPAdapter)
  */
 
-import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
-import { MemoryBankError, isError, tryCatch } from "../../types/index.js";
-import type { AsyncResult, MemoryBankFileType, Result } from "../../types/index.js";
-import type { MCPErrorResponse, MCPResponse, MCPSuccessResponse } from "../../types/mcpTypes.js";
+import { MemoryBankError, isError, tryCatch } from "@/types/index.js";
+import type { AsyncResult, MemoryBankFileType, Result } from "@/types/index.js";
+import type { MCPErrorResponse, MCPResponse, MCPSuccessResponse } from "@/types/mcpTypes.js";
+import type { MemoryBankServiceCore } from "@core/memoryBankServiceCore.js";
 
 /**
  * Ensures memory bank is ready, handling common readiness patterns
- * Reduces complexity from ~8 branches to ~2 in calling code
  */
 export async function ensureMemoryBankReady(
 	memoryBank: MemoryBankServiceCore,
@@ -67,8 +66,6 @@ export function createErrorResponse(error: unknown, context?: string): MCPErrorR
  * 1. Ensure memory bank readiness
  * 2. Execute handler
  * 3. Return standardized response
- *
- * Reduces tool complexity from ~8-10 to ~2-3 complexity points
  */
 export function createMemoryBankTool<T = unknown>(
 	memoryBank: MemoryBankServiceCore,
@@ -170,13 +167,13 @@ export const MemoryBankOperations = {
 			const files = memoryBank.getAllFiles();
 			const fileListText = files
 				.map(
-					(file) =>
+					file =>
 						`${file.type}: Last updated ${
 							file.lastUpdated ? new Date(file.lastUpdated).toLocaleString() : "never"
 						}`,
 				)
 				.join("\n");
-			return fileListText || "No memory bank files found.";
+			return fileListText ?? "No memory bank files found.";
 		});
 
 		if (isError(result)) {
@@ -233,14 +230,14 @@ export const MemoryBankOperations = {
 				nextAction: { type: "idle" },
 			};
 		}
-		const reviewMessages: MCPResponse["content"] = files.map((file) => ({
+		const reviewMessages: MCPResponse["content"] = files.map(file => ({
 			type: "text" as const,
 			text: `File: ${file.type}\n\n${file.content}\n\nDo you want to update this file? If yes, reply with the new content. If no, reply 'skip'.`,
 		}));
 
 		const nextActionPayload: MCPResponse["nextAction"] = {
 			type: "collect-updates",
-			files: files.map((file) => file.type as string),
+			files: files.map(file => file.type as string),
 		};
 
 		return {

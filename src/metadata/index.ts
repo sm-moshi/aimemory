@@ -12,9 +12,7 @@ export { MetadataSearchEngine } from "./MetadataSearchEngine.js";
 export * from "./indexUtils.js";
 
 // Specialized utility modules
-export * from "./MetadataFilter.js";
-export * from "./MetadataStats.js";
-export * from "./MetadataFinder.js";
+export * from "./metadataQueryUtils.js";
 
 // Re-export types for convenience
 export type {
@@ -30,4 +28,4 @@ export type {
 	IndexChangeListener,
 	FileMetrics,
 	DateRangeFilter,
-} from "../types/core.js";
+} from "../types/index.js";

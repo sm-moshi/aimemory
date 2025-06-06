@@ -2,7 +2,7 @@
 // Resource Management Types for AI Memory Extension
 // =============================================================================
 
-import type { DIContainer } from "../core/DIContainer.js";
+import type { DIContainer } from "../utils/system/di-container.js";
 
 // =============================================================================
 // Dependency Injection Types

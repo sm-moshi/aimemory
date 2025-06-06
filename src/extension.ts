@@ -1,18 +1,17 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { CommandHandler } from "./commandHandler.js";
+import { CommandHandler } from "./app/extension/commandHandler.js";
 import { CacheManager } from "./core/CacheManager.js";
-import { DIContainer } from "./core/DIContainer.js";
 import { FileOperationManager } from "./core/FileOperationManager.js";
 import { MemoryBankServiceCore } from "./core/memoryBankServiceCore.js";
-import { VSCodeMemoryBankService } from "./core/vsCodeMemoryBankService.js";
-import { LogLevel, Logger } from "./infrastructure/logging/vscode-logger.js";
-import { showVSCodeError } from "./infrastructure/vscode/error-display.js";
+import { updateCursorMCPConfig } from "./cursor/config.js";
+import { CursorRulesService } from "./cursor/rules-service.js";
 import { MemoryBankMCPAdapter } from "./mcp/mcpAdapter.js";
 import { StreamingManager } from "./performance/StreamingManager.js";
-import { updateCursorMCPConfig } from "./services/cursor/config.js";
-import { CursorRulesService } from "./services/cursor/rules-service.js";
 import type { MCPServerInterface } from "./types/mcpTypes.js";
+import { DIContainer } from "./utils/system/di-container.js";
+import { showVSCodeError } from "./utils/vscode/ui-helpers.js";
+import { LogLevel, Logger } from "./utils/vscode/vscode-logger.js";
 import { WebviewManager } from "./webview/webviewManager.js";
 
 // Default MCP server options (for compatibility with existing interface)
@@ -41,10 +40,56 @@ function parseLogLevel(levelStr: string): LogLevel {
  */
 function getMemoryBankPath(): string {
 	const workspaceFolders = vscode.workspace.workspaceFolders;
-	if (!workspaceFolders) {
+	if (!workspaceFolders || workspaceFolders.length === 0) {
 		throw new Error("No workspace folder found");
 	}
-	return path.join(workspaceFolders[0].uri.fsPath, ".aimemory", "memory-bank");
+	const firstFolder = workspaceFolders[0];
+	if (!firstFolder) {
+		throw new Error("No workspace folder found");
+	}
+	return path.join(firstFolder.uri.fsPath, ".aimemory", "memory-bank");
+}
+
+/**
+ * VS Code specific logic for creating memory bank rules if not exists
+ */
+async function createMemoryBankRulesIfNotExists(
+	cursorRulesService: CursorRulesService,
+	logger: Logger,
+): Promise<void> {
+	const workspaceFolders = vscode.workspace.workspaceFolders;
+	if (!workspaceFolders || workspaceFolders.length === 0) {
+		logger.warn("No workspace folder found - cannot create memory bank rules");
+		return;
+	}
+
+	const workspaceRoot = workspaceFolders[0].uri.fsPath;
+	const cursorRulesPath = path.join(workspaceRoot, ".cursor", "rules");
+	const memoryBankRulesPath = path.join(cursorRulesPath, "memory-bank.mdc");
+
+	try {
+		// Check if rules file already exists
+		const existsResult = await cursorRulesService.checkRulesFileExists();
+		if (existsResult.success && existsResult.data) {
+			logger.info("Memory bank rules file already exists");
+			return;
+		}
+
+		// Create the rules file
+		const createResult = await cursorRulesService.createMemoryBankRulesFromTemplate();
+		if (createResult.success) {
+			vscode.window.showInformationMessage(
+				"Created memory bank rules file for Cursor AI integration",
+			);
+			logger.info(`Created memory bank rules at: ${memoryBankRulesPath}`);
+		} else {
+			logger.error(`Failed to create memory bank rules: ${createResult.error.message}`);
+		}
+	} catch (error) {
+		logger.error(
+			`Error creating memory bank rules: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
 }
 
 /**
@@ -56,26 +101,23 @@ function registerCoreServices(
 	context: vscode.ExtensionContext,
 ): void {
 	const memoryBankPath = getMemoryBankPath();
+	const fileOperationManager = new FileOperationManager(logger, memoryBankPath);
 
 	// Register singletons
 	container.register("Logger", () => logger, true);
-	container.register("CacheManager", (c) => new CacheManager(c.resolve("Logger")), true);
+	container.register("CacheManager", c => new CacheManager(c.resolve("Logger")), true);
 
 	container.register(
 		"StreamingManager",
-		(c) => new StreamingManager(c.resolve("Logger"), memoryBankPath),
+		c => new StreamingManager(c.resolve("Logger"), fileOperationManager, memoryBankPath),
 		true,
 	);
 
-	container.register(
-		"FileOperationManager",
-		(c) => new FileOperationManager(c.resolve("Logger"), memoryBankPath),
-		true,
-	);
+	container.register("FileOperationManager", () => fileOperationManager, true);
 
 	container.register(
 		"MemoryBankServiceCore",
-		(c) =>
+		c =>
 			new MemoryBankServiceCore(
 				memoryBankPath,
 				c.resolve("Logger"),
@@ -89,23 +131,11 @@ function registerCoreServices(
 	container.register("CursorRulesService", () => new CursorRulesService(context), true);
 
 	container.register(
-		"VSCodeMemoryBankService",
-		(c) =>
-			new VSCodeMemoryBankService(
-				context,
-				c.resolve("MemoryBankServiceCore"),
-				c.resolve("CursorRulesService"),
-				c.resolve("Logger"),
-			),
-		true,
-	);
-
-	container.register(
 		"MCPServerInterface",
-		(c) =>
+		c =>
 			new MemoryBankMCPAdapter(
 				context,
-				c.resolve<VSCodeMemoryBankService>("VSCodeMemoryBankService"),
+				c.resolve<MemoryBankServiceCore>("MemoryBankServiceCore"),
 				c.resolve<Logger>("Logger"),
 				DEFAULT_MCP_PORT,
 			),
@@ -114,11 +144,11 @@ function registerCoreServices(
 
 	container.register(
 		"WebviewManager",
-		(c) =>
+		c =>
 			new WebviewManager(
 				context,
 				c.resolve("MCPServerInterface"),
-				c.resolve("VSCodeMemoryBankService"),
+				c.resolve("MemoryBankServiceCore"),
 				c.resolve("CursorRulesService"),
 				c.resolve("MCPServerInterface"),
 				c.resolve("Logger"),
@@ -128,7 +158,7 @@ function registerCoreServices(
 
 	container.register(
 		"CommandHandler",
-		(c) => new CommandHandler(c.resolve("MCPServerInterface")),
+		c => new CommandHandler(c.resolve("MCPServerInterface")),
 		true,
 	);
 }
@@ -138,6 +168,7 @@ function registerCoreServices(
  */
 function registerCommands(
 	context: vscode.ExtensionContext,
+	container: DIContainer,
 	webviewManager: WebviewManager,
 	commandHandler: CommandHandler,
 	mcpServer: MCPServerInterface,
@@ -151,7 +182,8 @@ function registerCommands(
 
 		vscode.commands.registerCommand("aimemory.updateMCPConfig", async () => {
 			try {
-				await updateCursorMCPConfig(context.extensionPath);
+				const fom = container.resolve<FileOperationManager>("FileOperationManager");
+				await updateCursorMCPConfig(context.extensionPath, fom);
 				vscode.window.showInformationMessage(
 					"Cursor MCP config (mcp.json) has been configured for AI Memory (STDIO).",
 				);
@@ -163,7 +195,9 @@ function registerCommands(
 		vscode.commands.registerCommand("aimemory.startMCP", async () => {
 			try {
 				await mcpServer.start();
-				await mcpServer.getMemoryBank().createMemoryBankRulesIfNotExists();
+				const cursorRulesService =
+					container.resolve<CursorRulesService>("CursorRulesService");
+				await createMemoryBankRulesIfNotExists(cursorRulesService, logger);
 				vscode.window.showInformationMessage(
 					"AI Memory MCP server started using STDIO transport. Ready for Cursor MCP integration.",
 				);
@@ -176,17 +210,20 @@ function registerCommands(
 			mcpServer.stop();
 		}),
 
-		vscode.commands.registerTextEditorCommand("cursor.newChat", async (editor, edit, text) => {
-			console.log("cursor.newChat", text);
-			if (typeof text === "string" && text.trim().startsWith("/memory")) {
-				const response = await commandHandler.processMemoryCommand(text);
-				if (response) {
-					vscode.window.showInformationMessage(`AI Memory: ${response}`);
-					return;
+		vscode.commands.registerTextEditorCommand(
+			"cursor.newChat",
+			async (_editor, _edit, text) => {
+				console.log("cursor.newChat", text);
+				if (typeof text === "string" && text.trim().startsWith("/memory")) {
+					const response = await commandHandler.processMemoryCommand(text);
+					if (response) {
+						vscode.window.showInformationMessage(`AI Memory: ${response}`);
+						return;
+					}
 				}
-			}
-			vscode.commands.executeCommand("_cursor.newChat", text);
-		}),
+				vscode.commands.executeCommand("_cursor.newChat", text);
+			},
+		),
 
 		vscode.commands.registerCommand("aimemory.setLogLevel", async () => {
 			const levels = [
@@ -225,7 +262,7 @@ function setupConfigurationListeners(
 	container: DIContainer,
 ): void {
 	context.subscriptions.push(
-		vscode.workspace.onDidChangeConfiguration((e) => {
+		vscode.workspace.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration("aimemory.logLevel")) {
 				const newLevel =
 					vscode.workspace.getConfiguration("aimemory").get<string>("logLevel") ?? "info";
@@ -250,26 +287,16 @@ export function activate(context: vscode.ExtensionContext) {
 	const container = new DIContainer();
 	registerCoreServices(container, logger, context);
 
-	// Setup configuration listeners
-	setupConfigurationListeners(context, container);
-
-	console.log("Registering open webview command");
-
-	// Resolve services and register commands
+	// Resolve services from container
 	const webviewManager = container.resolve<WebviewManager>("WebviewManager");
 	const commandHandler = container.resolve<CommandHandler>("CommandHandler");
 	const mcpServer = container.resolve<MCPServerInterface>("MCPServerInterface");
 
-	registerCommands(context, webviewManager, commandHandler, mcpServer, logger);
+	// Register commands and UI elements
+	registerCommands(context, container, webviewManager, commandHandler, mcpServer, logger);
+	setupConfigurationListeners(context, container);
 
-	console.log("AI Memory extension is now active!");
-
-	// Register cleanup on deactivation
-	context.subscriptions.push({
-		dispose: () => {
-			mcpServer.stop();
-		},
-	});
+	logger.info("AI Memory extension activated.");
 }
 
 // This method is called when your extension is deactivated

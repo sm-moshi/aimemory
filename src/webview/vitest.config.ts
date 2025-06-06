@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	test: {
 		setupFiles: "./vitest.setup.ts",
-		environment: "jsdom",
+		environment: "happy-dom", // 2-8x faster than jsdom
 		globals: true,
 		coverage: {
 			provider: "v8",

@@ -2,7 +2,7 @@ import type {
 	WebviewLogLevel,
 	WebviewLogMessage,
 	WebviewToExtensionMessage,
-} from "../types/messages.js";
+} from "../types/messages";
 
 // Create a safe postMessage function
 export const postMessage = (message: WebviewToExtensionMessage) => {

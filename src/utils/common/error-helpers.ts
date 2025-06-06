@@ -50,7 +50,7 @@ export function formatZodError(issues: z.ZodIssue[]): string {
 		return "No validation errors.";
 	}
 
-	const errorMessages = issues.map((issue) => {
+	const errorMessages = issues.map(issue => {
 		const path = issue.path.join(".");
 		return path ? `${path}: ${issue.message}` : issue.message;
 	});

@@ -1,12 +1,6 @@
 /**
  * Error Handling and Result Pattern Types
- * Consolidated error handling for type-safe operations and domain-specific errors
- * Merged from result.ts and errors.ts
  */
-
-// =============================================================================
-// Result Pattern for Type-Safe Error Handling
-// =============================================================================
 
 /**
  * Result pattern for safe error handling without exceptions
@@ -18,10 +12,6 @@ export type Result<T, E = Error> = { success: true; data: T } | { success: false
  * Async version of Result pattern for Promise-returning functions
  */
 export type AsyncResult<T, E = Error> = Promise<Result<T, E>>;
-
-// =============================================================================
-// Result Pattern Type Guards and Utilities
-// =============================================================================
 
 /**
  * Type guard to check if a Result is successful
@@ -75,10 +65,6 @@ export async function tryCatchAsync<T>(fn: () => Promise<T>): AsyncResult<T, Err
 	}
 }
 
-// =============================================================================
-// Domain-Specific Error Classes
-// =============================================================================
-
 /**
  * Base Memory Bank error class for all Memory Bank operations.
  * Provides a structured way to handle errors with specific codes and context.
@@ -128,10 +114,6 @@ export class CacheError extends MemoryBankError {
 		this.name = "CacheError";
 	}
 }
-
-// =============================================================================
-// Error Type Guards
-// =============================================================================
 
 /**
  * Type guard to check if an error is a MemoryBankError

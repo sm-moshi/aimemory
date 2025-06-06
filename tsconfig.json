@@ -11,34 +11,40 @@
 			],
 			"@utils/*": [
 				"src/utils/*"
+			],
+			"@test-utils/*": [
+				"src/test/test-utils/*"
+			],
+			"@types/*": [
+				"src/types/*"
+			],
+			"@core/*": [
+				"src/core/*"
+			],
+			"@mcp/*": [
+				"src/mcp/*"
 			]
 		},
-		"typeRoots": [
-			"./node_modules/@types"
-		],
 		"types": [
 			"node",
 			"vscode"
 		],
 		"noImplicitReturns": true,
-		"noUnusedParameters": false
+		"noUnusedParameters": false,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitThis": true,
+		"noPropertyAccessFromIndexSignature": true
 	},
 	"include": [
 		"src/**/*",
 		"vitest.config.ts",
-		"scripts/build-check.ts",
-		"scripts/update-docs-date.ts",
-		"scripts/refactor-imports.ts"
+		"scripts/*.ts"
 	],
 	"exclude": [
-		"src/webview/src",
-		"src/webview/vite.config.ts",
-		"src/webview/vitest.config.ts",
-		"src/webview/vitest.setup.ts",
+		"src/webview/**",
 		"**/node_modules/**",
-		"**/dist",
-		"**/coverage",
-		"**/out"
+		"**/dist/**",
+		"**/coverage/**"
 	],
 	"references": [
 		{

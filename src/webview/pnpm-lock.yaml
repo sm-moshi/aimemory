@@ -49,8 +49,8 @@ importers:
         specifier: ^19.1.6
         version: 19.1.6(@types/react@19.1.6)
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20250605.1
-        version: 7.0.0-dev.20250605.1
+        specifier: ^7.0.0-dev.20250606.1
+        version: 7.0.0-dev.20250606.1
       '@vitejs/plugin-react':
         specifier: ^4.5.1
         version: 4.5.1(vite@6.3.5(@types/node@22.15.18)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4))
@@ -60,12 +60,15 @@ importers:
       '@vitest/ui':
         specifier: ^3.2.2
         version: 3.2.2(vitest@3.2.2)
-      jsdom:
-        specifier: ^26.1.0
-        version: 26.1.0
+      happy-dom:
+        specifier: ^17.6.3
+        version: 17.6.3
       msw:
         specifier: ^2.9.0
         version: 2.9.0(@types/node@22.15.18)(typescript@5.8.3)
+      rollup-plugin-analyzer:
+        specifier: ^4.0.0
+        version: 4.0.0
       tsx:
         specifier: ^4.19.4
         version: 4.19.4
@@ -80,7 +83,7 @@ importers:
         version: 5.1.4(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.18)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4))
       vitest:
         specifier: ^3.2.2
-        version: 3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4)
+        version: 3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(happy-dom@17.6.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4)
 
 packages:
 
@@ -776,50 +779,50 @@ packages:
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-fkftk9+orn2beytfCCjgfprsybt8a0gybKoMm47YTuLz09QI/8ugclqYpu2Durs54UVLpssL+qZK+//aGbuiTQ==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-/EsG3bhU9QFci/LQkyb8k+aym64Ul13GdDF2V5AaR/aeYG/p0kD9nvEJNjRVlw0CWvsr297nG119gy+keOeHXQ==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-ubfzZKLv105zDT5AjO9wIIrLz4ehXd0lwV+Gu7qRws9Oq3ojPVzzQs/B8Vh4zl3R1Zn1bzm8fSkIs0+kO1Ik5g==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-e9D1tL3JXr8RZE0ncYoV2wxDVvwWC7koX18JGtTC72O7q9Coh4cJaofLcaNhz+neUkN8QcMPuWhaXo7lKzHupA==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-raRVls6Yx0zOt1Dj+xUOG6SAlq5B+dV731Re+86AfL0XQwWXU2YPK/QP8BRH4zv/PzOVzX274zBmTI6tSQC/1g==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-57f+AKAW3z0aDgg1P6saTyR4AzHYNoOdHTjwBCVMV4PT5Ol2trecAvos91xg4lAg7F/Te+M/2GHCxtjNqOqtig==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-kOHdWPxj/arjamt7s3p7DPDFZr84yAVxS1jHD2YWhwH/uotHu4RaFUYD+iYurl7b+B3numHFLwzWO9HvOXQbeQ==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-xm5acI1Lz9LdZ21/lFqd1Njp4GAZs7/57EP+oMd+lCAJmLSVYH/qSTWaiuyaUxOZ7nSw9it4Is28sDCgbxJz+g==}
     engines: {node: '>=20.6.0'}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-DFJO78Lr5NgJFclOJyOev5h0sDEKpUmIq3UHBEP8IOnyjZiHfDSSOUajC3miEI0FqW7sq/Ocixm2Q3jPXx8EUA==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-4jMYLG1ajvUSaoSUcaxSbnrFP81MFw2/Ls+pWRL3bblTNw2S9X+EZ3lrxYZvU7eCF2eqxeef7saYijbQxfp+cw==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-t0IGSeQ7UFpahbWj6HoWevpl3aWopFKqIc6jgdy4Fr6FGdg+js68PBpx2wul+u4U8iC2s9hq4a3RrA1Ffj2jUw==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-/CP/rcEZT3liC7Qkx7yGyrBmH508yUMwyYbFM2v1xmgRVArjCSoof4OlQ4NaqjkeKXQjJZDwyYPMPFp7e5qqJQ==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-9QNuKDE0qEyH7hGfMwWAxLh8QEEPaFBKRQ65J2TuNYk5MC+K83yhHZhgZhNjftC0Wqj3aD2/mtUdxJjSUsOlmQ==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-t9oMPLtwNIbVwyGe/s+pkze0K9RRE4dz83IYa/lJeWYkpZCh4DcSbcrsCs0sgLJCb1eCWpbLtssTCtptBO7teQ==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20250605.1':
-    resolution: {integrity: sha512-JCxsGHd0pHC2H8fKRI9Ncw4gUyU6os4B2zp9o9hLlXVTyisdhoUmnznv91O5K1xBr1pmqZFqd6o7V4PCx8zZ8Q==}
+  '@typescript/native-preview@7.0.0-dev.20250606.1':
+    resolution: {integrity: sha512-nSNbcCXD/UKvIJN4mD0kkIYmpGwcQ47dcU4LLDJHVERFPfTWEr2YNJLmfjRikFeu8wiDa5A3m1Ywrzox8iR/oA==}
     engines: {node: '>=20.6.0'}
     hasBin: true
 
@@ -1130,6 +1133,10 @@ packages:
   graphql@16.11.0:
     resolution: {integrity: sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
+
+  happy-dom@17.6.3:
+    resolution: {integrity: sha512-UVIHeVhxmxedbWPCfgS55Jg2rDfwf2BCKeylcPSqazLz5w3Kri7Q4xdBJubsr/+VUzFLh0VjIvh13RaDA2/Xug==}
+    engines: {node: '>=20.0.0'}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -1461,6 +1468,10 @@ packages:
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
+  rollup-plugin-analyzer@4.0.0:
+    resolution: {integrity: sha512-LL9GEt3bkXp6Wa19SNR5MWcvHNMvuTFYg+eYBZN2OIFhSWN+pEJUQXEKu5BsOeABob3x9PDaLKW7w5iOJnsESQ==}
+    engines: {node: '>=8.0.0'}
+
   rollup@4.40.2:
     resolution: {integrity: sha512-tfUOg6DTP4rhQ3VjOO6B4wyrJnGOX85requAXvqYTHsOgb2TFJdZ3aWpT8W2kPoypSGP7dZUyzxJ9ee4buM5Fg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
@@ -1752,6 +1763,10 @@ packages:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
 
+  whatwg-mimetype@3.0.0:
+    resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
+    engines: {node: '>=12'}
+
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
     engines: {node: '>=18'}
@@ -1840,6 +1855,7 @@ snapshots:
       '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-tokenizer': 3.0.3
       lru-cache: 10.4.3
+    optional: true
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -2003,12 +2019,14 @@ snapshots:
       '@types/tough-cookie': 4.0.5
       tough-cookie: 4.1.4
 
-  '@csstools/color-helpers@5.0.2': {}
+  '@csstools/color-helpers@5.0.2':
+    optional: true
 
   '@csstools/css-calc@2.1.3(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)':
     dependencies:
       '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-tokenizer': 3.0.3
+    optional: true
 
   '@csstools/css-color-parser@3.0.9(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)':
     dependencies:
@@ -2016,12 +2034,15 @@ snapshots:
       '@csstools/css-calc': 2.1.3(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-tokenizer': 3.0.3
+    optional: true
 
   '@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3)':
     dependencies:
       '@csstools/css-tokenizer': 3.0.3
+    optional: true
 
-  '@csstools/css-tokenizer@3.0.3': {}
+  '@csstools/css-tokenizer@3.0.3':
+    optional: true
 
   '@esbuild/aix-ppc64@0.25.4':
     optional: true
@@ -2405,36 +2426,36 @@ snapshots:
 
   '@types/trusted-types@2.0.7': {}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250605.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250606.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20250605.1':
+  '@typescript/native-preview@7.0.0-dev.20250606.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250605.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250605.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250605.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250605.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250605.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250605.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250605.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250606.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250606.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250606.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250606.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250606.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250606.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250606.1
 
   '@vitejs/plugin-react@4.5.1(vite@6.3.5(@types/node@22.15.18)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4))':
     dependencies:
@@ -2463,7 +2484,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4)
+      vitest: 3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(happy-dom@17.6.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -2512,7 +2533,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4)
+      vitest: 3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(happy-dom@17.6.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4)
 
   '@vitest/utils@3.2.2':
     dependencies:
@@ -2533,7 +2554,8 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  agent-base@7.1.3: {}
+  agent-base@7.1.3:
+    optional: true
 
   ansi-escapes@4.3.2:
     dependencies:
@@ -2634,6 +2656,7 @@ snapshots:
     dependencies:
       '@asamuzakjp/css-color': 3.1.7
       rrweb-cssom: 0.8.0
+    optional: true
 
   csstype@3.1.3: {}
 
@@ -2641,6 +2664,7 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.2.0
+    optional: true
 
   debug@4.4.0:
     dependencies:
@@ -2650,7 +2674,8 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
-  decimal.js@10.5.0: {}
+  decimal.js@10.5.0:
+    optional: true
 
   deep-eql@5.0.2: {}
 
@@ -2675,7 +2700,8 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.2.1
 
-  entities@6.0.0: {}
+  entities@6.0.0:
+    optional: true
 
   es-module-lexer@1.7.0: {}
 
@@ -2756,6 +2782,11 @@ snapshots:
 
   graphql@16.11.0: {}
 
+  happy-dom@17.6.3:
+    dependencies:
+      webidl-conversions: 7.0.0
+      whatwg-mimetype: 3.0.0
+
   has-flag@4.0.0: {}
 
   headers-polyfill@4.0.3: {}
@@ -2763,26 +2794,30 @@ snapshots:
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
+    optional: true
 
   html-escaper@2.0.2: {}
 
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
+    optional: true
 
   indent-string@4.0.0: {}
 
@@ -2790,7 +2825,8 @@ snapshots:
 
   is-node-process@1.2.0: {}
 
-  is-potential-custom-element-name@1.0.1: {}
+  is-potential-custom-element-name@1.0.1:
+    optional: true
 
   isexe@2.0.0: {}
 
@@ -2853,6 +2889,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   jsesc@3.1.0: {}
 
@@ -2994,7 +3031,8 @@ snapshots:
 
   node-releases@2.0.19: {}
 
-  nwsapi@2.2.20: {}
+  nwsapi@2.2.20:
+    optional: true
 
   outvariant@1.4.3: {}
 
@@ -3003,6 +3041,7 @@ snapshots:
   parse5@7.3.0:
     dependencies:
       entities: 6.0.0
+    optional: true
 
   path-key@3.1.1: {}
 
@@ -3067,6 +3106,8 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
+  rollup-plugin-analyzer@4.0.0: {}
+
   rollup@4.40.2:
     dependencies:
       '@types/estree': 1.0.7
@@ -3093,13 +3134,16 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.40.2
       fsevents: 2.3.3
 
-  rrweb-cssom@0.8.0: {}
+  rrweb-cssom@0.8.0:
+    optional: true
 
-  safer-buffer@2.1.2: {}
+  safer-buffer@2.1.2:
+    optional: true
 
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+    optional: true
 
   scheduler@0.26.0: {}
 
@@ -3161,7 +3205,8 @@ snapshots:
     dependencies:
       has-flag: 4.0.0
 
-  symbol-tree@3.2.4: {}
+  symbol-tree@3.2.4:
+    optional: true
 
   tailwindcss@4.1.8: {}
 
@@ -3202,11 +3247,13 @@ snapshots:
 
   tinyspy@4.0.3: {}
 
-  tldts-core@6.1.86: {}
+  tldts-core@6.1.86:
+    optional: true
 
   tldts@6.1.86:
     dependencies:
       tldts-core: 6.1.86
+    optional: true
 
   totalist@3.0.1: {}
 
@@ -3220,10 +3267,12 @@ snapshots:
   tough-cookie@5.1.2:
     dependencies:
       tldts: 6.1.86
+    optional: true
 
   tr46@5.1.1:
     dependencies:
       punycode: 2.3.1
+    optional: true
 
   tsconfck@3.1.6(typescript@5.8.3):
     optionalDependencies:
@@ -3305,7 +3354,7 @@ snapshots:
       lightningcss: 1.30.1
       tsx: 4.19.4
 
-  vitest@3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4):
+  vitest@3.2.2(@types/node@22.15.18)(@vitest/ui@3.2.2)(happy-dom@17.6.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.9.0(@types/node@22.15.18)(typescript@5.8.3))(tsx@4.19.4):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.2
@@ -3333,6 +3382,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.15.18
       '@vitest/ui': 3.2.2(vitest@3.2.2)
+      happy-dom: 17.6.3
       jsdom: 26.1.0
     transitivePeerDependencies:
       - jiti
@@ -3351,19 +3401,25 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+    optional: true
 
   webidl-conversions@7.0.0: {}
 
   whatwg-encoding@3.1.1:
     dependencies:
       iconv-lite: 0.6.3
+    optional: true
 
-  whatwg-mimetype@4.0.0: {}
+  whatwg-mimetype@3.0.0: {}
+
+  whatwg-mimetype@4.0.0:
+    optional: true
 
   whatwg-url@14.2.0:
     dependencies:
       tr46: 5.1.1
       webidl-conversions: 7.0.0
+    optional: true
 
   which@2.0.2:
     dependencies:
@@ -3392,11 +3448,14 @@ snapshots:
       string-width: 5.1.2
       strip-ansi: 7.1.0
 
-  ws@8.18.2: {}
+  ws@8.18.2:
+    optional: true
 
-  xml-name-validator@5.0.0: {}
+  xml-name-validator@5.0.0:
+    optional: true
 
-  xmlchars@2.2.0: {}
+  xmlchars@2.2.0:
+    optional: true
 
   y18n@5.0.8: {}
 

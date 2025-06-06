@@ -1,5 +1,5 @@
+import { standardBeforeEach } from "@test-utils/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { standardBeforeEach } from "../test-utils/index.js";
 
 vi.mock("../../mcp/coreMemoryBankMCP.js", () => ({
 	CoreMemoryBankMCP: vi.fn().mockImplementation(() => ({
@@ -16,7 +16,7 @@ describe("cli main", () => {
 	});
 
 	it("creates CoreMemoryBankMCP and connects transport", async () => {
-		const cliModule = await import("../../cli.js");
+		const cliModule = await import("@/app/cli/index.js");
 		const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue("/mock/path");
 		const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
 			throw new Error("exit");
@@ -25,7 +25,7 @@ describe("cli main", () => {
 		try {
 			await cliModule.main(true);
 			// TODO: Linter says: "Handle this exception or don't catch it at all."
-		} catch (e) {
+		} catch (_e) {
 			threw = true;
 		}
 		expect(threw).toBe(false);

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
-import { cn } from "../../utils/cn.js";
-import { sendLog } from "../../utils/message.js";
+import { cn } from "../../utils/cn";
+import { sendLog } from "../../utils/message";
 
 export function RulesStatus() {
 	const [isLoading, setIsLoading] = useState(true);

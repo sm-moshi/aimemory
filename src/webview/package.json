@@ -9,14 +9,20 @@
 	},
 	"packageManager": "pnpm@10.11.1",
 	"scripts": {
-		"dev": "vite",
+		"dev": "vite --host --open",
+		"dev:debug": "vite --debug --host",
+		"dev:network": "vite --host 0.0.0.0",
 		"build": "vite build",
 		"check": "tsgo --noEmit && pnpm run lint && pnpm run format",
 		"lint": "biome check --write .",
 		"format": "biome format --write .",
 		"preview": "vite preview",
-		"test": "vitest run",
-		"test:coverage": "vitest run --coverage"
+		"test": "vitest run --run",
+		"test:watch": "vitest",
+		"test:ui": "vitest --ui --open",
+		"test:coverage": "vitest run --coverage --reporter=html",
+		"build:check": "tsgo --noEmit && vite build --mode=development",
+		"bundle:analyze": "vite build --mode=analyze"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.8",
@@ -34,16 +40,18 @@
 		"@testing-library/react": "^16.3.0",
 		"@types/react": "^19.1.6",
 		"@types/react-dom": "^19.1.6",
-		"@typescript/native-preview": "7.0.0-dev.20250605.1",
+		"@typescript/native-preview": "^7.0.0-dev.20250606.1",
 		"@vitejs/plugin-react": "^4.5.1",
 		"@vitest/coverage-v8": "^3.2.2",
 		"@vitest/ui": "^3.2.2",
-		"jsdom": "^26.1.0",
+		"happy-dom": "^17.6.3",
 		"msw": "^2.9.0",
+		"rollup-plugin-analyzer": "^4.0.0",
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3",
 		"vite": "^6.3.5",
 		"vite-tsconfig-paths": "^5.1.4",
 		"vitest": "^3.2.2"
-	}
+	},
+	"type": "module"
 }

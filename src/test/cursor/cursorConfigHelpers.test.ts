@@ -3,62 +3,29 @@
  * Verifies functionality of cursor config management utilities
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	compareServerConfigs,
 	createAIMemoryServerConfig,
 	ensureCursorDirectory,
 	readCursorMCPConfig,
 	writeCursorMCPConfig,
-} from "../../services/cursor/config-helpers.js";
+} from "@/cursor/config-helpers.js";
+import { Logger } from "@/utils/vscode/vscode-logger.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CursorMCPConfig, MCPServerConfig } from "../../types/config.js";
-import { setupVSCodeMock, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
-
-// Setup mocks
-setupVSCodeMock();
-
-// Define a consistent mock logger instance with proper Vitest mock functions
-const mockLoggerInstance = {
-	info: vi.fn(),
-	error: vi.fn(),
-	debug: vi.fn(),
-	log: vi.fn(),
-	setLevel: vi.fn(),
-	showOutput: vi.fn(),
-};
-
-// Mock Logger to return the consistent instance
-vi.mock("../../infrastructure/logging/vscode-logger.js", () => ({
-	Logger: {
-		getInstance: () => mockLoggerInstance,
-	},
-	LogLevel: {
-		Trace: 0,
-		Debug: 1,
-		Info: 2,
-		Warning: 3,
-		Error: 4,
-		Off: 5,
-	},
-}));
-
-// Mock process helpers
-vi.mock("../../infrastructure/process/helpers.js", () => ({
-	validateWorkspace: vi.fn().mockReturnValue("/test/workspace"),
-}));
-
-// Mock OS
-vi.mock("node:os", () => ({
-	homedir: vi.fn(() => "/test/home"),
-}));
 
 describe("Cursor Config Helpers", () => {
+	let mockLoggerInstance: ReturnType<typeof Logger.getInstance>;
+
 	beforeEach(() => {
-		standardBeforeEach();
+		// Get a reference to the mocked logger instance for spying
+		mockLoggerInstance = Logger.getInstance();
 	});
 
 	afterEach(() => {
-		standardAfterEach();
+		// Global teardown in vitest.setup.ts handles resetting mocks.
+		// No standardAfterEach() needed.
+		// TODO: Why don't we remove this then?
 	});
 
 	describe("createAIMemoryServerConfig", () => {
@@ -208,9 +175,11 @@ describe("Cursor Config Helpers", () => {
 			);
 
 			expect(loggerErrorSpy).toHaveBeenCalledWith(
-				expect.stringContaining("Failed to create .cursor directory: Permission denied"),
+				expect.stringContaining(
+					"Failed to create directory /test/home/.cursor: Permission denied",
+				),
+				undefined, // Acknowledge the second argument being undefined
 			);
-			// No need to restore spy on mockLoggerInstance.error if it's cleared in beforeEach
 		});
 	});
 

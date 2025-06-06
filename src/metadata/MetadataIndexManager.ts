@@ -1,30 +1,40 @@
 /**
  * Metadata Index Manager
  *
- * Manages the centralized metadata index for memory bank files.
- * Provides functionality to build, maintain, and query file metadata efficiently.
+ * Manages a centralized index of metadata for all memory bank files.
+ * Provides efficient querying and updating capabilities.
  */
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
+import * as path from "node:path";
+import type { FileOperationManager } from "../core/FileOperationManager.js";
 import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import type {
 	IndexChangeEvent,
 	IndexChangeListener,
 	IndexRebuildResult,
 	IndexStats,
+	Logger,
 	MetadataIndexConfig,
 	MetadataIndexEntry,
-} from "../types/core.js";
-import type { MemoryBankLogger } from "../types/index.js";
-
+} from "../types/index.js";
 import { calculateFileMetrics, debounce, deepClone, inferFileType } from "./indexUtils.js";
 
+// Constants for metadata property names
+const METADATA_PROPS = {
+	ID: "id",
+	TYPE: "type",
+	TITLE: "title",
+	DESCRIPTION: "description",
+	TAGS: "tags",
+	CREATED: "created",
+	UPDATED: "updated",
+} as const;
+
 /**
- * Default configuration for metadata indexing
+ * Default configuration values
  */
-const DEFAULT_CONFIG: Required<Omit<MetadataIndexConfig, "memoryBankPath">> = {
+const DEFAULT_CONFIG: Required<MetadataIndexConfig> = {
+	memoryBankPath: "",
 	indexFilePath: ".index/metadata.json",
 	autoRebuild: true,
 	rebuildDebounceMs: 1000,
@@ -32,7 +42,7 @@ const DEFAULT_CONFIG: Required<Omit<MetadataIndexConfig, "memoryBankPath">> = {
 };
 
 /**
- * Centralized metadata index manager for memory bank files
+ * Manages metadata index for efficient querying of memory bank files
  */
 export class MetadataIndexManager {
 	private readonly config: Required<MetadataIndexConfig>;
@@ -45,7 +55,8 @@ export class MetadataIndexManager {
 
 	constructor(
 		private readonly memoryBankService: MemoryBankServiceCore,
-		private readonly logger: MemoryBankLogger,
+		private readonly logger: Logger,
+		private readonly fileOperationManager: FileOperationManager,
 		config: MetadataIndexConfig,
 	) {
 		this.config = { ...DEFAULT_CONFIG, ...config };
@@ -55,7 +66,7 @@ export class MetadataIndexManager {
 		if (this.config.autoRebuild) {
 			this.debouncedRebuild = debounce(
 				() =>
-					this.buildIndex().catch((error) =>
+					this.buildIndex().catch(error =>
 						this.logger.error(
 							`Auto-rebuild failed: ${error instanceof Error ? error.message : String(error)}`,
 						),
@@ -127,10 +138,22 @@ export class MetadataIndexManager {
 				try {
 					// Get file stats for metrics
 					const fullPath = path.join(this.config.memoryBankPath, relativePath);
-					const fileStats = await fs.stat(fullPath);
+					const statResult = await this.fileOperationManager.statWithRetry(fullPath);
+
+					if (!statResult.success) {
+						throw new Error(`Failed to stat file: ${statResult.error.message}`);
+					}
+
+					const fileStats = statResult.data;
 
 					// Read full file content
-					const fullContent = await fs.readFile(fullPath, "utf-8");
+					const readResult = await this.fileOperationManager.readFileWithRetry(fullPath);
+
+					if (!readResult.success) {
+						throw new Error(`Failed to read file: ${readResult.error.message}`);
+					}
+
+					const fullContent = readResult.data;
 
 					// Parse frontmatter if present
 					const matter = await import("gray-matter");
@@ -142,18 +165,22 @@ export class MetadataIndexManager {
 					// Create index entry
 					const indexEntry: MetadataIndexEntry = {
 						relativePath,
-						id: metadata.id as string | undefined,
-						type: (metadata.type as string | undefined) ?? inferFileType(relativePath),
-						title: metadata.title as string | undefined,
-						description: metadata.description as string | undefined,
-						tags: Array.isArray(metadata.tags)
-							? (metadata.tags as string[])
+						id: metadata[METADATA_PROPS.ID] as string | undefined,
+						type:
+							(metadata[METADATA_PROPS.TYPE] as string | undefined) ??
+							inferFileType(relativePath),
+						title: metadata[METADATA_PROPS.TITLE] as string | undefined,
+						description: metadata[METADATA_PROPS.DESCRIPTION] as string | undefined,
+						tags: Array.isArray(metadata[METADATA_PROPS.TAGS])
+							? (metadata[METADATA_PROPS.TAGS] as string[])
 							: undefined,
 						created:
-							(metadata.created as string) ??
-							fileStats.birthtime.toISOString() ??
+							(metadata[METADATA_PROPS.CREATED] as string) ??
+							fileStats.birthtime?.toISOString() ??
 							new Date().toISOString(),
-						updated: (metadata.updated as string) ?? fileStats.mtime.toISOString(),
+						updated:
+							(metadata[METADATA_PROPS.UPDATED] as string) ??
+							fileStats.mtime.toISOString(),
 						fileMetrics,
 						validationStatus: "unchecked", // Will be validated later if needed
 						lastIndexed: new Date().toISOString(),
@@ -221,7 +248,7 @@ export class MetadataIndexManager {
 		if (!this.indexLoaded) {
 			throw new Error("Index not loaded. Call initialize() first.");
 		}
-		return this.index.find((entry) => entry.relativePath === relativePath);
+		return this.index.find(entry => entry.relativePath === relativePath);
 	}
 
 	/**
@@ -235,16 +262,29 @@ export class MetadataIndexManager {
 		try {
 			// Check if file exists
 			const fullPath = path.join(this.config.memoryBankPath, relativePath);
-			try {
-				await fs.access(fullPath);
-			} catch {
+			const accessResult = await this.fileOperationManager.accessWithRetry(fullPath);
+
+			if (!accessResult.success) {
 				// File doesn't exist - throw error for explicit update calls
 				throw new Error(`File not found: ${relativePath}`);
 			}
 
 			// Get file stats and content for metrics
-			const fileStats = await fs.stat(fullPath);
-			const fullContent = await fs.readFile(fullPath, "utf-8");
+			const statResult = await this.fileOperationManager.statWithRetry(fullPath);
+
+			if (!statResult.success) {
+				throw new Error(`Failed to stat file: ${statResult.error.message}`);
+			}
+
+			const fileStats = statResult.data;
+
+			const readResult = await this.fileOperationManager.readFileWithRetry(fullPath);
+
+			if (!readResult.success) {
+				throw new Error(`Failed to read file: ${readResult.error.message}`);
+			}
+
+			const fullContent = readResult.data;
 
 			// Parse frontmatter if present
 			const matter = await import("gray-matter");
@@ -256,16 +296,21 @@ export class MetadataIndexManager {
 			// Create updated index entry
 			const updatedEntry: MetadataIndexEntry = {
 				relativePath,
-				id: metadata.id as string | undefined,
-				type: (metadata.type as string | undefined) ?? inferFileType(relativePath),
-				title: metadata.title as string | undefined,
-				description: metadata.description as string | undefined,
-				tags: Array.isArray(metadata.tags) ? (metadata.tags as string[]) : undefined,
+				id: metadata[METADATA_PROPS.ID] as string | undefined,
+				type:
+					(metadata[METADATA_PROPS.TYPE] as string | undefined) ??
+					inferFileType(relativePath),
+				title: metadata[METADATA_PROPS.TITLE] as string | undefined,
+				description: metadata[METADATA_PROPS.DESCRIPTION] as string | undefined,
+				tags: Array.isArray(metadata[METADATA_PROPS.TAGS])
+					? (metadata[METADATA_PROPS.TAGS] as string[])
+					: undefined,
 				created:
-					(metadata.created as string) ??
-					fileStats.birthtime.toISOString() ??
+					(metadata[METADATA_PROPS.CREATED] as string) ??
+					fileStats.birthtime?.toISOString() ??
 					new Date().toISOString(),
-				updated: (metadata.updated as string) ?? fileStats.mtime.toISOString(),
+				updated:
+					(metadata[METADATA_PROPS.UPDATED] as string) ?? fileStats.mtime.toISOString(),
 				fileMetrics,
 				validationStatus: "unchecked",
 				lastIndexed: new Date().toISOString(),
@@ -273,7 +318,7 @@ export class MetadataIndexManager {
 
 			// Find existing entry and update or add new
 			const existingIndex = this.index.findIndex(
-				(entry) => entry.relativePath === relativePath,
+				entry => entry.relativePath === relativePath,
 			);
 			const isUpdate = existingIndex !== -1;
 
@@ -314,7 +359,7 @@ export class MetadataIndexManager {
 			throw new Error("Index not loaded. Call initialize() first.");
 		}
 
-		const index = this.index.findIndex((entry) => entry.relativePath === relativePath);
+		const index = this.index.findIndex(entry => entry.relativePath === relativePath);
 		if (index !== -1) {
 			this.index.splice(index, 1);
 			await this.saveIndex();
@@ -379,11 +424,9 @@ export class MetadataIndexManager {
 		let lastBuildTime = new Date().toISOString();
 		const lastBuildDuration = 0;
 
-		try {
-			const indexStats = await fs.stat(this.indexPath);
-			lastBuildTime = indexStats.mtime.toISOString();
-		} catch {
-			// Index file doesn't exist or can't be read
+		const statResult = await this.fileOperationManager.statWithRetry(this.indexPath);
+		if (statResult.success) {
+			lastBuildTime = statResult.data.mtime.toISOString();
 		}
 
 		return {
@@ -430,17 +473,24 @@ export class MetadataIndexManager {
 	 * Load index from disk
 	 */
 	private async loadIndex(): Promise<void> {
-		try {
-			const indexData = await fs.readFile(this.indexPath, "utf-8");
-			this.index = JSON.parse(indexData) as MetadataIndexEntry[];
-			this.logger.debug(`Loaded metadata index from disk - entries: ${this.index.length}`);
-		} catch (error) {
-			if ((error as { code?: string }).code === "ENOENT") {
+		const readResult = await this.fileOperationManager.readFileWithRetry(this.indexPath);
+
+		if (!readResult.success) {
+			if (readResult.error.code === "ENOENT") {
 				this.logger.debug("No existing index file found");
 				this.index = [];
-			} else {
-				throw error;
+				return;
 			}
+			throw new Error(`Failed to load index: ${readResult.error.message}`);
+		}
+
+		try {
+			this.index = JSON.parse(readResult.data) as MetadataIndexEntry[];
+			this.logger.debug(`Loaded metadata index from disk - entries: ${this.index.length}`);
+		} catch (parseError) {
+			throw new Error(
+				`Failed to parse index file: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+			);
 		}
 	}
 
@@ -450,7 +500,16 @@ export class MetadataIndexManager {
 	private async saveIndex(): Promise<void> {
 		await this.ensureIndexDirectory();
 		const indexData = JSON.stringify(this.index, null, 2);
-		await fs.writeFile(this.indexPath, indexData, "utf-8");
+
+		const writeResult = await this.fileOperationManager.writeFileWithRetry(
+			this.indexPath,
+			indexData,
+		);
+
+		if (!writeResult.success) {
+			throw new Error(`Failed to save index: ${writeResult.error.message}`);
+		}
+
 		this.logger.debug(
 			`Saved metadata index to disk - entries: ${this.index.length}, path: ${this.indexPath}`,
 		);
@@ -461,7 +520,13 @@ export class MetadataIndexManager {
 	 */
 	private async ensureIndexDirectory(): Promise<void> {
 		const indexDir = path.dirname(this.indexPath);
-		await fs.mkdir(indexDir, { recursive: true });
+		const mkdirResult = await this.fileOperationManager.mkdirWithRetry(indexDir, {
+			recursive: true,
+		});
+
+		if (!mkdirResult.success) {
+			throw new Error(`Failed to create index directory: ${mkdirResult.error.message}`);
+		}
 	}
 
 	/**
@@ -472,6 +537,10 @@ export class MetadataIndexManager {
 
 		const scanDirectory = async (dirPath: string, relativePath = ""): Promise<void> => {
 			try {
+				// Use streaming manager for reading directory contents if available
+				// For now, we'll use direct readdir but this could be improved
+				const _matter = await import("gray-matter");
+				const fs = await import("node:fs/promises");
 				const items = await fs.readdir(dirPath, { withFileTypes: true });
 
 				for (const item of items) {

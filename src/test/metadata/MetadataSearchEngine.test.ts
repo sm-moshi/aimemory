@@ -1,8 +1,8 @@
+import { createFileMetrics, standardAfterEach, standardBeforeEach } from "@test-utils/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MetadataIndexManager } from "../../metadata/MetadataIndexManager.js";
 import { MetadataSearchEngine } from "../../metadata/MetadataSearchEngine.js";
-import type { MetadataIndexEntry } from "../../types/core.js";
-import { createFileMetrics, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
+import type { MetadataIndexEntry } from "../../types/index.js";
 
 // Mock MetadataIndexManager
 const mockIndexManager = {
@@ -239,7 +239,7 @@ describe("MetadataSearchEngine", () => {
 			const result = await searchEngine.search({ validationStatus: "valid" });
 
 			expect(result.results).toHaveLength(2);
-			expect(result.results.every((entry) => entry.validationStatus === "valid")).toBe(true);
+			expect(result.results.every(entry => entry.validationStatus === "valid")).toBe(true);
 		});
 
 		it("should filter by validation status invalid", async () => {
@@ -266,7 +266,7 @@ describe("MetadataSearchEngine", () => {
 			expect(result.results).toHaveLength(2);
 			expect(
 				result.results.every(
-					(entry) => new Date(entry.created) >= new Date("2025-05-29T00:00:00.000Z"),
+					entry => new Date(entry.created) >= new Date("2025-05-29T00:00:00.000Z"),
 				),
 			).toBe(true);
 		});
@@ -279,7 +279,7 @@ describe("MetadataSearchEngine", () => {
 			expect(result.results).toHaveLength(2);
 			expect(
 				result.results.every(
-					(entry) => new Date(entry.created) <= new Date("2025-05-29T00:00:00.000Z"),
+					entry => new Date(entry.created) <= new Date("2025-05-29T00:00:00.000Z"),
 				),
 			).toBe(true);
 		});
@@ -342,15 +342,15 @@ describe("MetadataSearchEngine", () => {
 			const result1 = await searchEngine.search({});
 			const result2 = await searchEngine.search({});
 
-			expect(result1.results.map((r) => r.relativePath)).toEqual(
-				result2.results.map((r) => r.relativePath),
+			expect(result1.results.map(r => r.relativePath)).toEqual(
+				result2.results.map(r => r.relativePath),
 			);
 		});
 
 		it("should sort results by updated date (newest first)", async () => {
 			const result = await searchEngine.search({});
 
-			const dates = result.results.map((r) => new Date(r.updated));
+			const dates = result.results.map(r => new Date(r.updated));
 			for (let i = 1; i < dates.length; i++) {
 				expect(dates[i - 1].getTime()).toBeGreaterThanOrEqual(dates[i].getTime());
 			}

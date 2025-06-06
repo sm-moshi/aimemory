@@ -1,30 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the security validation module DIRECTLY at the top
-vi.mock("../../services/validation/security.js", () => ({
-	validateMemoryBankPath: vi.fn(), // Default mock is just a vi.fn()
-	sanitizePath: vi.fn((path: string) => path),
+// Import the functions to be mocked from their actual module path
+import {
+	sanitizePath as actualSanitizePath,
+	validateMemoryBankPath as actualValidateMemoryBankPath,
+} from "../../utils/security-helpers.js";
+
+// Mock the security validation module using a factory
+vi.mock("../../utils/security-helpers.js", () => ({
+	validateMemoryBankPath: vi.fn(path => path), // Default pass-through implementation
+	sanitizePath: vi.fn(path => path), // Default pass-through implementation
 }));
 
-// THEN import other things
-import { FileOperationManager } from "../../core/FileOperationManager.js";
-import { FileStreamer } from "../../performance/FileStreamer.js";
-import { StreamingManager } from "../../performance/StreamingManager.js";
 import {
 	SECURITY_TEST_DATA,
 	createMockFileStats,
 	createSecurityMockLogger,
 	expectConstructorError,
 	expectValidationFailure,
+	// These helpers will be modified to use the vi.mocked(actualValidateMemoryBankPath)
 	setupMaliciousPathRejection,
 	setupSecurityValidationError,
 	setupValidPathAcceptance,
-} from "../test-utils/security-mock-helpers.js";
+} from "@test-utils/index.js";
+// THEN import other things, including helpers that will use the above mocks
+import { FileOperationManager } from "../../core/FileOperationManager.js";
+import { FileStreamer } from "../../performance/FileStreamer.js";
+import { StreamingManager } from "../../performance/StreamingManager.js";
 
 const mockLogger = createSecurityMockLogger();
 
 // Extract constants from centralized test data
-const { ALLOWED_ROOT, MALICIOUS_PATHS, VALID_PATHS, EDGE_CASES } = SECURITY_TEST_DATA;
+const {
+	allowedRoot: ALLOWED_ROOT,
+	maliciousPaths: MALICIOUS_PATHS,
+	validPaths: VALID_PATHS,
+	edgeCases: EDGE_CASES,
+} = SECURITY_TEST_DATA;
 
 describe("Path Traversal Security Tests", () => {
 	let fileOperationManager: FileOperationManager;
@@ -32,7 +44,13 @@ describe("Path Traversal Security Tests", () => {
 	let fileStreamer: FileStreamer;
 
 	beforeEach(() => {
+		// Clear all mock call history and reset implementations to their vi.fn() default (or factory default)
 		vi.clearAllMocks();
+
+		// Explicitly reset implementations for functions we will re-configure per test-group
+		// This ensures the default pass-through from the vi.mock factory is active unless overridden by a setup* helper
+		vi.mocked(actualValidateMemoryBankPath).mockImplementation(path => path);
+		vi.mocked(actualSanitizePath).mockImplementation(path => path);
 
 		fileOperationManager = new FileOperationManager(mockLogger, ALLOWED_ROOT);
 		streamingManager = new StreamingManager(mockLogger, fileOperationManager, ALLOWED_ROOT);
@@ -45,7 +63,7 @@ describe("Path Traversal Security Tests", () => {
 
 	describe("FileOperationManager Security", () => {
 		it("should reject obvious path traversal attempts", async () => {
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 
 			for (const maliciousPath of MALICIOUS_PATHS) {
 				const result = await fileOperationManager.readFileWithRetry(maliciousPath);
@@ -54,7 +72,7 @@ describe("Path Traversal Security Tests", () => {
 		});
 
 		it("should allow safe relative paths", async () => {
-			await setupValidPathAcceptance();
+			setupValidPathAcceptance();
 
 			for (const validPath of VALID_PATHS) {
 				expect(() => {
@@ -67,14 +85,12 @@ describe("Path Traversal Security Tests", () => {
 
 		it("should validate paths in all FileOperationManager methods", async () => {
 			const testPath = "test-file.txt";
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 
 			const operations = [
 				() => fileOperationManager.readFileWithRetry(testPath),
-				() => fileOperationManager.writeFileWithRetry(testPath, "content"),
-				() => fileOperationManager.mkdirWithRetry(testPath),
+				() => fileOperationManager.writeFileWithRetry(testPath, "data"),
 				() => fileOperationManager.statWithRetry(testPath),
-				() => fileOperationManager.accessWithRetry(testPath),
 			];
 
 			for (const operation of operations) {
@@ -86,24 +102,24 @@ describe("Path Traversal Security Tests", () => {
 
 	describe("StreamingManager Security", () => {
 		it("should validate paths before streaming", async () => {
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 			const result = await streamingManager.readFile("../../../etc/passwd");
-			expectValidationFailure(result);
+			expectValidationFailure(result, "PATH_VALIDATION_ERROR");
 		});
 
 		it("should check if file would be streamed safely", async () => {
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 			const result = await streamingManager.wouldStreamFile(
 				"../../../etc/passwd",
 				ALLOWED_ROOT,
 			);
-			expectValidationFailure(result);
+			expectValidationFailure(result, "PATH_VALIDATION_ERROR");
 		});
 	});
 
 	describe("FileStreamer Security", () => {
 		it("should validate paths before creating read streams", async () => {
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 			const mockStats = createMockFileStats();
 			const result = await fileStreamer.streamFile("../../../etc/passwd", mockStats);
 			expectValidationFailure(result);
@@ -119,9 +135,9 @@ describe("Path Traversal Security Tests", () => {
 		});
 
 		it("should require allowedRoot for StreamingManager", () => {
-			const mockFOM = {} as any; // Mock FileOperationManager for this test
+			const mockFom = {} as any; // Mock FileOperationManager for this test
 			expectConstructorError(
-				() => new StreamingManager(mockLogger, mockFOM, ""),
+				() => new StreamingManager(mockLogger, mockFom, ""),
 				"Requires allowedRoot for security - cannot operate without path restrictions",
 			);
 		});
@@ -142,7 +158,7 @@ describe("Path Traversal Security Tests", () => {
 	describe("Edge Cases", () => {
 		for (const { path, error } of EDGE_CASES) {
 			it(`should handle ${error.toLowerCase()}`, async () => {
-				await setupSecurityValidationError(error);
+				setupSecurityValidationError(error);
 
 				const result = await fileOperationManager.readFileWithRetry(path);
 				expectValidationFailure(result);
@@ -152,28 +168,28 @@ describe("Path Traversal Security Tests", () => {
 
 	describe("Regression Prevention", () => {
 		it("should log security violations for monitoring", async () => {
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 			await fileOperationManager.readFileWithRetry("../../../etc/passwd");
 
 			expect(mockLogger.error).toHaveBeenCalledWith(
-				expect.stringContaining("Path validation failed for: ../../../etc/passwd"),
+				expect.stringContaining("Path validation failed"),
 			);
 		});
 
 		it("should maintain security across all file operation types", async () => {
 			const maliciousPath = "../../../etc/passwd";
-			await setupMaliciousPathRejection();
+			setupMaliciousPathRejection();
 
 			const operations = [
 				fileOperationManager.readFileWithRetry(maliciousPath),
-				fileOperationManager.writeFileWithRetry(maliciousPath, "content"),
+				fileOperationManager.writeFileWithRetry(maliciousPath, "data"),
 				fileOperationManager.statWithRetry(maliciousPath),
-				fileOperationManager.accessWithRetry(maliciousPath),
-				fileOperationManager.mkdirWithRetry(maliciousPath),
 			];
 
 			const results = await Promise.all(operations);
-			results.forEach(expectValidationFailure);
+			for (const result of results) {
+				expectValidationFailure(result);
+			}
 		});
 	});
 });

@@ -1,4 +1,13 @@
 import { describe, expect, it } from "vitest";
+import type { MemoryBankFileType } from "../../types/core.js";
+import {
+	MemoryBankFileTypeSchema,
+	UpdateMemoryBankFileSchema,
+	isSafePath,
+	isValidFileType,
+	validateMCPToolParams,
+	validateWebviewMessage,
+} from "../../types/validation.js";
 import {
 	auditInput,
 	sanitizeFileContent,
@@ -9,16 +18,7 @@ import {
 	validateMemoryBankPath,
 	validatePort,
 	validateProcessConfig,
-} from "../../services/validation/security.js";
-import type { MemoryBankFileType } from "../../types/core.js";
-import {
-	MemoryBankFileTypeSchema,
-	UpdateMemoryBankFileSchema,
-	isSafePath,
-	isValidFileType,
-	validateMCPToolParams,
-	validateWebviewMessage,
-} from "../../types/validation.js";
+} from "../../utils/security-helpers.js";
 
 describe("MemoryBankFileTypeSchema Validation", () => {
 	it("should validate correct file types", () => {

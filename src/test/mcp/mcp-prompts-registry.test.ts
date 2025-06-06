@@ -1,16 +1,15 @@
+import { registerMemoryBankPrompts } from "@/cursor/mcp-prompts-registry.js";
 import { describe, expect, it } from "vitest";
-import { registerMemoryBankPrompts } from "../../services/cursor/mcp-prompts-registry.js";
 
 describe("registerMemoryBankPrompts", () => {
 	it("registers all expected prompt names", () => {
 		const registered: string[] = [];
 		const mockServer = {
-			prompt: (name: string, fn: any) => {
+			prompt: (name: string, _fn: any) => {
 				registered.push(name);
 			},
 		};
-		// @ts-expect-error: partial mock is fine for this test
-		registerMemoryBankPrompts(mockServer);
+		registerMemoryBankPrompts(mockServer as any);
 		expect(registered).toEqual(
 			expect.arrayContaining([
 				"memory-bank-guide",

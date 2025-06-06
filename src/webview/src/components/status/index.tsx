@@ -1,6 +1,6 @@
-import type { StatusProps } from "../../types/components.js";
-import { MemoryBankStatus } from "./memory-bank-status.js";
-import { RulesStatus } from "./rules-status.js";
+import type { StatusProps } from "../../types/components";
+import { MemoryBankStatus } from "./memory-bank-status";
+import { RulesStatus } from "./rules-status";
 
 export function Status({ onReviewAllFiles, reviewLoading }: StatusProps) {
 	return (

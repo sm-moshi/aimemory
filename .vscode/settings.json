@@ -87,5 +87,7 @@
 	"typescript.suggest.paths": true,
 	"typescript.tsserver.experimental.enableProjectDiagnostics": true,
 	"typescript.updateImportsOnPaste.enabled": true,
-	"typescript.workspaceSymbols.scope": "currentProject"
+	"typescript.workspaceSymbols.scope": "currentProject",
+	"json.schemaDownload.enable": true,
+	"json.indent": "4"
 }

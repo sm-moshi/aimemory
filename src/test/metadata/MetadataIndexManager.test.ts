@@ -2,27 +2,6 @@ import { promises as fs } from "node:fs";
 import type { Stats } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-// Mock fs.readdir at module level to avoid "Cannot redefine property" errors
-vi.mock("node:fs", async () => {
-	const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
-	return {
-		...actual,
-		promises: {
-			...actual.promises,
-			readdir: vi.fn(),
-		},
-	};
-});
-
-// Mock the dynamic import of fs/promises used in MetadataIndexManager
-vi.mock("node:fs/promises", () => ({
-	readdir: vi.fn(),
-	readFile: vi.fn(),
-	writeFile: vi.fn(),
-	mkdir: vi.fn(),
-	stat: vi.fn(),
-}));
 import type { FileOperationManager } from "../../core/FileOperationManager.js";
 import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
 import { MetadataIndexManager } from "../../metadata/MetadataIndexManager.js";
@@ -37,22 +16,22 @@ import {
 	createMockMemoryBankFile,
 	standardAfterEach,
 	standardBeforeEach,
-} from "../test-utils/index.js";
+} from "@test-utils/index.js";
 
 // Create a mock MemoryBankServiceCore using centralized utilities
 function createMockMemoryBankServiceCore() {
-	const mockFOM = createMockFileOperationManager();
+	const mockFom = createMockFileOperationManager();
 	return {
 		getAllFiles: vi.fn().mockReturnValue([]),
-		getFileOperationManager: vi.fn().mockReturnValue(mockFOM),
+		getFileOperationManager: vi.fn().mockReturnValue(mockFom),
 		readFile: vi.fn(),
 	} as any;
 }
 
 // Setup standard mock implementations for file operations
-function setupStandardMocks(mockFOM: any, indexPath: string) {
+function setupStandardMocks(mockFom: any, indexPath: string) {
 	// Standard readFileWithRetry implementation
-	vi.mocked(mockFOM.readFileWithRetry).mockImplementation(
+	vi.mocked(mockFom.readFileWithRetry).mockImplementation(
 		async (filePath: string): Promise<Result<string, any>> => {
 			if (filePath === indexPath) {
 				return { success: true, data: JSON.stringify([]) }; // Empty index by default
@@ -70,7 +49,7 @@ function setupStandardMocks(mockFOM: any, indexPath: string) {
 	);
 
 	// Standard statWithRetry implementation
-	vi.mocked(mockFOM.statWithRetry).mockImplementation(
+	vi.mocked(mockFom.statWithRetry).mockImplementation(
 		async (filePath: string): Promise<Result<Stats, any>> => {
 			try {
 				const stats = await fs.stat(filePath);
@@ -115,10 +94,10 @@ async function createTestIndexManager(
 }> {
 	const mockLogger = overrides.mockLogger ?? createMockLogger();
 	const mockCore = overrides.mockCore ?? createMockMemoryBankServiceCore();
-	const mockFOM = overrides.mockFOM ?? mockCore.getFileOperationManager();
+	const mockFom = overrides.mockFOM ?? mockCore.getFileOperationManager();
 	const indexPath = resolve(tempDir, ".index", "metadata.json");
 
-	setupStandardMocks(mockFOM, indexPath);
+	setupStandardMocks(mockFom, indexPath);
 
 	// Ensure directories exist
 	await fs.mkdir(tempDir, { recursive: true });
@@ -127,11 +106,11 @@ async function createTestIndexManager(
 	const indexManager = new MetadataIndexManager(
 		mockCore as MemoryBankServiceCore,
 		mockLogger,
-		mockFOM as FileOperationManager,
+		mockFom as FileOperationManager,
 		{ memoryBankPath: tempDir },
 	);
 
-	return { indexManager, mockCore, mockLogger, mockFOM, indexPath };
+	return { indexManager, mockCore, mockLogger, mockFOM: mockFom, indexPath };
 }
 
 // Validate build index results
@@ -220,13 +199,13 @@ describe("MetadataIndexManager - Initialization & Configuration", () => {
 // =================== INDEX BUILDING & FILE PROCESSING ===================
 describe("MetadataIndexManager - Index Building & File Processing", () => {
 	let indexManager: MetadataIndexManager;
-	let mockCore: any;
-	let mockFOM: any;
+	let _mockCore: any;
+	let mockFom: any;
 
 	beforeEach(async () => {
 		const setup = await createTestIndexManager(tempDir);
 		indexManager = setup.indexManager;
-		mockFOM = setup.mockFOM;
+		mockFom = setup.mockFOM;
 		await indexManager.initialize();
 	});
 
@@ -316,7 +295,7 @@ describe("MetadataIndexManager - Index Building & File Processing", () => {
 
 		await indexManager.buildIndex();
 
-		expect(mockFOM.writeFileWithRetry).toHaveBeenCalledWith(
+		expect(mockFom.writeFileWithRetry).toHaveBeenCalledWith(
 			expect.stringContaining("metadata.json"),
 			expect.any(String),
 		);
@@ -411,7 +390,7 @@ describe("MetadataIndexManager - Entry Management & Retrieval", () => {
 
 		const entries = indexManager.getIndex();
 		expect(entries).toHaveLength(2);
-		expect(entries.map((e) => e.title)).toEqual(["Entry 1", "Entry 2"]);
+		expect(entries.map(e => e.title)).toEqual(["Entry 1", "Entry 2"]);
 	});
 
 	it("should return empty array when no entries", () => {
@@ -444,7 +423,7 @@ describe("MetadataIndexManager - Entry Management & Retrieval", () => {
 
 		const entries = indexManager.getIndex();
 		expect(entries).toHaveLength(2);
-		expect(entries.map((e) => e.title)).toEqual(["Entry 1", "Entry 2"]);
+		expect(entries.map(e => e.title)).toEqual(["Entry 1", "Entry 2"]);
 	});
 });
 
@@ -502,20 +481,20 @@ describe("MetadataIndexManager - Statistics & Analytics", () => {
 // =================== ERROR HANDLING & RECOVERY ===================
 describe("MetadataIndexManager - Error Handling & Recovery", () => {
 	let indexManager: MetadataIndexManager;
-	let mockCore: any;
+	let _mockCore: any;
 	let mockLogger: any;
-	let mockFOM: any;
+	let mockFom: any;
 
 	beforeEach(async () => {
 		const setup = await createTestIndexManager(tempDir);
 		indexManager = setup.indexManager;
 		mockLogger = setup.mockLogger;
-		mockFOM = setup.mockFOM;
+		mockFom = setup.mockFOM;
 		await indexManager.initialize();
 	});
 
 	it("should handle corrupted index file", async () => {
-		vi.mocked(mockFOM.readFileWithRetry).mockResolvedValueOnce({
+		vi.mocked(mockFom.readFileWithRetry).mockResolvedValueOnce({
 			success: true,
 			data: "invalid json",
 		});
@@ -582,8 +561,8 @@ describe("MetadataIndexManager - Error Handling & Recovery", () => {
 		}));
 
 		// Reset the standard stat mock and make it fail for this specific file
-		vi.mocked(mockFOM.statWithRetry).mockReset();
-		vi.mocked(mockFOM.statWithRetry).mockImplementation(async (filePath: string) => {
+		vi.mocked(mockFom.statWithRetry).mockReset();
+		vi.mocked(mockFom.statWithRetry).mockImplementation(async (filePath: string) => {
 			if (filePath.includes("error-stat.md")) {
 				return {
 					success: false,
@@ -621,14 +600,14 @@ describe("MetadataIndexManager - Updates & Persistence", () => {
 	let indexManager: MetadataIndexManager;
 	let mockCore: any;
 	let mockLogger: any;
-	let mockFOM: any;
+	let mockFom: any;
 
 	beforeEach(async () => {
 		const setup = await createTestIndexManager(tempDir);
 		indexManager = setup.indexManager;
 		mockCore = setup.mockCore;
 		mockLogger = setup.mockLogger;
-		mockFOM = setup.mockFOM;
+		mockFom = setup.mockFOM;
 		await indexManager.initialize();
 	});
 
@@ -673,7 +652,7 @@ describe("MetadataIndexManager - Updates & Persistence", () => {
 	it("should handle update errors gracefully", async () => {
 		const filePath = "error-update.md";
 
-		vi.mocked(mockFOM.statWithRetry).mockResolvedValueOnce({
+		vi.mocked(mockFom.statWithRetry).mockResolvedValueOnce({
 			success: false,
 			error: { code: "STAT_ERROR", message: "simulated stat error" },
 		});
@@ -704,14 +683,14 @@ describe("MetadataIndexManager - Updates & Persistence", () => {
 
 		await indexManager.buildIndex(); // This should trigger a save
 
-		expect(mockFOM.writeFileWithRetry).toHaveBeenCalledWith(
+		expect(mockFom.writeFileWithRetry).toHaveBeenCalledWith(
 			expect.stringContaining("metadata.json"),
 			expect.any(String),
 		);
 
 		// Test debounced save after modification
 		vi.useFakeTimers();
-		vi.mocked(mockFOM.writeFileWithRetry).mockClear();
+		vi.mocked(mockFom.writeFileWithRetry).mockClear();
 
 		// Remove an entry and advance timers for debounced save
 		indexManager.removeEntry("persist-test.md");
@@ -719,7 +698,7 @@ describe("MetadataIndexManager - Updates & Persistence", () => {
 		// Advance timers to trigger debounced save
 		await vi.runAllTimersAsync();
 
-		expect(mockFOM.writeFileWithRetry).toHaveBeenCalledWith(
+		expect(mockFom.writeFileWithRetry).toHaveBeenCalledWith(
 			expect.stringContaining("metadata.json"),
 			expect.any(String),
 		);

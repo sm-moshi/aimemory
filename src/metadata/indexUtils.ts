@@ -5,7 +5,7 @@
  * and search functionality. No external dependencies or side effects.
  */
 
-import type { FileMetrics, MetadataIndexEntry, SortField, SortOrder } from "../types/core.js";
+import type { FileMetrics } from "../types/index.js";
 
 /**
  * Count the number of lines in a text string
@@ -23,7 +23,7 @@ export function countWords(content: string): number {
 	return content
 		.trim()
 		.split(/\s+/)
-		.filter((word) => word.length > 0).length;
+		.filter(word => word.length > 0).length;
 }
 
 /**
@@ -61,21 +61,6 @@ export function calculateFileMetrics(
 		wordCount: countWords(contentOnly),
 		characterCount: contentOnly.length,
 	};
-}
-
-/**
- * Extract searchable text from a metadata index entry
- * Combines title, description, relativePath, and tags for text searching
- */
-export function extractSearchableText(entry: MetadataIndexEntry): string {
-	const parts: string[] = [];
-
-	if (entry.title) parts.push(entry.title);
-	if (entry.description) parts.push(entry.description);
-	if (entry.relativePath) parts.push(entry.relativePath);
-	if (entry.tags && entry.tags.length > 0) parts.push(entry.tags.join(" "));
-
-	return parts.join(" ").toLowerCase();
 }
 
 /**
@@ -127,10 +112,10 @@ export function hasAllTags(fileTags: string[] | undefined, requiredTags: string[
 	if (!fileTags || fileTags.length === 0) return requiredTags.length === 0;
 	if (requiredTags.length === 0) return true;
 
-	const fileTagsLower = fileTags.map((tag) => tag.toLowerCase());
-	const requiredTagsLower = requiredTags.map((tag) => tag.toLowerCase());
+	const fileTagsLower = fileTags.map(tag => tag.toLowerCase());
+	const requiredTagsLower = requiredTags.map(tag => tag.toLowerCase());
 
-	return requiredTagsLower.every((requiredTag) => fileTagsLower.includes(requiredTag));
+	return requiredTagsLower.every(requiredTag => fileTagsLower.includes(requiredTag));
 }
 
 /**
@@ -140,105 +125,10 @@ export function hasAnyTags(fileTags: string[] | undefined, requiredTags: string[
 	if (!fileTags || fileTags.length === 0) return false;
 	if (requiredTags.length === 0) return true;
 
-	const fileTagsLower = fileTags.map((tag) => tag.toLowerCase());
-	const requiredTagsLower = requiredTags.map((tag) => tag.toLowerCase());
+	const fileTagsLower = fileTags.map(tag => tag.toLowerCase());
+	const requiredTagsLower = requiredTags.map(tag => tag.toLowerCase());
 
-	return requiredTagsLower.some((requiredTag) => fileTagsLower.includes(requiredTag));
-}
-
-/**
- * Calculate text search relevance score between a query and searchable text
- * Returns a score from 0-1 where 1 is perfect match
- */
-export function calculateRelevanceScore(query: string, searchableText: string): number {
-	if (!query || !searchableText) return 0;
-
-	const queryLower = query.toLowerCase().trim();
-	const textLower = searchableText.toLowerCase();
-
-	// Exact phrase match gets highest score
-	if (textLower.includes(queryLower)) {
-		const position = textLower.indexOf(queryLower);
-		// Earlier matches get higher scores
-		const positionScore = 1 - position / textLower.length;
-		return 0.8 + positionScore * 0.2;
-	}
-
-	// Word-based matching
-	const queryWords = queryLower.split(/\s+/).filter((word) => word.length > 0);
-	const textWords = textLower.split(/\s+/).filter((word) => word.length > 0);
-
-	if (queryWords.length === 0 || textWords.length === 0) return 0;
-
-	let matchingWords = 0;
-	for (const queryWord of queryWords) {
-		for (const textWord of textWords) {
-			if (textWord.includes(queryWord) || queryWord.includes(textWord)) {
-				matchingWords++;
-				break;
-			}
-		}
-	}
-
-	return (matchingWords / queryWords.length) * 0.6;
-}
-
-/**
- * Rank search results by relevance to the query
- * Sorts entries by relevance score in descending order
- */
-export function rankSearchResults(
-	query: string,
-	entries: MetadataIndexEntry[],
-): MetadataIndexEntry[] {
-	if (!query) return entries;
-
-	const scored = entries.map((entry) => ({
-		entry,
-		score: calculateRelevanceScore(query, extractSearchableText(entry)),
-	}));
-
-	const sortedScored = [...scored].sort((a, b) => b.score - a.score);
-	return sortedScored.map((item) => item.entry);
-}
-
-/**
- * Sort entries by a specified field and order
- */
-export function sortEntries(
-	entries: MetadataIndexEntry[],
-	sortBy: SortField,
-	sortOrder: SortOrder = "desc",
-): MetadataIndexEntry[] {
-	const sorted = [...entries].sort((a, b) => {
-		let comparison = 0;
-
-		switch (sortBy) {
-			case "created":
-				comparison = new Date(a.created).getTime() - new Date(b.created).getTime();
-				break;
-			case "updated":
-				comparison = new Date(a.updated).getTime() - new Date(b.updated).getTime();
-				break;
-			case "title":
-				comparison = (a.title ?? a.relativePath).localeCompare(b.title ?? b.relativePath);
-				break;
-			case "size":
-				comparison = a.fileMetrics.sizeBytes - b.fileMetrics.sizeBytes;
-				break;
-			case "lines":
-				comparison = a.fileMetrics.lineCount - b.fileMetrics.lineCount;
-				break;
-			case "relevance":
-				// For relevance, we can't sort without a query context
-				// This case would be handled by rankSearchResults
-				return 0;
-		}
-
-		return sortOrder === "asc" ? comparison : -comparison;
-	});
-
-	return sorted;
+	return requiredTagsLower.some(requiredTag => fileTagsLower.includes(requiredTag));
 }
 
 /**

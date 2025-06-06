@@ -1,9 +1,19 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
+		// Build tools configuration (for vite.config.mts, etc.)
 		"composite": true,
-		"allowSyntheticDefaultImports": true,
-		"types": ["node"]
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"types": [
+			"node"
+		],
+		"noEmit": false, // Build tools need to emit
+		"outDir": "dist" // Where build artifacts go
 	},
-	"include": ["vite.config.ts"]
+	"include": [
+		"vite.config.mts",
+		"vitest.config.ts",
+		"*.config.*"
+	]
 }

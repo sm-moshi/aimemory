@@ -16,7 +16,8 @@
 			"**/*.d.ts",
 			"**/build/**",
 			"**/.next/**",
-			"**/.cache/**"
+			"**/.cache/**",
+			"**/tsconfig*.json"
 		]
 	},
 	"formatter": {
@@ -51,6 +52,7 @@
 					"level": "error",
 					"options": {
 						"requireAscii": false,
+						"strictCase": false,
 						"conventions": [
 							{
 								"selector": {
@@ -69,6 +71,18 @@
 									"kind": "typeAlias"
 								},
 								"formats": ["PascalCase"]
+							},
+							{
+								"selector": {
+									"kind": "objectLiteralProperty"
+								},
+								"formats": ["camelCase", "CONSTANT_CASE", "PascalCase"]
+							},
+							{
+								"selector": {
+									"kind": "classProperty"
+								},
+								"formats": ["camelCase", "PascalCase"]
 							}
 						]
 					}
@@ -86,7 +100,14 @@
 	},
 	"overrides": [
 		{
-			"include": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+			"include": [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/*.spec.ts",
+				"**/*.spec.tsx",
+				"**/test/**/*.ts",
+				"**/tests/**/*.ts"
+			],
 			"linter": {
 				"rules": {
 					"suspicious": {
@@ -130,6 +151,16 @@
 					"suspicious": {
 						"noExplicitAny": "off"
 					},
+					"style": {
+						"useNamingConvention": "off"
+					}
+				}
+			}
+		},
+		{
+			"include": ["src/types/config.ts"],
+			"linter": {
+				"rules": {
 					"style": {
 						"useNamingConvention": "off"
 					}

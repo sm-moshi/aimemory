@@ -1,13 +1,13 @@
+import { MemoryBankServiceCore } from "@/core/memoryBankServiceCore.js";
+import { StreamingManager } from "@/performance/StreamingManager.js";
+import { createMockLogger, standardAfterEach, standardBeforeEach } from "@test-utils/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CacheManager } from "../../core/CacheManager.js";
 import { FileOperationManager } from "../../core/FileOperationManager.js";
-import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore.js";
-import { StreamingManager } from "../../performance/StreamingManager.js";
 import type { MemoryBankLogger } from "../../types/index.js";
-import { createMockLogger, standardAfterEach, standardBeforeEach } from "../test-utils/index.js";
 
 // Mock the path validation to avoid filesystem validation issues
-vi.mock("../../services/validation/security.js", () => ({
+vi.mock("@utils/security-helpers.js", () => ({
 	validateMemoryBankPath: vi.fn((path: string) => `/mock/memory-bank/${path}`),
 	sanitizePath: vi.fn((path: string) => path),
 }));
@@ -15,15 +15,6 @@ vi.mock("../../services/validation/security.js", () => ({
 // Mock core file helpers to avoid filesystem dependencies
 vi.mock("../../core/memory-bank-file-helpers.js", () => ({
 	ensureMemoryBankFolders: vi.fn().mockResolvedValue(undefined),
-}));
-
-// Mock filesystem operations
-vi.mock("node:fs/promises", () => ({
-	mkdir: vi.fn().mockResolvedValue(undefined),
-	writeFile: vi.fn().mockResolvedValue(undefined),
-	readFile: vi.fn().mockResolvedValue("mock content"),
-	access: vi.fn().mockResolvedValue(undefined),
-	stat: vi.fn().mockResolvedValue({ isDirectory: () => true, isFile: () => false }),
 }));
 
 describe("Performance Layer Integration", () => {
@@ -39,7 +30,7 @@ describe("Performance Layer Integration", () => {
 		standardBeforeEach();
 
 		// Reset the validateMemoryBankPath mock to its default behavior
-		const { validateMemoryBankPath } = await import("../../services/validation/security.js");
+		const { validateMemoryBankPath } = await import("@utils/security-helpers.js");
 		vi.mocked(validateMemoryBankPath).mockImplementation(
 			(path: string) => `/mock/memory-bank/${path}`,
 		);
@@ -213,12 +204,12 @@ describe("Performance Layer Integration", () => {
 			);
 
 			// Test with invalid path by mocking validation failure temporarily
-			const { validateMemoryBankPath } = await import(
-				"../../services/validation/security.js"
+			const { validateMemoryBankPath: validateMemoryBankPathErrorTest } = await import(
+				"@utils/security-helpers.js"
 			);
 
 			// Mock implementation that throws error only for this specific test
-			vi.mocked(validateMemoryBankPath).mockImplementationOnce(() => {
+			vi.mocked(validateMemoryBankPathErrorTest).mockImplementationOnce(() => {
 				throw new Error("Path validation failed");
 			});
 

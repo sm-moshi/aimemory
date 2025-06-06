@@ -1,7 +1,7 @@
 import type { Stats } from "node:fs";
 import { dirname } from "node:path";
 import { MemoryBankFileType } from "../../types/index.js";
-import { validateAndConstructFilePath } from "../../utils/files/path-validation.js";
+import { validateAndConstructFilePath } from "../../utils/path-validation.js";
 
 /**
  * Helper function for the 'healthy' fs.stat mock implementation
@@ -14,7 +14,7 @@ export async function healthyStatMockImplementation(
 	if (pathStr === memoryBankFolder) {
 		return { isDirectory: () => true, isFile: () => false } as Stats;
 	}
-	const isAParentDir = Object.values(MemoryBankFileType).some((ft) => {
+	const isAParentDir = Object.values(MemoryBankFileType).some(ft => {
 		const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
 		return dirname(expectedFilePath) === pathStr;
 	});
@@ -62,7 +62,7 @@ export async function filesMissingStatMockImplementation(
 	}
 	if (
 		Object.values(MemoryBankFileType).some(
-			(ft) =>
+			ft =>
 				filePathStr.endsWith(ft) &&
 				!filePathStr.endsWith("core/projectBrief.md") &&
 				!filePathStr.endsWith("progress/current.md"),
@@ -88,7 +88,7 @@ export function createHealthyFileOperationManagerMock(memoryBankFolder: string) 
 				} as Stats,
 			};
 		}
-		const isAParentDir = Object.values(MemoryBankFileType).some((ft) => {
+		const isAParentDir = Object.values(MemoryBankFileType).some(ft => {
 			const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
 			return dirname(expectedFilePath) === pathToStat.toString();
 		});
@@ -161,7 +161,7 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 
 		if (
 			Object.values(MemoryBankFileType).some(
-				(ft) => validateAndConstructFilePath(memoryBankFolder, ft) === pathStr,
+				ft => validateAndConstructFilePath(memoryBankFolder, ft) === pathStr,
 			)
 		) {
 			return {
@@ -175,7 +175,7 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 		}
 		if (
 			Object.values(MemoryBankFileType).some(
-				(ft) => dirname(validateAndConstructFilePath(memoryBankFolder, ft)) === pathStr,
+				ft => dirname(validateAndConstructFilePath(memoryBankFolder, ft)) === pathStr,
 			)
 		) {
 			return {

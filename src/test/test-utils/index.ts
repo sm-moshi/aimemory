@@ -1,25 +1,56 @@
 // Export all test utilities from a central location
 
-// =============================================================================
-// CORE TEST UTILITIES
-// =============================================================================
+export {
+	mockCommands,
+	mockWindow,
+	mockWorkspace,
+	mockLogger,
+	mockMcpServer,
+	mockMemoryBankServiceCore,
+	mockFileOperations,
+	mockPathUtils,
+	mockValidation,
+	mockVscodeWorkspaceFs,
+	mockOutputChannel,
+	mockNodeFs,
+	mockWebviewManager,
+	mockMemoryBank,
+} from "../setup/shared-mocks.js";
 
-// Mock factories and setup
+// Re-export vscode-specific mocks
+export { mockVscodeWindow } from "../__mocks__/vscode.js";
+
+// MCP-specific mocks (import directly when needed)
 export {
 	createMockLogger,
+	createSecurityMockLogger,
 	createMockFileOperationManager,
+	createMockCacheManager,
 	createMockExtensionContext,
 	createMockMemoryBankServiceCore,
 	createMockConsole,
 	createMockCursorRulesService,
+	createMockMemoryBankFile,
+	createMockDirectoryListing,
+	createMockFileStats,
+	createEnoentError,
+	createEaccesError,
+	createFileMetrics,
+	createTempDirectory,
+	createTestFilePath,
+	createTestRulesFilePath,
+	createAIMemoryServerConfig,
+	createTestCursorMCPConfig,
+	setupCommonFileOperationMocks,
 	setupMockCoreServiceDefaults,
-	MockReadStream,
 	setupVSCodeMock,
-} from "./mocks.js";
+	getVSCodeMock,
+	// Test setup functions
+	standardBeforeEach,
+	standardAfterEach,
+} from "./utilities.js";
 
-// Test data factories and assertion helpers
 export {
-	getPath,
 	expectSuccess,
 	expectFailure,
 	expectBuildResult,
@@ -28,34 +59,19 @@ export {
 	expectValidationFailure,
 	expectAsyncSuccess,
 	expectAsyncFailure,
-	createMockMemoryBankFile,
-	createTestFilePath,
-	createTestRulesFilePath,
-	createAIMemoryServerConfig,
-	createTestCursorMCPConfig,
-	createMockDirectoryListing,
-	createEnoentError,
-	createFileMetrics,
-	createTempDirectory,
+	expectSecurityValidationFailure,
+	setupMaliciousPathRejection,
+	setupValidPathAcceptance,
+	setupSecurityValidationError,
 } from "./utilities.js";
 
-// Specialized file operation mocks (kept separate due to complexity)
-export * from "./file-operation-mock-helpers.js";
-
-// Security-specific test utilities
-export * from "./security-mock-helpers.js";
-
-// Test utilities, assertions, and data factories
-export * from "./utilities.js";
-
-// Setup and teardown helpers (explicit exports to avoid conflicts)
 export {
-	standardBeforeEach,
-	standardAfterEach,
-	setupFileSystemMocks,
-	setupVSCodeWorkspaceMocks,
-	setupVSCodeWindowMocks,
-	createTempTestPath,
-	resetMocks,
-	setupCommonFileOperationMocks,
-} from "./setup-helpers.js";
+	getPath,
+	createMockCursorConfigPaths,
+	getOriginalValidateMemoryBankPath,
+	getOriginalSanitizePath,
+	getOriginalValidateCommand,
+} from "./utilities.js";
+
+export { SECURITY_TEST_DATA } from "./utilities.js";
+export { resetSharedMocks } from "../setup/shared-mocks.js";
