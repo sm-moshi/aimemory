@@ -1,42 +1,60 @@
 {
 	"recommendations": [
-		// Core Development Tools
+		// Core Modern Tooling (2025)
 		"biomejs.biome",
 		"bradlc.vscode-tailwindcss",
-		"ms-vscode.test-adapter-converter",
 		"formulahendry.auto-rename-tag",
 		"christian-kohler.path-intellisense",
-		"anysphere.remote-ssh",
 		// Testing and Coverage
 		"vitest.explorer",
 		"ryanluker.vscode-coverage-gutters",
 		"hbenl.vscode-test-explorer",
-		"ms-vscode.vscode-jest",
-		// TypeScript and JavaScript
+		"ms-vscode.extension-test-runner",
+		// TypeScript and JavaScript Modern Stack
 		"ms-typescript.vscode-typescript-next",
 		"usernamehw.errorlens",
 		"ms-vscode.vscode-json",
+		// React 19 and Modern Frontend
+		"ms-vscode.vscode-react-refactor",
+		"dsznajder.es7-react-js-snippets",
+		"bradlc.vscode-tailwindcss",
+		// Build Tools and Performance
+		"ms-vscode.vscode-typescript-next",
+		"ambar.bundle-size",
+		"kisstkondoros.vscode-codemetrics",
+		"pflannery.vscode-versionlens",
 		// Extension Development
-		"ms-vscode.extension-test-runner",
 		"ms-vscode.vscode-extension-samples",
 		"ms-vscode.references-view",
 		// Quality and Performance
 		"sonarsource.sonarlint-vscode",
-		"ambar.bundle-size",
-		"kisstkondoros.vscode-codemetrics",
-		"pflannery.vscode-versionlens",
 		"wayou.vscode-todo-highlight",
 		// Git and Version Control
 		"eamodio.gitlens",
-		// UI, Theme and Markdown
-		"eliverlara.andromeda",
+		// Development Experience
+		"ms-vscode.test-adapter-converter",
+		"anysphere.remote-ssh",
+		// Modern Build System Support
+		"bradlc.vscode-tailwindcss",
+		"ms-vscode.vscode-json",
+		// Markdown and Documentation
 		"yzhang.markdown-all-in-one",
-		"bierner.markdown-mermaid"
+		"bierner.markdown-mermaid",
+		// Theme (Optional)
+		"eliverlara.andromeda"
 	],
 	"unwantedRecommendations": [
+		// Legacy linting/formatting tools (replaced by Biome)
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode",
+		// Legacy build tools
 		"ms-vscode.vscode-typescript",
 		"hookyqr.beautify",
+		// Outdated Node.js tools
 		"ms-vscode.node-debug",
-		"dbaeumer.vscode-eslint"
+		// Legacy bundlers (using Rollup + SWC now)
+		"ms-vscode.vscode-webpack-analyzer",
+		// Replaced by modern testing
+		"ms-vscode.vscode-jest"
 	]
 }

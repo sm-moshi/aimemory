@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import alias from "@rollup/plugin-alias";
 import commonjsPlugin from "@rollup/plugin-commonjs";
 import jsonPlugin from "@rollup/plugin-json";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
@@ -25,6 +26,12 @@ const outDir = path.resolve(process.cwd(), "dist");
 
 // Common plugin configuration
 const getPlugins = () => [
+	alias({
+		entries: [
+			{ find: "@", replacement: path.resolve(process.cwd(), "src") },
+			{ find: "@utils", replacement: path.resolve(process.cwd(), "src/utils") },
+		],
+	}),
 	markdownPlugin(),
 	jsonPlugin(),
 	nodeResolve({

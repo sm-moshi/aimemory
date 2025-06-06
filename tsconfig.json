@@ -1,21 +1,27 @@
 {
+	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"module": "NodeNext",
-		"target": "ES2022",
-		"lib": ["ES2022"],
-		"sourceMap": true,
-		"moduleResolution": "nodenext",
-		"strict": true /* enable all strict type-checking options */,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"allowSyntheticDefaultImports": true,
-		"forceConsistentCasingInFileNames": true,
-		/* Additional Checks */
-		"noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
-		"typeRoots": ["./node_modules/@types"],
-		"types": ["node", "vscode"],
-		"noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
-		"noUnusedParameters": false /* Report errors on unused parameters. */
+		"lib": [
+			"ES2022"
+		],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"src/*"
+			],
+			"@utils/*": [
+				"src/utils/*"
+			]
+		},
+		"typeRoots": [
+			"./node_modules/@types"
+		],
+		"types": [
+			"node",
+			"vscode"
+		],
+		"noImplicitReturns": true,
+		"noUnusedParameters": false
 	},
 	"include": [
 		"src/**/*",
@@ -26,12 +32,17 @@
 	],
 	"exclude": [
 		"src/webview/src",
+		"src/webview/vite.config.ts",
 		"src/webview/vitest.config.ts",
 		"src/webview/vitest.setup.ts",
 		"**/node_modules/**",
 		"**/dist",
 		"**/coverage",
-		"**/out",
-		"**/node_modules/**"
+		"**/out"
+	],
+	"references": [
+		{
+			"path": "./src/webview/tsconfig.node.json"
+		}
 	]
 }

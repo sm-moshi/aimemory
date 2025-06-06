@@ -31,7 +31,7 @@
 			"sourceMaps": true,
 			"smartStep": true,
 			"skipFiles": ["<node_internals>/**"],
-			"preLaunchTask": "build:prod"
+			"preLaunchTask": "build:full"
 		},
 		{
 			"name": "Debug MCP CLI Server",
@@ -86,7 +86,7 @@
 			"preLaunchTask": "build:dev"
 		},
 		{
-			"name": "Debug Unit Tests",
+			"name": "Debug Unit Tests (Vitest)",
 			"type": "node",
 			"request": "launch",
 			"program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
@@ -101,13 +101,58 @@
 			}
 		},
 		{
-			"name": "Debug Webview",
+			"name": "Debug Vitest UI",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+			"args": [
+				"--ui",
+				"--reporter=verbose"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"env": {
+				"NODE_ENV": "test"
+			}
+		},
+		{
+			"name": "Debug Webview (Chrome)",
 			"type": "chrome",
-			"request": "attach",
-			"port": 9222,
+			"request": "launch",
+			"url": "http://localhost:5173",
 			"webRoot": "${workspaceFolder}/src/webview/src",
 			"sourceMaps": true,
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"enableContentValidation": false,
+			"pathMapping": {
+				"/src/": "${workspaceFolder}/src/webview/src/"
+			},
+			"preLaunchTask": "webview:dev"
+		},
+		{
+			"name": "Debug Webview (Edge)",
+			"type": "msedge",
+			"request": "launch",
+			"url": "http://localhost:5173",
+			"webRoot": "${workspaceFolder}/src/webview/src",
+			"sourceMaps": true,
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"enableContentValidation": false,
+			"pathMapping": {
+				"/src/": "${workspaceFolder}/src/webview/src/"
+			},
+			"preLaunchTask": "webview:dev"
 		},
 		{
 			"name": "Attach to Process",
@@ -122,8 +167,21 @@
 	],
 	"compounds": [
 		{
-			"name": "Launch Extension + Watch",
-			"configurations": ["Launch Extension"],
+			"name": "Launch Extension + Webview Dev",
+			"configurations": [
+				"Launch Extension",
+				"Debug Webview (Chrome)"
+			],
+			"preLaunchTask": "dev:parallel",
+			"stopAll": true
+		},
+		{
+			"name": "Full Development Debug",
+			"configurations": [
+				"Launch Extension",
+				"Debug Webview (Chrome)",
+				"Debug Unit Tests (Vitest)"
+			],
 			"preLaunchTask": "dev:parallel",
 			"stopAll": true
 		}

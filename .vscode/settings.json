@@ -1,80 +1,5 @@
 {
-	"sonarlint.connectedMode.project": {
-		"connectionId": "sm-moshi-org",
-		"projectKey": "sm-moshi_aimemory"
-	},
-	"cursorStats.currency": "EUR",
-	"cursorStats.enableLogging": true,
-	"cursorStats.showDailyRemaining": true,
-	"cursorStats.showTotalRequests": true,
-	"cursorStats.showProgressBars": true,
-	"dependi.npm.unstableFilter": "IncludeIfUnstable",
-	"dependi.npm.informPatchUpdates": true,
-	"dependi.vulnerability.ghsa.enabled": true,
-	"eslint.run": "onSave",
-	"evenBetterToml.formatter.alignEntries": true,
-	"evenBetterToml.formatter.allowedBlankLines": 3,
-	"debug.javascript.enableNetworkView": true,
-	"npm.enableRunFromFolder": true,
-	"npm.packageManager": "pnpm",
-	"npm.fetchOnlinePackageInfo": true,
-	"npm-intellisense.packageSubfoldersIntellisense": true,
-	"npm-intellisense.scanDevDependencies": true,
-	"php.suggest.basic": false,
-	"php.validate.enable": false,
-	"javascript.referencesCodeLens.enabled": true,
-	"javascript.suggest.completeFunctionCalls": true,
-	"js/ts.implicitProjectConfig.checkJs": true,
-	"js/ts.implicitProjectConfig.experimentalDecorators": true,
-	"typescript.enablePromptUseWorkspaceTsdk": true,
-	"typescript.experimental.expandableHover": true,
-	"js/ts.implicitProjectConfig.target": "ES2022",
-	"javascript.updateImportsOnPaste.enabled": true,
-	"typescript.implementationsCodeLens.enabled": true,
-	"typescript.implementationsCodeLens.showOnInterfaceMethods": true,
-	"typescript.preferences.preferTypeOnlyAutoImports": true,
-	"typescript.referencesCodeLens.enabled": true,
-	"typescript.referencesCodeLens.showOnAllFunctions": true,
-	"typescript.suggest.completeFunctionCalls": true,
-	"typescript.tsserver.experimental.enableProjectDiagnostics": true,
-	"typescript.updateImportsOnPaste.enabled": true,
-	"typescript.workspaceSymbols.scope": "currentProject",
 	"aimemory.logLevel": "debug",
-	"files.associations": {
-		"*.cjs": "javascript"
-	},
-	"search.exclude": {
-		"**/node_modules": true,
-		"**/dist": true,
-		"**/.vscode-test": true,
-		"**/coverage": true
-	},
-	"files.watcherExclude": {
-		"**/node_modules/**": true,
-		"**/dist/**": true,
-		"**/.vscode-test/**": true,
-		"**/coverage/**": true
-	},
-	"dependi.npm.lockFileEnabled": true,
-	"eslint.codeActionsOnSave.mode": "problems",
-	"evenBetterToml.formatter.alignComments": true,
-	// Enhanced TypeScript Settings
-	"typescript.preferences.includePackageJsonAutoImports": "on",
-	"typescript.suggest.autoImports": true,
-	"typescript.suggest.classMemberSnippets.enabled": true,
-	"typescript.suggest.objectLiteralMethodSnippets.enabled": true,
-	"typescript.preferences.quoteStyle": "double",
-	"typescript.format.semicolons": "insert",
-	"typescript.inlayHints.enumMemberValues.enabled": true,
-	"typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-	"typescript.inlayHints.parameterNames.enabled": "literals",
-	"typescript.inlayHints.parameterTypes.enabled": true,
-	"typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-	"typescript.inlayHints.variableTypes.enabled": false,
-	// Testing Configuration
-	"coverage-gutters.showGutterCoverage": true,
-	"coverage-gutters.showLineCoverage": true,
-	"coverage-gutters.showRulerCoverage": true,
 	"coverage-gutters.coverageFileNames": [
 		"lcov.info",
 		"cov.xml",
@@ -82,37 +7,85 @@
 		"jacoco.xml",
 		"coverage.lcov"
 	],
-	// MCP Development Settings (via terminal environment)
-	"terminal.integrated.env.linux": {
-		"DEBUG": "mcp:*"
+	"coverage-gutters.showGutterCoverage": true,
+	"coverage-gutters.showLineCoverage": true,
+	"coverage-gutters.showRulerCoverage": true,
+	"debug.focusWindowOnBreak": true,
+	"debug.inlineValues": "auto",
+	"debug.javascript.autoAttachFilter": "smart",
+	"debug.javascript.enableNetworkView": true,
+	"debug.showBreakpointsInOverviewRuler": true,
+	"debug.toolBarLocation": "floating",
+	"dependi.npm.informPatchUpdates": true,
+	"dependi.npm.lockFileEnabled": true,
+	"dependi.npm.unstableFilter": "IncludeAlways",
+	"dependi.vulnerability.ghsa.enabled": true,
+	"diffEditor.ignoreTrimWhitespace": false,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit",
+		"source.organizeImports.biome": "explicit"
 	},
+	"evenBetterToml.formatter.alignComments": true,
+	"evenBetterToml.formatter.alignEntries": true,
+	"evenBetterToml.formatter.allowedBlankLines": 3,
+	"extensions.ignoreRecommendations": false,
+	"files.associations": {
+		"*.cjs": "javascript"
+	},
+	"files.autoSave": "off",
+	"files.watcherExclude": {
+		"**/.vscode-test/**": true,
+		"**/coverage/**": true,
+		"**/node_modules/**": true
+	},
+	"git.autofetch": true,
+	"git.enableSmartCommit": true,
+	"git.suggestSmartCommit": true,
+	"javascript.referencesCodeLens.enabled": true,
+	"javascript.suggest.completeFunctionCalls": true,
+	"javascript.updateImportsOnPaste.enabled": true,
+	"merge-conflict.autoNavigateNextConflict.enabled": true,
+	"npm-intellisense.packageSubfoldersIntellisense": true,
+	"npm-intellisense.scanDevDependencies": true,
+	"npm.enableRunFromFolder": true,
+	"npm.fetchOnlinePackageInfo": true,
+	"npm.packageManager": "pnpm",
+	"scm.inputFontSize": 12,
+	"search.exclude": {
+		"**/.vscode-test": true,
+		"**/coverage": true,
+		"**/node_modules": true
+	},
+	"sonarlint.connectedMode.project": {
+		"connectionId": "sm-moshi-org",
+		"projectKey": "sm-moshi_aimemory"
+	},
+	// MCP Development Settings (via terminal environment)
 	"terminal.integrated.env.osx": {
 		"DEBUG": "mcp:*"
 	},
-	"terminal.integrated.env.windows": {
-		"DEBUG": "mcp:*"
-	},
-	// Performance Settings
-	"extensions.ignoreRecommendations": false,
-	"files.autoSave": "onFocusChange",
-	"explorer.fileNesting.enabled": false,
-	// Git and Source Control
-	"git.autofetch": true,
-	"git.confirmSync": false,
-	"git.enableSmartCommit": true,
-	"git.suggestSmartCommit": true,
-	"scm.inputFontSize": 12,
-	"diffEditor.ignoreTrimWhitespace": false,
-	"merge-conflict.autoNavigateNextConflict.enabled": true,
-	// Extension Development Specific
-	"debug.focusWindowOnBreak": true,
-	"debug.inlineValues": "auto",
-	"debug.showBreakpointsInOverviewRuler": true,
-	"debug.toolBarLocation": "floating",
-	"editor.codeActionsOnSave": {
-		"source.organizeImports.biome": "explicit",
-		"source.fixAll.biome": "explicit"
-	},
-	"emmet.showSuggestionsAsSnippets": true,
-	"emmet.triggerExpansionOnTab": true
+	"typescript.experimental.expandableHover": true,
+	"typescript.experimental.useTsgo": true,
+	"typescript.implementationsCodeLens.enabled": true,
+	"typescript.implementationsCodeLens.showOnInterfaceMethods": true,
+	"typescript.inlayHints.enumMemberValues.enabled": true,
+	"typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+	"typescript.inlayHints.parameterNames.enabled": "literals",
+	"typescript.inlayHints.parameterTypes.enabled": true,
+	"typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+	"typescript.native-preview.tsdk": "/Users/smeya/.local/share/pnpm/tsgo",
+	"typescript.preferences.includePackageJsonAutoImports": "on",
+	"typescript.preferences.preferTypeOnlyAutoImports": true,
+	"typescript.preferences.useAliasesForRenames": false,
+	"typescript.referencesCodeLens.enabled": true,
+	"typescript.referencesCodeLens.showOnAllFunctions": true,
+	"typescript.suggest.autoImports": true,
+	"typescript.suggest.classMemberSnippets.enabled": true,
+	"typescript.suggest.completeFunctionCalls": true,
+	"typescript.suggest.includeAutomaticOptionalChainCompletions": true,
+	"typescript.suggest.objectLiteralMethodSnippets.enabled": true,
+	"typescript.suggest.paths": true,
+	"typescript.tsserver.experimental.enableProjectDiagnostics": true,
+	"typescript.updateImportsOnPaste.enabled": true,
+	"typescript.workspaceSymbols.scope": "currentProject"
 }

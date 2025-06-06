@@ -8,40 +8,85 @@
 	"files": {
 		"ignore": [
 			"**/dist/**",
-			"**/out/**",
 			"**/node_modules/**",
 			"**/coverage/**",
 			".vscode-test/**",
 			".cursor/**",
-			".repomix/**"
+			".repomix/**",
+			"**/*.d.ts",
+			"**/build/**",
+			"**/.next/**",
+			"**/.cache/**"
 		]
 	},
 	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
 		"indentWidth": 4,
-		"lineWidth": 100
+		"lineWidth": 100,
+		"lineEnding": "lf"
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double",
 			"jsxQuoteStyle": "double",
 			"trailingCommas": "all",
-			"semicolons": "always"
+			"semicolons": "always",
+			"arrowParentheses": "asNeeded"
 		}
 	},
-	"organizeImports": {
-		"enabled": true
-	},
 	"linter": {
-		"enabled": true,
 		"rules": {
-			"recommended": true
+			"performance": {
+				"noAccumulatingSpread": "warn",
+				"noDelete": "warn"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "error",
+				"noGlobalEval": "error"
+			},
+			"complexity": {
+				"noBannedTypes": "error",
+				"noUselessTypeConstraint": "error"
+			},
+			"style": {
+				"useNamingConvention": {
+					"level": "error",
+					"options": {
+						"requireAscii": false,
+						"conventions": [
+							{
+								"selector": {
+									"kind": "function"
+								},
+								"formats": ["camelCase", "PascalCase"]
+							},
+							{
+								"selector": {
+									"kind": "interface"
+								},
+								"formats": ["PascalCase"]
+							},
+							{
+								"selector": {
+									"kind": "typeAlias"
+								},
+								"formats": ["PascalCase"]
+							}
+						]
+					}
+				},
+				"useConsistentArrayType": "error",
+				"useShorthandAssign": "error"
+			},
+			"correctness": {
+				"noUnusedVariables": {
+					"level": "error"
+				},
+				"noUnusedImports": "error"
+			}
 		}
 	},
 	"overrides": [
 		{
-			"include": ["**/*.test.ts", "**/*.test.tsx"],
+			"include": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
 			"linter": {
 				"rules": {
 					"suspicious": {
@@ -51,18 +96,23 @@
 			}
 		},
 		{
-			"include": ["src/webview/**/*"],
-			"javascript": {
-				"formatter": {
-					"quoteStyle": "double",
-					"jsxQuoteStyle": "double",
-					"lineWidth": 100
-				}
-			},
+			"include": ["src/webview/**/*", "**/*.d.ts"],
 			"linter": {
 				"rules": {
 					"suspicious": {
 						"noExplicitAny": "off"
+					},
+					"style": {
+						"useNamingConvention": "off",
+						"useFilenamingConvention": "off"
+					},
+					"a11y": {
+						"noBlankTarget": {
+							"level": "error",
+							"options": {
+								"allowDomains": ["localhost"]
+							}
+						}
 					}
 				}
 			}
@@ -71,12 +121,17 @@
 			"include": [
 				"**/*.config.{js,ts}",
 				"**/vite.config.{js,ts}",
-				"**/rollup.config.{js,ts}"
+				"**/rollup.config.{js,ts}",
+				"**/vitest.config.{js,ts}",
+				"**/tsconfig*.json"
 			],
 			"linter": {
 				"rules": {
 					"suspicious": {
 						"noExplicitAny": "off"
+					},
+					"style": {
+						"useNamingConvention": "off"
 					}
 				}
 			}

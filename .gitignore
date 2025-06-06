@@ -16,6 +16,7 @@ src/webview/pnpm-lock.yaml
 
 # Node
 node_modules/
+src/webview/node_modules/
 
 # Editor
 .idea/
