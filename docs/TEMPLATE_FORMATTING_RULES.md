@@ -36,14 +36,14 @@ These rules ensure consistent, linter-compliant markdown formatting across all m
 
 ```markdown
 ---
-> Last updated: 2025-05-31
+> Last updated: 2025-06-05
 ```
 
 **Don't do this:**
 
 ```markdown
 ---
-*Last updated: 2025-05-31*
+*Last updated: 2025-06-05*
 ```
 
 **Rationale:** Consistent with document description formatting and avoids emphasis-as-heading violations.
@@ -217,4 +217,4 @@ Expected result: Zero MD036 violations and clean linting output.
 These rules ensure professional, consistent documentation that passes automated quality checks while remaining highly readable and maintainable.
 
 ---
-> Last updated: 2025-05-31
+> Last updated: 2025-06-05

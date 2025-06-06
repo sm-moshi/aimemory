@@ -1,84 +1,64 @@
+import { mockCommands, mockWindow } from "@test-utils/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { deactivate } from "../../extension.js";
+import { activate, deactivate } from "../../extension.js";
 
-// Mock vscode module
-vi.mock("vscode", () => ({
-	workspace: {
-		getConfiguration: vi.fn(() => ({
-			get: vi.fn().mockReturnValue("info"),
-			update: vi.fn(),
-		})),
-		onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
-	},
-	commands: {
-		registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-		registerTextEditorCommand: vi.fn(() => ({ dispose: vi.fn() })),
-		executeCommand: vi.fn(),
-	},
-	window: {
-		showInformationMessage: vi.fn(),
-		showErrorMessage: vi.fn(),
-		showQuickPick: vi.fn(),
-	},
-	ConfigurationTarget: {
-		Global: 1,
-	},
+// Mock the dependencies that `activate` calls into.
+vi.mock("@/app/extension/commandHandler.js", () => ({
+	CommandHandler: vi.fn(() => ({
+		registerCommands: vi.fn(),
+	})),
 }));
-
-// Mock all dependencies
-vi.mock("../../commandHandler.js", () => ({
-	CommandHandler: vi.fn().mockImplementation(() => ({
-		processMemoryCommand: vi.fn(),
+vi.mock("@/core/memoryBankServiceCore.js", () => ({
+	MemoryBankServiceCore: vi.fn(() => ({
+		getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true }),
+		initializeFolders: vi.fn().mockResolvedValue({ success: true }),
+		loadFiles: vi.fn().mockResolvedValue({ success: true, data: [] }),
+	})),
+}));
+vi.mock("@/cursor/rules-service.js", () => ({
+	CursorRulesService: vi.fn(() => ({
+		createRulesFile: vi.fn().mockResolvedValue(undefined),
 	})),
 }));
 
-vi.mock("../../mcp/mcpAdapter.js", () => ({
-	MemoryBankMCPAdapter: vi.fn().mockImplementation(() => ({
-		start: vi.fn(),
-		stop: vi.fn(),
-		getPort: vi.fn().mockReturnValue(7331),
-	})),
-}));
+describe("Extension Activation and Deactivation", () => {
+	it("should activate the extension and register commands", async () => {
+		const mockContext: any = {
+			subscriptions: [],
+			extensionPath: "/mock/path",
+		};
+		await activate(mockContext);
 
-vi.mock("../../utils/cursor-config.js", () => ({
-	updateCursorMCPConfig: vi.fn(),
-}));
-
-vi.mock("../../utils/log.js", () => ({
-	Logger: {
-		getInstance: vi.fn(() => ({
-			setLevel: vi.fn(),
-			info: vi.fn(),
-			showOutput: vi.fn(),
-		})),
-	},
-	LogLevel: {
-		Trace: "trace",
-		Debug: "debug",
-		Info: "info",
-		Warning: "warning",
-		Error: "error",
-	},
-}));
-
-vi.mock("../../webview/webviewManager.js", () => ({
-	WebviewManager: vi.fn().mockImplementation(() => ({
-		openWebview: vi.fn(),
-	})),
-}));
-
-describe("Extension", () => {
-	describe("deactivate", () => {
-		it("can be called without errors", () => {
-			expect(() => deactivate()).not.toThrow();
-		});
+		// Verify that a command was registered
+		expect(mockCommands.registerCommand).toHaveBeenCalled();
+		// Verify that a disposable was pushed to subscriptions
+		expect(mockContext.subscriptions.length).toBeGreaterThan(0);
 	});
 
-	describe("module structure", () => {
-		it("has required exports", async () => {
-			const extensionModule = await import("../../extension.js");
-			expect(extensionModule.activate).toBeDefined();
-			expect(extensionModule.deactivate).toBeDefined();
+	it("should show an error message if initialization fails", async () => {
+		// Override mock for this specific test case
+		const { MemoryBankServiceCore } = await import("@/core/memoryBankServiceCore.js");
+		(MemoryBankServiceCore as any).mockReturnValueOnce({
+			getIsMemoryBankInitialized: vi.fn().mockResolvedValue({
+				success: false,
+				error: "Initialization failed",
+			}),
+			initializeFolders: vi.fn().mockResolvedValue({ success: true }),
+			loadFiles: vi.fn().mockResolvedValue({ success: true, data: [] }),
 		});
+
+		const mockContext: any = { subscriptions: [] };
+		await activate(mockContext);
+
+		expect(mockWindow.showErrorMessage).toHaveBeenCalledWith(
+			expect.stringContaining("Failed to initialize AI Memory Bank"),
+		);
+	});
+
+	it("deactivates the extension", () => {
+		deactivate();
+		// Currently, deactivate does nothing, so this is just a smoke test.
+		// If deactivation logic is added, this test should be updated.
+		expect(true).toBe(true);
 	});
 });

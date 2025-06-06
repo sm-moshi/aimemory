@@ -1,8 +1,4 @@
-import type {
-	WebviewLogLevel,
-	WebviewLogMessage,
-	WebviewToExtensionMessage,
-} from "../types/messages.js";
+import type { WebviewLogLevel, WebviewToExtensionMessage } from "../types/messages";
 
 // Create a safe postMessage function
 export const postMessage = (message: WebviewToExtensionMessage) => {
@@ -25,11 +21,11 @@ export function sendLog(
 	level: WebviewLogLevel = "info",
 	meta?: Record<string, unknown>,
 ) {
-	const message: WebviewLogMessage = {
+	const message: WebviewToExtensionMessage = {
 		command: "logMessage",
 		level,
 		text,
-		meta,
+		...(meta && { meta }),
 	};
 	postMessage(message);
 }

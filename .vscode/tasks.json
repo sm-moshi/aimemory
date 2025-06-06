@@ -14,9 +14,19 @@
 			"problemMatcher": ["$tsc"]
 		},
 		{
-			"label": "build:prod",
+			"label": "build:extension",
 			"type": "shell",
-			"command": "pnpm build:prod",
+			"command": "pnpm build:extension",
+			"group": "build",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": ["$tsc"]
+		},
+		{
+			"label": "build:webview",
+			"type": "shell",
+			"command": "pnpm build:webview",
 			"group": "build",
 			"presentation": {
 				"reveal": "always"
@@ -34,9 +44,10 @@
 			"problemMatcher": ["$tsc"]
 		},
 		{
-			"label": "watch",
+			"label": "watch:extension",
 			"type": "shell",
-			"command": "pnpm dev",
+			"command": "rollup",
+			"args": ["-c", "rollup.config.js", "--watch"],
 			"group": "build",
 			"isBackground": true,
 			"presentation": {
@@ -46,15 +57,35 @@
 				"base": "$tsc-watch",
 				"background": {
 					"activeOnStart": true,
-					"beginsPattern": "^\\s*\\[\\d+:\\d+:\\d+\\s+[AP]M\\]\\s+File change detected\\.",
-					"endsPattern": "^\\s*\\[\\d+:\\d+:\\d+\\s+[AP]M\\]\\s+Found \\d+ errors?\\."
+					"beginsPattern": "rollup.*watching for changes",
+					"endsPattern": "created.*in"
 				}
 			}
 		},
 		{
-			"label": "test",
+			"label": "webview:dev",
 			"type": "shell",
-			"command": "pnpm test",
+			"command": "pnpm webview:dev",
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "."
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^\\s*Local:",
+					"endsPattern": "^\\s*ready in"
+				}
+			}
+		},
+		{
+			"label": "test:unit",
+			"type": "shell",
+			"command": "pnpm test:unit",
 			"group": "test",
 			"presentation": {
 				"reveal": "always"
@@ -64,7 +95,8 @@
 		{
 			"label": "test:watch",
 			"type": "shell",
-			"command": "pnpm test:watch",
+			"command": "pnpm test:unit",
+			"args": ["--watch"],
 			"group": "test",
 			"isBackground": true,
 			"presentation": {
@@ -76,16 +108,6 @@
 			"label": "test:coverage",
 			"type": "shell",
 			"command": "pnpm test:coverage",
-			"group": "test",
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "test:extension",
-			"type": "shell",
-			"command": "pnpm test:extension",
 			"group": "test",
 			"presentation": {
 				"reveal": "always"
@@ -112,7 +134,7 @@
 				"reveal": "always"
 			},
 			"problemMatcher": [],
-			"dependsOn": "build:prod"
+			"dependsOn": "build:full"
 		},
 		{
 			"label": "lint",
@@ -125,19 +147,9 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "lint:fix",
-			"type": "shell",
-			"command": "pnpm lint:fix",
-			"group": "build",
-			"presentation": {
-				"reveal": "always"
-			},
-			"problemMatcher": []
-		},
-		{
 			"label": "type-check",
 			"type": "shell",
-			"command": "pnpm type-check",
+			"command": "pnpm check-types",
 			"group": "build",
 			"presentation": {
 				"reveal": "always"
@@ -145,9 +157,28 @@
 			"problemMatcher": ["$tsc"]
 		},
 		{
+			"label": "type-check:watch",
+			"type": "shell",
+			"command": "tsgo",
+			"args": ["-p", "tsconfig.json", "--noEmit", "--watch"],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": {
+				"base": "$tsc-watch",
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^\\s*Starting compilation in watch mode",
+					"endsPattern": "^\\s*Found \\d+ errors?\\. Watching for file changes\\."
+				}
+			}
+		},
+		{
 			"label": "clean",
 			"type": "shell",
-			"command": "pnpm clean",
+			"command": "rm -rf dist && rm -rf node_modules/.cache",
 			"group": "build",
 			"presentation": {
 				"reveal": "silent"
@@ -157,7 +188,7 @@
 		{
 			"label": "dev:parallel",
 			"dependsOrder": "parallel",
-			"dependsOn": ["watch", "test:watch"],
+			"dependsOn": ["watch:extension", "webview:dev"],
 			"group": "build",
 			"isBackground": true,
 			"presentation": {

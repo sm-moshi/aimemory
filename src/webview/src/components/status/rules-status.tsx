@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
-import { cn } from "../../utils/cn.js";
-import { sendLog } from "../../utils/message.js";
+import { cn } from "../../utils/cn";
+import { sendLog } from "../../utils/message";
 
-export function RulesStatus() {
+export function RulesStatus(): ReactNode {
 	const [isLoading, setIsLoading] = useState(true);
 	const [rulesInitialized, setRulesInitialized] = useState(false);
 	const [resetLoading, setResetLoading] = useState(false);

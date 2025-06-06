@@ -1,43 +1,65 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LogLevel, Logger } from "../../infrastructure/logging/vscode-logger.js";
+import { type TestLogger, createTestLogger } from "@/utils/logging.js";
+import { standardAfterEach, standardBeforeEach } from "@test-utils/index.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-// Mock vscode OutputChannel
-const appendLine = vi.fn();
-const show = vi.fn();
-vi.mock("vscode", () => ({
-	window: {
-		createOutputChannel: vi.fn(() => ({ appendLine, show })),
-	},
-}));
+describe("Centralized Logging System", () => {
+	let testLogger: TestLogger;
 
-describe("Logger", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		standardBeforeEach();
+		testLogger = createTestLogger();
 	});
 
-	it("returns a singleton instance", () => {
-		const logger1 = Logger.getInstance();
-		const logger2 = Logger.getInstance();
-		expect(logger1).toBe(logger2);
+	afterEach(() => {
+		standardAfterEach();
 	});
 
-	it("logs info messages at Info level", () => {
-		const logger = Logger.getInstance();
-		logger.setLevel(LogLevel.Info);
-		logger.info("test info");
-		expect(appendLine).toHaveBeenCalled();
+	it("should create test logger and capture logs", () => {
+		testLogger.info("Test info message");
+		testLogger.warn("Test warning message");
+		testLogger.error("Test error message");
+
+		expect(testLogger.logs).toHaveLength(3);
+		expect(testLogger.logs[0]).toEqual({
+			level: "INFO",
+			message: "Test info message",
+		});
+		expect(testLogger.logs[1]).toEqual({
+			level: "WARN",
+			message: "Test warning message",
+		});
+		expect(testLogger.logs[2]).toEqual({
+			level: "ERROR",
+			message: "Test error message",
+		});
 	});
 
-	it("does not log debug messages at Info level", () => {
-		const logger = Logger.getInstance();
-		logger.setLevel(LogLevel.Info);
-		logger.debug("test debug");
-		expect(appendLine).not.toHaveBeenCalled();
+	it("should handle context in test logs", () => {
+		const context = { component: "test", operation: "validate" };
+		testLogger.info("Test with context", context);
+
+		expect(testLogger.logs).toHaveLength(1);
+		expect(testLogger.logs[0]).toEqual({
+			level: "INFO",
+			message: "Test with context",
+			context,
+		});
 	});
 
-	it("shows the output channel", () => {
-		const logger = Logger.getInstance();
-		logger.showOutput();
-		expect(show).toHaveBeenCalled();
+	it("should clear logs", () => {
+		testLogger.info("Test message");
+		expect(testLogger.logs).toHaveLength(1);
+
+		testLogger.clear();
+		expect(testLogger.logs).toHaveLength(0);
+	});
+
+	it("should log debug and trace messages", () => {
+		testLogger.debug("Debug message");
+		testLogger.trace("Trace message");
+
+		expect(testLogger.logs).toHaveLength(2);
+		expect(testLogger.logs[0]?.level).toBe("DEBUG");
+		expect(testLogger.logs[1]?.level).toBe("TRACE");
 	});
 });

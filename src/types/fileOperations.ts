@@ -1,13 +1,97 @@
 /**
  * File Operations Types and Interfaces
- * Contains types for file system operations, templates, and content management
+ * Contains types for file system operations, templates, streaming, and batch processing
  */
 
 import type { MemoryBankFileType } from "./core.js";
+import type { Result } from "./errorHandling.js";
 
-// =============================================================================
-// File Content and Template Types
-// =============================================================================
+/**
+ * Progress callback for streaming operations
+ */
+export type StreamingProgressCallback = (bytesRead: number, totalBytes: number) => void;
+
+/**
+ * Configuration for streaming manager behavior
+ */
+export interface StreamingManagerConfig {
+	sizeThreshold?: number; // bytes - files larger than this will be streamed
+	chunkSize?: number; // bytes - size of each chunk when streaming
+	timeout?: number; // milliseconds - timeout for streaming operations
+	enableProgressCallbacks?: boolean;
+}
+
+/**
+ * Options for individual streaming operations
+ */
+export interface StreamingOptions {
+	onProgress?: StreamingProgressCallback;
+	timeout?: number;
+	chunkSize?: number;
+	enableCancellation?: boolean;
+	/**
+	 * Security: Root directory for path validation - prevents path traversal attacks
+	 * If provided, all file paths will be validated to ensure they remain within this root
+	 */
+	allowedRoot?: string;
+}
+
+/**
+ * Enhanced result with streaming metadata
+ */
+export interface StreamingResult {
+	content: string;
+	wasStreamed: boolean;
+	duration: number;
+	bytesRead: number;
+	chunksProcessed?: number;
+}
+
+/**
+ * Statistics for streaming operations
+ */
+export interface StreamingStats {
+	totalOperations: number;
+	streamedOperations: number;
+	totalBytesRead: number;
+	avgStreamingTime: number;
+	avgNormalReadTime: number;
+	largestFileStreamed: number;
+	lastReset: Date;
+}
+
+/**
+ * Streaming operation metadata
+ */
+export interface StreamingMetadata {
+	filePath: string;
+	fileSize: number;
+	strategy: "normal" | "streaming";
+	startTime: number;
+	endTime?: number;
+	bytesProcessed?: number;
+	chunksProcessed?: number;
+}
+
+// Configuration for FileStreamer class
+export interface FileStreamerConfig {
+	defaultChunkSize: number;
+	defaultTimeout: number;
+	defaultEnableProgressCallbacks: boolean;
+	// Optional onProgress for specific instances if needed, but defaults are primary
+	onProgress?: (progress: { bytesRead: number; totalBytes: number; chunks: number }) => void;
+}
+
+/**
+ * Context for the _handleStreamData method in FileStreamer.
+ */
+export interface StreamDataHandlerContext {
+	bytesRead: { value: number };
+	chunksProcessed: { value: number };
+	totalSize: number;
+	enableProgress: boolean;
+	options?: StreamingOptions;
+}
 
 /**
  * Different strategies for handling file conflicts
@@ -51,10 +135,6 @@ export type FileTemplateMap = {
 	[K in MemoryBankFileType]: FileContentTemplate;
 };
 
-// =============================================================================
-// File Operation Validation and Processing
-// =============================================================================
-
 /**
  * Content validation rules for memory bank files
  */
@@ -75,18 +155,14 @@ export interface FileProcessingOptions {
 }
 
 /**
- * Result of a file validation operation
+ * Result of a file processing operation (use ValidationResult from config.ts for general validation)
  */
-export interface ValidationResult {
+export interface FileProcessingResult {
 	isValid: boolean;
 	errors: string[];
 	warnings: string[];
 	processedContent?: string;
 }
-
-// =============================================================================
-// Batch File Operations
-// =============================================================================
 
 /**
  * Options for batch file operations
@@ -107,10 +183,6 @@ export interface BatchOperationResult {
 	totalProcessed: number;
 	duration: number;
 }
-
-// =============================================================================
-// Enhanced File Operations (Phase 1)
-// =============================================================================
 
 /**
  * Configuration for retry behavior in file operations
@@ -138,4 +210,36 @@ export interface FileError {
 	message: string;
 	path?: string;
 	originalError?: Error;
+}
+
+/**
+ * Cache entry statistics for determining streaming strategy.
+ * Used by StreamingManager to cache file stats.
+ */
+export interface CachedFileStats {
+	path: string;
+	size: number;
+	mtime: Date;
+	wouldStream: boolean;
+}
+
+/**
+ * Parameters for the internal _setupStreamAndEvents method in FileStreamer.
+ */
+export interface StreamSetupParameters {
+	validatedPath: string;
+	stats: import("node:fs").Stats;
+	options?: StreamingOptions;
+	originalFilePath: string;
+	startTime: number;
+}
+
+/**
+ * Mutable state for the internal _setupStreamAndEvents method in FileStreamer.
+ */
+export interface StreamSetupState {
+	resolve: (value: Result<StreamingResult, FileError>) => void;
+	chunks: Buffer[];
+	bytesRead: { value: number };
+	chunksProcessed: { value: number };
 }

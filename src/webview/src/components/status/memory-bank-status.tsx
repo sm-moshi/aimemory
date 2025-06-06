@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
-import type { MemoryBankStatusProps } from "../../types/components.js";
-import { cn } from "../../utils/cn.js";
-import { sendLog } from "../../utils/message.js";
+import type { MemoryBankStatusProps } from "../../types/components";
+import { cn } from "../../utils/cn";
+import { sendLog } from "../../utils/message";
 
-export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBankStatusProps) {
+export function MemoryBankStatus({
+	onReviewAllFiles,
+	reviewLoading,
+}: MemoryBankStatusProps): ReactNode {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMemoryBankInitialized, setIsMemoryBankInitialized] = useState(false);
 	const [updateLoading, setUpdateLoading] = useState(false);

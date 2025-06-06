@@ -1,0 +1,7 @@
+packages:
+- "src/webview"
+
+onlyBuiltDependencies:
+- '@biomejs/biome'
+- '@swc/core'
+- '@tailwindcss/oxide'

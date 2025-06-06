@@ -1,4 +1,6 @@
-export function HowDoesItWork() {
+import type { ReactNode } from "react";
+
+export function HowDoesItWork(): ReactNode {
 	return (
 		<div className="rounded-xl border border-border bg-muted p-4 shadow-sm space-y-4 mb-6">
 			<h2 className="text-xl font-bold mb-2 border-b border-border pb-1">

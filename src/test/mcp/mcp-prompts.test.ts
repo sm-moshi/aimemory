@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
 	INITIALIZE_MEMORY_BANK_PROMPT,
 	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
@@ -8,7 +7,8 @@ import {
 	MEMORY_BANK_UPDATE_CONFIRMATION_PROMPT,
 	MEMORY_BANK_USAGE_TIP_PROMPT,
 	REVIEW_AND_UPDATE_MEMORY_BANK_PROMPT,
-} from "../../services/cursor/mcp-prompts.js";
+} from "@/cursor/mcp-prompts.js";
+import { describe, expect, it } from "vitest";
 
 // Unit tests for mcp-prompts.ts
 

@@ -14,16 +14,16 @@ export type {
 	ReviewUpdateMemoryBankMessage,
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
-} from "./messages.js";
+} from "./messages";
 
 // Hook types
-export type { UseMCPServerDetectionReturn } from "./hooks.js";
+export type { UseMCPServerDetectionReturn } from "./hooks";
 
 // VSCode API types
 export type {
 	VSCodeAPI,
 	WebviewMessageEvent,
-} from "./vscode.js";
+} from "./vscode";
 
 // Component types
 export type {
@@ -32,4 +32,4 @@ export type {
 	ButtonProps,
 	LoadingState,
 	ComponentState,
-} from "./components.js";
+} from "./components";

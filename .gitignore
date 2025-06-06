@@ -3,17 +3,15 @@ dist/
 **/coverage/**
 !**/coverage/lcov.info
 .vscode-test/
-*.tsbuildinfo
 
-# TypeScript - Generated declaration files and source maps
-**/*.d.ts
+# Generated source maps
 **/*.d.ts.map
-# But preserve manually written type definitions
-!src/types/markdown.d.ts
-!src/webview/src/vite-env.d.ts
+**/*.cjs.map
+**/*.mjs.map
 
 # Node
 node_modules/
+src/webview/node_modules/
 
 # Editor
 .idea/
@@ -21,7 +19,7 @@ node_modules/
 .secrets
 
 # Cursor
-.cursor/
+# .cursor/
 memory-bank/*.md
 **/.log
 docs/devs/
@@ -32,3 +30,9 @@ out/
 .repomix/
 .vsix
 archive/
+test-file.txt
+test-results.json
+
+docs/phase-4-restructuring-plan.md
+
+docs/maybe/

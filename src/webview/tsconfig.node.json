@@ -1,10 +1,18 @@
 {
+	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"composite": true,
-		"skipLibCheck": true,
-		"module": "ESNext",
+		"module": "ES2022",
 		"moduleResolution": "bundler",
-		"allowSyntheticDefaultImports": true
+		"types": [
+			"node",
+			"vite/client"
+		],
+		// "outDir": "dist"
 	},
-	"include": ["vite.config.ts"]
+	"include": [
+		"vite.config.mts",
+		"vitest.config.ts",
+		"*.config.*"
+	]
 }

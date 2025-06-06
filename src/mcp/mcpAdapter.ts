@@ -1,10 +1,10 @@
 import type { ChildProcess } from "node:child_process";
 import type { ExtensionContext } from "vscode";
-import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
-import type { Logger } from "../infrastructure/logging/vscode-logger.js";
-import { launchMCPServerProcess } from "../infrastructure/process/helpers.js";
+import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
 import type { MemoryBankFileType } from "../types/core.js";
+import type { Logger } from "../types/logging.js";
 import type { MCPServerInterface } from "../types/mcpTypes.js";
+import { launchMCPServerProcess } from "../utils/system/process-helpers.js";
 
 /**
  * Adapter that provides the same interface as MemoryBankMCPServer
@@ -15,7 +15,7 @@ import type { MCPServerInterface } from "../types/mcpTypes.js";
  */
 export class MemoryBankMCPAdapter implements MCPServerInterface {
 	private readonly context: ExtensionContext;
-	private readonly memoryBank: VSCodeMemoryBankService;
+	private readonly memoryBank: MemoryBankServiceCore;
 	private readonly logger: Logger;
 	private childProcess: ChildProcess | null = null;
 	private isRunning = false;
@@ -23,7 +23,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 
 	constructor(
 		context: ExtensionContext,
-		memoryBankService: VSCodeMemoryBankService,
+		memoryBankService: MemoryBankServiceCore,
 		logger: Logger,
 		defaultPort = 3000,
 	) {
@@ -35,7 +35,6 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 
 	/**
 	 * Start the STDIO MCP server as a child process
-	 * Complexity reduced from ~19 to ~5 by extracting process management utilities
 	 */
 	async start(): Promise<void> {
 		if (this.isRunning || this.childProcess) {
@@ -46,7 +45,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 		try {
 			// Launch MCP server process using shared utilities
 			this.childProcess = await launchMCPServerProcess(this.context, this.logger, {
-				onError: (error) => {
+				onError: error => {
 					this.logger.error(`MCP server process error: ${error.message}`);
 					this.isRunning = false;
 					this.childProcess = null;
@@ -58,7 +57,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 					this.isRunning = false;
 					this.childProcess = null;
 				},
-				onStderr: (data) => {
+				onStderr: data => {
 					this.logger.debug(`MCP server stderr: ${data}`);
 				},
 			});
@@ -111,7 +110,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	/**
 	 * Get the memory bank service instance
 	 */
-	getMemoryBank(): VSCodeMemoryBankService {
+	getMemoryBank(): MemoryBankServiceCore {
 		return this.memoryBank;
 	}
 
@@ -119,6 +118,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 * Update a memory bank file
 	 * Note: This delegates to the memory bank service directly for now
 	 * In a full implementation, this could communicate with the STDIO server
+	 * TODO: Do the full implementation.
 	 */
 	async updateMemoryBankFile(fileType: string, content: string): Promise<void> {
 		try {
@@ -163,6 +163,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 		// Original comment:
 		// For now, delegate to memory bank service
 		// In a full implementation, this could communicate with the STDIO server
+		// TODO: Do the full implementation.
 		try {
 			switch (command) {
 				case "init":

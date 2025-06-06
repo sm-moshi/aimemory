@@ -3,7 +3,7 @@
  * Type definitions for VSCode webview API and global declarations
  */
 
-import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./messages.js";
+import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./messages";
 
 /**
  * VSCode API interface for webview communication
