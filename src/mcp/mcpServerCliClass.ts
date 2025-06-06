@@ -1,21 +1,15 @@
 import { resolve } from "node:path";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
-import { CacheManager } from "../core/CacheManager.js";
-import { FileOperationManager } from "../core/FileOperationManager.js";
-import { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
-import { StreamingManager } from "../performance/StreamingManager.js";
 import {
 	INITIALIZE_MEMORY_BANK_PROMPT,
 	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
-} from "../services/cursor/mcp-prompts.js";
-import type { MemoryBankFileType } from "../types/core.js";
-import { MemoryBankError, isError, tryCatchAsync } from "../types/index.js";
-import type { AsyncResult, Result } from "../types/index.js";
-import type {
-	CLIServerConfig,
-	MCPServerInstanceConfig as MCPServerConfig,
-} from "../types/mcpTypes.js";
+} from "@/cursor/mcp-prompts.js";
+import type { MemoryBankFileType } from "@/types/core.js";
+import { MemoryBankError, isError, tryCatchAsync } from "@/types/index.js";
+import type { AsyncResult, Result } from "@/types/index.js";
+import type { BaseMCPServerConfig, MCPServerCLIOptions } from "@/types/mcpTypes.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { getExtensionVersion } from "@utils/version.js";
+import { z } from "zod";
 import { BaseMCPServer } from "./shared/baseMcpServer.js";
 import {
 	MemoryBankOperations,
@@ -30,32 +24,26 @@ import {
  * and provides proper dependency injection and testability.
  */
 export class MCPServerCLI extends BaseMCPServer {
-	private readonly workspacePath: string;
+	private readonly logLevel: string;
+	constructor(config?: MCPServerCLIOptions) {
+		// Handle flexible path configuration
+		const { MEMORY_BANK_PATH } = process.env;
+		const memoryBankPath =
+			config?.memoryBankPath ?? config?.workspacePath ?? MEMORY_BANK_PATH ?? process.cwd();
 
-	constructor(config: CLIServerConfig) {
-		const logger = config.logger ?? console; // Ensure logger is defined
-		const memoryBankDir = resolve(config.workspacePath, "memory-bank");
-
-		const cacheManager = new CacheManager(logger);
-		const streamingManager = new StreamingManager(logger);
-		const fileOperationManager = new FileOperationManager(logger);
-		const memoryBank = new MemoryBankServiceCore(
-			memoryBankDir,
-			logger, // Pass the defined logger
-			cacheManager,
-			streamingManager,
-			fileOperationManager,
-		);
-
-		const serverConfig: MCPServerConfig = {
-			name: "AI Memory MCP Server",
-			version: "0.8.0-dev.1",
-			memoryBank,
-			logger, // Pass the defined logger to BaseMCPServer config
+		// Create the unified config for the base class
+		const baseConfig: BaseMCPServerConfig = {
+			memoryBankPath,
+			name: config?.name ?? "MCPServerCLI",
+			version: config?.version ?? getExtensionVersion(),
+			logger: config?.logger ?? console,
 		};
 
-		super(serverConfig);
-		this.workspacePath = config.workspacePath;
+		// Call super first
+		super(baseConfig);
+
+		// Set CLI-specific properties
+		this.logLevel = config?.logLevel ?? "info";
 	}
 
 	/**
@@ -63,24 +51,61 @@ export class MCPServerCLI extends BaseMCPServer {
 	 */
 	private _registerInitMemoryBankTool(): void {
 		this.server.tool("init-memory-bank", {}, async () => {
-			this.logger.info?.("Initializing memory bank") ??
-				console.log("Initializing memory bank");
+			(this.logger.info ?? console.log)("Initializing memory bank via CLI tool");
 			try {
-				const isInitialized = await this.memoryBank.getIsMemoryBankInitialized();
+				const isInitializedResult = await this.memoryBank.getIsMemoryBankInitialized();
+				if (isError(isInitializedResult)) {
+					(this.logger.error ?? console.error)(
+						"Error checking memory bank initialization status:",
+						isInitializedResult.error,
+					);
+					return createErrorResponse(
+						isInitializedResult.error,
+						"Error checking memory bank initialization status",
+					);
+				}
+				const isInitialized = isInitializedResult.data;
+
 				if (!isInitialized) {
-					await this.memoryBank.initializeFolders();
-					this.logger.info?.(
+					const initFoldersResult = await this.memoryBank.initializeFolders();
+					if (isError(initFoldersResult)) {
+						(this.logger.error ?? console.error)(
+							"Error initializing memory bank folders:",
+							initFoldersResult.error,
+						);
+						return createErrorResponse(
+							initFoldersResult.error,
+							"Error initializing memory bank folders",
+						);
+					}
+					const loadFilesResult = await this.memoryBank.loadFiles();
+					if (isError(loadFilesResult)) {
+						(this.logger.error ?? console.error)(
+							"Error loading files after folder initialization:",
+							loadFilesResult.error,
+						);
+						return createErrorResponse(
+							loadFilesResult.error,
+							"Error loading files after folder initialization",
+						);
+					}
+					(this.logger.info ?? console.log)(
 						"Memory bank not initialized, sending initialization prompt",
-					) ?? console.log("Memory bank not initialized, sending initialization prompt");
+					);
 					return createSuccessResponse(INITIALIZE_MEMORY_BANK_PROMPT);
 				}
-				// Load memory bank files into memory
-				await this.memoryBank.loadFiles();
+				const loadFilesResult = await this.memoryBank.loadFiles();
+				if (isError(loadFilesResult)) {
+					(this.logger.error ?? console.error)(
+						"Error loading files for already initialized bank:",
+						loadFilesResult.error,
+					);
+					return createErrorResponse(loadFilesResult.error, "Error loading files");
+				}
 				return createSuccessResponse(MEMORY_BANK_ALREADY_INITIALIZED_PROMPT);
 			} catch (error) {
-				this.logger.error?.("Error initializing memory bank:", error) ??
-					console.error("Error initializing memory bank:", error);
-				return createErrorResponse(error, "Error initializing memory bank");
+				(this.logger.error ?? console.error)("Error in init-memory-bank tool:", error);
+				return createErrorResponse(error, "Error initializing memory bank via CLI tool");
 			}
 		});
 	}
@@ -124,7 +149,7 @@ export class MCPServerCLI extends BaseMCPServer {
 
 					return result;
 				},
-				"Error reading memory bank file",
+				"Error reading memory bank file via CLI tool",
 			),
 		);
 	}
@@ -139,7 +164,7 @@ export class MCPServerCLI extends BaseMCPServer {
 				if (isError(readyResult)) {
 					return createErrorResponse(
 						readyResult.error,
-						"Error preparing memory bank for review",
+						"Error preparing memory bank for review via CLI tool",
 					);
 				}
 
@@ -150,58 +175,26 @@ export class MCPServerCLI extends BaseMCPServer {
 					nextAction: payload.nextAction,
 				};
 			} catch (error) {
-				this.logger.error?.("Unexpected error in review-and-update-memory-bank:", error) ??
-					console.error("Unexpected error in review-and-update-memory-bank:", error);
-				return createErrorResponse(error, "Unexpected error reviewing memory bank");
+				(this.logger.error ?? console.error)(
+					"Unexpected error in review-and-update-memory-bank CLI tool:",
+					error,
+				);
+				return createErrorResponse(
+					error,
+					"Unexpected error reviewing memory bank via CLI tool",
+				);
 			}
-		});
-	}
-
-	/**
-	 * Registers tools that use the enhanced logging helper.
-	 */
-	private _registerLoggingEnhancedTools(): void {
-		this.registerToolWithLogging("read-memory-bank-files", async () => {
-			this.logger.info?.("Reading memory bank files") ??
-				console.log("Reading memory bank files");
-			const result = await MemoryBankOperations.readAllFiles(this.memoryBank);
-			this.logger.info?.("Memory Bank Files Read Successfully.") ??
-				console.log("Memory Bank Files Read Successfully.");
-			return result;
-		});
-
-		this.registerToolWithLogging("list-memory-bank-files", async () => {
-			this.logger.info?.("Listing memory bank files") ??
-				console.log("Listing memory bank files");
-			const result = await MemoryBankOperations.listFiles(this.memoryBank);
-			this.logger.info?.("Memory Bank Files Listed Successfully.") ??
-				console.log("Memory Bank Files Listed Successfully.");
-			return result;
 		});
 	}
 
 	/**
 	 * Register CLI-specific tools with custom initialization logic
 	 */
-	protected registerCustomTools(): void {
+	protected override registerCustomTools(): void {
 		this._registerInitMemoryBankTool();
 		this._registerReadMemoryBankFileTool();
-		this._registerLoggingEnhancedTools();
 		this._registerReviewAndUpdateTool();
-	}
-
-	/**
-	 * Helper method to register tools with enhanced logging
-	 */
-	private registerToolWithLogging(
-		toolName: string,
-		handler: () => AsyncResult<string, MemoryBankError>,
-	): void {
-		this.server.tool(
-			toolName,
-			{},
-			createMemoryBankTool(this.memoryBank, handler, `Error executing ${toolName}`),
-		);
+		this._registerMetadataTools();
 	}
 
 	/**
@@ -224,14 +217,25 @@ export class MCPServerCLI extends BaseMCPServer {
 			);
 		}
 
-		console.error(`[MCPServerCLI] Workspace argument: ${workspaceArg}`);
 		console.error(
-			`[MCPServerCLI] Memory bank directory: ${resolve(workspaceArg, "memory-bank")}`,
+			`[MCPServerCLI] Workspace argument (used as memoryBankPath): ${workspaceArg}`,
+		);
+		console.error(
+			`[MCPServerCLI] Full memory bank directory: ${resolve(workspaceArg, "memory-bank")}`,
 		);
 
 		return new MCPServerCLI({
-			workspacePath: workspaceArg,
+			memoryBankPath: workspaceArg,
 			logger: console,
 		});
+	}
+
+	/**
+	 * Register metadata-specific tools
+	 */
+	private _registerMetadataTools(): void {
+		this.metadataToolRegistrar.registerQueryMemoryIndexTool(this.server);
+		this.metadataToolRegistrar.registerValidateMemoryFileTool(this.server);
+		this.metadataToolRegistrar.registerRebuildMetadataIndexTool(this.server);
 	}
 }

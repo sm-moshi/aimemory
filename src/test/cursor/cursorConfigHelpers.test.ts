@@ -3,71 +3,29 @@
  * Verifies functionality of cursor config management utilities
  */
 
-import fs from "node:fs/promises";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	compareServerConfigs,
 	createAIMemoryServerConfig,
 	ensureCursorDirectory,
 	readCursorMCPConfig,
 	writeCursorMCPConfig,
-} from "../../services/cursor/config-helpers.js";
+} from "@/cursor/config-helpers.js";
+import { Logger } from "@/utils/vscode/vscode-logger.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CursorMCPConfig, MCPServerConfig } from "../../types/config.js";
 
-// Mock file system operations
-vi.mock("node:fs/promises", () => ({
-	default: {
-		mkdir: vi.fn(),
-		readFile: vi.fn(),
-		writeFile: vi.fn(),
-	},
-}));
-
-// Mock VS Code
-vi.mock("vscode", () => ({
-	window: {
-		showInformationMessage: vi.fn(),
-		showErrorMessage: vi.fn(),
-	},
-}));
-
-// Define a consistent mock logger instance
-const mockLoggerInstance = {
-	info: vi.fn(),
-	error: vi.fn(),
-	debug: vi.fn(),
-	warn: vi.fn(), // Added warn as it's a common log level
-};
-
-// Mock Logger to return the consistent instance
-vi.mock("../../infrastructure/logging/vscode-logger.js", () => ({
-	Logger: {
-		getInstance: () => mockLoggerInstance,
-	},
-}));
-
-// Mock process helpers
-vi.mock("../../infrastructure/process/helpers.js", () => ({
-	validateWorkspace: vi.fn().mockReturnValue("/test/workspace"),
-}));
-
-// Mock OS
-vi.mock("node:os", () => ({
-	homedir: vi.fn(() => "/test/home"),
-}));
-
 describe("Cursor Config Helpers", () => {
+	let mockLoggerInstance: ReturnType<typeof Logger.getInstance>;
+
 	beforeEach(() => {
-		vi.clearAllMocks();
-		// Specifically clear mocks on the shared logger instance
-		mockLoggerInstance.info.mockClear();
-		mockLoggerInstance.error.mockClear();
-		mockLoggerInstance.debug.mockClear();
-		mockLoggerInstance.warn.mockClear();
+		// Get a reference to the mocked logger instance for spying
+		mockLoggerInstance = Logger.getInstance();
 	});
 
 	afterEach(() => {
-		vi.restoreAllMocks(); // This might be redundant if clearAllMocks and specific clears are used.
+		// Global teardown in vitest.setup.ts handles resetting mocks.
+		// No standardAfterEach() needed.
+		// TODO: Why don't we remove this then?
 	});
 
 	describe("createAIMemoryServerConfig", () => {
@@ -169,69 +127,102 @@ describe("Cursor Config Helpers", () => {
 	});
 
 	describe("ensureCursorDirectory", () => {
-		it("should create directory successfully", async () => {
-			vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+		const mockFileOperationManager = {
+			mkdirWithRetry: vi.fn(),
+			readFileWithRetry: vi.fn(),
+			writeFileWithRetry: vi.fn(),
+		} as any;
 
-			const result = await ensureCursorDirectory();
+		it("should create directory successfully", async () => {
+			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({
+				success: true,
+				data: undefined,
+			});
+
+			const result = await ensureCursorDirectory(mockFileOperationManager);
 
 			expect(result).toBe("/test/home/.cursor");
-			expect(fs.mkdir).toHaveBeenCalledWith("/test/home/.cursor", { recursive: true });
+			expect(mockFileOperationManager.mkdirWithRetry).toHaveBeenCalledWith(
+				"/test/home/.cursor",
+				{
+					recursive: true,
+				},
+			);
 		});
 
 		it("should handle EEXIST error gracefully", async () => {
-			const eexistError = new Error("Directory exists") as NodeJS.ErrnoException;
-			eexistError.code = "EEXIST";
-			vi.mocked(fs.mkdir).mockRejectedValue(eexistError);
+			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({
+				success: false,
+				error: { code: "EEXIST", message: "Directory exists" },
+			});
 
-			const result = await ensureCursorDirectory();
+			const result = await ensureCursorDirectory(mockFileOperationManager);
 
 			expect(result).toBe("/test/home/.cursor");
 		});
 
 		it("should log unexpected errors", async () => {
-			const unexpectedError = new Error("Permission denied") as NodeJS.ErrnoException;
-			unexpectedError.code = "EACCES";
-			vi.mocked(fs.mkdir).mockRejectedValue(unexpectedError);
+			mockFileOperationManager.mkdirWithRetry.mockResolvedValue({
+				success: false,
+				error: { code: "EACCES", message: "Permission denied" },
+			});
 
 			// Spy on the 'error' method of the consistent mockLoggerInstance
 			const loggerErrorSpy = vi.spyOn(mockLoggerInstance, "error");
 
-			await expect(ensureCursorDirectory()).rejects.toThrow("Permission denied");
+			await expect(ensureCursorDirectory(mockFileOperationManager)).rejects.toThrow(
+				"Permission denied",
+			);
 
 			expect(loggerErrorSpy).toHaveBeenCalledWith(
 				expect.stringContaining(
-					"Unexpected error creating .cursor directory: Permission denied",
+					"Failed to create directory /test/home/.cursor: Permission denied",
 				),
+				undefined, // Acknowledge the second argument being undefined
 			);
-			// No need to restore spy on mockLoggerInstance.error if it's cleared in beforeEach
 		});
 	});
 
 	describe("readCursorMCPConfig", () => {
+		const mockFileOperationManager = {
+			readFileWithRetry: vi.fn(),
+		} as any;
+
 		it("should read and parse existing config", async () => {
 			const mockConfig = { mcpServers: { test: { name: "test" } } };
-			vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig) as any);
+			mockFileOperationManager.readFileWithRetry.mockResolvedValue({
+				success: true,
+				data: JSON.stringify(mockConfig),
+			});
 
-			const result = await readCursorMCPConfig();
+			const result = await readCursorMCPConfig(mockFileOperationManager);
 
 			expect(result).toEqual(mockConfig);
-			expect(fs.readFile).toHaveBeenCalledWith("/test/home/.cursor/mcp.json", "utf-8");
+			expect(mockFileOperationManager.readFileWithRetry).toHaveBeenCalledWith(
+				"/test/home/.cursor/mcp.json",
+			);
 		});
 
 		it("should handle missing config file", async () => {
 			const enoentError = new Error("File not found") as NodeJS.ErrnoException;
 			enoentError.code = "ENOENT";
-			vi.mocked(fs.readFile).mockRejectedValue(enoentError);
+			mockFileOperationManager.readFileWithRetry.mockResolvedValue({
+				success: false,
+				error: { code: "ENOENT", message: "File not found" },
+			});
 
-			const result = await readCursorMCPConfig();
+			const result = await readCursorMCPConfig(mockFileOperationManager);
 
 			expect(result).toEqual({ mcpServers: {} });
 		});
 
 		it("should handle JSON parse errors", async () => {
-			vi.mocked(fs.readFile).mockResolvedValue("invalid json" as any);
+			mockFileOperationManager.readFileWithRetry.mockResolvedValue({
+				success: true,
+				data: "invalid json",
+			});
 
-			const result = await readCursorMCPConfig();
+			const result = await readCursorMCPConfig(mockFileOperationManager);
 
 			expect(result).toEqual({ mcpServers: {} });
 		});
@@ -239,7 +230,10 @@ describe("Cursor Config Helpers", () => {
 
 	describe("writeCursorMCPConfig", () => {
 		it("should write config with proper formatting", async () => {
-			vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+			const mockFileOperationManager = {
+				writeFileWithRetry: vi.fn(),
+			} as any;
+			mockFileOperationManager.writeFileWithRetry.mockResolvedValue({ success: true });
 
 			const config: CursorMCPConfig = {
 				mcpServers: {
@@ -250,9 +244,9 @@ describe("Cursor Config Helpers", () => {
 				},
 			};
 
-			await writeCursorMCPConfig(config);
+			await writeCursorMCPConfig(config, mockFileOperationManager);
 
-			expect(fs.writeFile).toHaveBeenCalledWith(
+			expect(mockFileOperationManager.writeFileWithRetry).toHaveBeenCalledWith(
 				"/test/home/.cursor/mcp.json",
 				JSON.stringify(config, null, 2),
 			);

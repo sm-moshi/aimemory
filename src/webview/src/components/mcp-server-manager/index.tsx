@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { RiPlayFill, RiStopFill } from "react-icons/ri";
-import { useMCPServerDetection } from "../../hooks/useMCPServerDetection.js";
-import { cn } from "../../utils/cn.js";
-import { sendLog } from "../../utils/message.js";
-import { RulesStatus } from "../status/rules-status.js";
+import { useMCPServerDetection } from "../../hooks/useMCPServerDetection";
+import { cn } from "../../utils/cn";
+import { sendLog } from "../../utils/message";
+import { RulesStatus } from "../status/rules-status";
 
 export function MCPServerManager() {
 	// State from the detection hook (for HTTP server detection only)
@@ -16,7 +16,7 @@ export function MCPServerManager() {
 	// Component-specific loading state (for start/stop actions)
 	const [isActionLoading, setIsActionLoading] = useState(false);
 	// Overall server running status - prioritize message updates over detection
-	const [isMCPRunning, setIsMCPRunning] = useState(false);
+	const [isMcpRunning, setIsMcpRunning] = useState(false);
 	// Overall port - prioritize message updates over detection
 	const [port, setPort] = useState<number | null>(null);
 	// Track if we've received any message-based status updates
@@ -26,12 +26,12 @@ export function MCPServerManager() {
 	// This ensures STDIO servers work correctly while still supporting HTTP detection
 	useEffect(() => {
 		if (!hasReceivedStatusMessage) {
-			setIsMCPRunning(initiallyDetectedServer);
+			setIsMcpRunning(initiallyDetectedServer);
 			setPort(initialPort);
 		}
 	}, [initiallyDetectedServer, initialPort, hasReceivedStatusMessage]);
 
-	const handleStartMCPServer = useCallback(() => {
+	const handleStartMcpServer = useCallback(() => {
 		setIsActionLoading(true);
 		// Optimistically set running, will be confirmed by message
 		// setIsMCPRunning(true);
@@ -41,7 +41,7 @@ export function MCPServerManager() {
 		});
 	}, []);
 
-	const handleStopMCPServer = useCallback(() => {
+	const handleStopMcpServer = useCallback(() => {
 		setIsActionLoading(true);
 		// Optimistically set stopped, will be confirmed by message
 		// setIsMCPRunning(false);
@@ -57,7 +57,7 @@ export function MCPServerManager() {
 		if (message.type === "MCPServerStatus") {
 			// Prioritize message-based status updates (for STDIO servers)
 			setHasReceivedStatusMessage(true);
-			setIsMCPRunning(message.status === "started");
+			setIsMcpRunning(message.status === "started");
 			setPort(message.port ?? null);
 			setIsActionLoading(false);
 
@@ -87,20 +87,20 @@ export function MCPServerManager() {
 				<span className="text-sm font-medium text-muted-foreground">Status:</span>
 				<span
 					className={cn(
-						isMCPRunning ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
+						isMcpRunning ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
 						"px-2 py-0.5 rounded-full text-xs font-semibold",
 					)}
 				>
-					{isMCPRunning ? "Running" : "Stopped"}
+					{isMcpRunning ? "Running" : "Stopped"}
 				</span>
 			</div>
 			<div className="w-full max-w-md grid grid-cols-2 gap-2 pt-2">
-				{!isMCPRunning && (
+				{!isMcpRunning && (
 					<>
 						<button
 							type="button"
 							className="w-full flex items-center gap-1 btn btn-primary px-2 py-1 text-white rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-							onClick={handleStartMCPServer}
+							onClick={handleStartMcpServer}
 							disabled={isLoading}
 						>
 							{isLoading && !isDetectingServer ? (
@@ -113,12 +113,12 @@ export function MCPServerManager() {
 						<div />
 					</>
 				)}
-				{isMCPRunning && (
+				{isMcpRunning && (
 					<>
 						<button
 							type="button"
 							className="w-full flex items-center gap-1 btn btn-destructive px-2 py-1 text-white rounded-md bg-red-600 hover:bg-red-700 disabled:opacity-50"
-							onClick={handleStopMCPServer}
+							onClick={handleStopMcpServer}
 							disabled={isLoading}
 						>
 							{isLoading && !isDetectingServer ? (
@@ -136,7 +136,7 @@ export function MCPServerManager() {
 				</div>
 			</div>
 			<hr className="border-border my-4" />
-			{isMCPRunning && (
+			{isMcpRunning && (
 				<p className="text-xs text-muted-foreground mt-2">
 					{port ? (
 						<>

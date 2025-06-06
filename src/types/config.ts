@@ -3,10 +3,6 @@
  * Contains types for Cursor configuration, process management, and system settings
  */
 
-// =============================================================================
-// Cursor Configuration Types
-// =============================================================================
-
 /**
  * Configuration for MCP server in Cursor
  */
@@ -44,10 +40,6 @@ export interface CursorRulesSettings {
 	includeTimestamp?: boolean;
 }
 
-// =============================================================================
-// Process and Environment Types
-// =============================================================================
-
 /**
  * Process environment configuration
  */
@@ -80,10 +72,6 @@ export interface ProcessResult {
 	duration: number;
 	signal?: NodeJS.Signals;
 }
-
-// =============================================================================
-// Extension Configuration Types
-// =============================================================================
 
 /**
  * VS Code extension configuration settings
@@ -119,7 +107,7 @@ export interface RuntimeConfig {
 }
 
 /**
- * Configuration for spawning MCP server process (from types.ts)
+ * Configuration for spawning MCP server process
  */
 export interface ProcessSpawnConfig {
 	serverPath: string;
@@ -130,7 +118,7 @@ export interface ProcessSpawnConfig {
 }
 
 /**
- * Process event handlers configuration (from types.ts)
+ * Process event handlers configuration
  */
 export interface ProcessEventHandlers {
 	onError: (error: Error) => void;

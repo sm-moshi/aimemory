@@ -1,15 +1,35 @@
 {
 	"name": "aimemory",
-	"displayName": "AI Memory",
+	"displayName": "Cursor AI Memory",
 	"publisher": "sm-moshi",
 	"repository": {
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.8.0-dev.1",
+	"version": "0.8.0-dev.2",
 	"engines": {
 		"vscode": "^1.96.2",
-		"pnpm": ">=10.11.0"
+		"pnpm": ">=10.11.1",
+		"node": ">=20.19.0"
+	},
+	"packageManager": "pnpm@10.11.1",
+	"type": "module",
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"@swc/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar",
+			"msw"
+		],
+		"packageExtensions": {
+			"react": {
+				"peerDependencies": {
+					"react-dom": "*"
+				}
+			}
+		}
 	},
 	"icon": "dist/assets/icon.png",
 	"categories": ["Other"],
@@ -20,7 +40,8 @@
 		"onCommand:aimemory.stopServer",
 		"onCommand:aimemory.openWebview",
 		"onCommand:aimemory.updateMCPConfig",
-		"onCommand:aimemory.showOutput"
+		"onCommand:aimemory.showOutput",
+		"onCommand:aimemory.setLogLevel"
 	],
 	"contributes": {
 		"commands": [
@@ -61,65 +82,63 @@
 		}
 	},
 	"scripts": {
-		"dev": "npm-run-all -p watch:rollup webview:dev",
+		"build:analyze": "ANALYZE=true pnpm build && echo 'Bundle analysis complete'",
 		"build": "pnpm run build:extension && pnpm run build:webview",
 		"build:extension": "rollup -c rollup.config.js",
-		"build:webview": "cd src/webview && pnpm run build",
-		"build:prod": "pnpm run check-types && NODE_ENV=production rollup -c && cd src/webview && pnpm run build",
 		"build:full": "pnpm run lint && cd src/webview && pnpm run lint && cd ../.. && pnpm run check-types && rollup -c && cd src/webview && pnpm run build",
-		"watch:rollup": "rollup -c --watch",
-		"webview:dev": "cd src/webview && pnpm run dev",
-		"test": "vitest run --exclude 'src/test/extension/**'",
-		"test:extension": "cross-env NODE_ENV=test npx vscode-test --extensions-dir .vscode-test/extensions --user-data-dir .vscode-test/user-data src/test/extension/vsCode*.test.ts src/test/extension/commandHandler.test.ts",
-		"test:watch": "vitest watch",
-		"test:coverage": "vitest run --coverage && pnpm -C src/webview run test:coverage",
-		"lint": "biome check src",
-		"lint:fix": "biome check src --write",
+		"build:webview": "cd src/webview && pnpm run build",
+		"dev": "npm-run-all -p watch:extension webview:dev",
+		"health": "pnpm check-types && pnpm lint && pnpm test",
+		"perf:build": "time pnpm build && echo '\n📊 Bundle Sizes:' && du -sh dist/*",
+		"perf:test": "vitest run --reporter=verbose --profile",
+		"test:ci": "vitest run --reporter=junit && pnpm webview:test --reporter=junit",
+		"test:coverage": "vitest run --coverage && pnpm webview:test --coverage",
+		"test:extension": "cross-env NODE_ENV=test p vscode-test ...",
+		"test:unit": "vitest run --exclude 'src/test/extension/**'",
+		"test:watch": "vitest --watch",
+		"test": "vitest run && pnpm webview:test",
+		"lint": "biome check src --write",
 		"format": "biome format src --write",
-		"check-types": "tsc --noEmit",
-		"package": "pnpm run build:prod && pnpm vsce package --no-dependencies",
-		"vscode:prepublish": "pnpm run build",
-		"update-docs-date": "tsx scripts/update-docs-date.ts",
-		"build-check": "tsx scripts/build-check.ts"
+		"check-types": "tsgo -p tsconfig.json --noEmit",
+		"check": "pnpm run lint && pnpm run format && pnpm run check-types",
+		"package": "pnpm run build:full && pnpm vsce package --no-dependencies",
+		"watch:extension": "rollup -c -w",
+		"webview:dev": "cd src/webview && pnpm run dev",
+		"vscode:prepublish": "pnpm run build"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@rollup/plugin-alias": "^5.1.1",
 		"@rollup/plugin-commonjs": "^28.0.3",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@rollup/plugin-swc": "^0.4.0",
-		"@swc/core": "^1.11.29",
-		"@types/node": "^20.17.56",
-		"@types/vscode": "^1.96.0",
-		"@vitest/coverage-v8": "^3.1.4",
+		"@rollup/plugin-typescript": "^12.1.2",
+		"@swc/core": "^1.11.31",
+		"@types/glob": "^8.1.0",
+		"@types/node": "^20.19.0",
+		"@types/vscode": "1.96.0",
+		"@typescript/native-preview": "^7.0.0-dev.20250606.1",
+		"@vitest/coverage-v8": "^3.2.2",
 		"@vscode/test-cli": "^0.0.11",
 		"@vscode/test-electron": "^2.5.2",
-		"@vscode/vsce": "^3.4.3-4",
+		"@vscode/vsce": "^3.5.0",
 		"cross-env": "^7.0.3",
+		"glob": "^11.0.2",
+		"mcp-testing-kit": "^0.2.0",
+		"msw": "^2.9.0",
 		"npm-run-all": "^4.1.5",
-		"rollup": "^4.41.1",
+		"rollup": "^4.41.2",
+		"rollup-plugin-analyzer": "^4.0.0",
 		"rollup-plugin-copy": "^3.5.0",
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3",
-		"vitest": "^3.2.1"
+		"vite-tsconfig-paths": "^5.1.4",
+		"vitest": "^3.2.2"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.1",
-		"zod": "^3.25.46"
-	},
-	"packageManager": "pnpm@10.11.0",
-	"pnpm": {
-		"overrides": {
-			"jwa": "^2.0.1"
-		},
-		"ignoredBuiltDependencies": ["keytar"],
-		"onlyBuiltDependencies": [
-			"@biomejs/biome",
-			"@swc/core",
-			"@vscode/vsce-sign",
-			"esbuild",
-			"keytar"
-		]
-	},
-	"type": "module"
+		"gray-matter": "^4.0.3",
+		"zod": "^3.25.55"
+	}
 }

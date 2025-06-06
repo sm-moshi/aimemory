@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import "@vscode-elements/elements";
-import { HowDoesItWork } from "./components/how-does-it-work/index.js";
-import { MCPServerManager } from "./components/mcp-server-manager/index.js";
-import { Status } from "./components/status/index.js";
-import { sendLog } from "./utils/message.js";
+import { HowDoesItWork } from "./components/how-does-it-work/index";
+import { MCPServerManager } from "./components/mcp-server-manager/index";
+import { Status } from "./components/status/index";
+import { sendLog } from "./utils/message";
 
 function App() {
 	const [apiAvailable, setApiAvailable] = useState(!!window.vscodeApi);

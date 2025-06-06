@@ -1,14 +1,14 @@
 /// <reference types="vite/client" />
 /// <reference types="react" />
 import { createRoot } from "react-dom/client";
-import App from "./App.js";
+import App from "./App";
 import "./index.css";
 import "@vscode-elements/elements";
-import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./types/messages.js";
-import type { VSCodeAPI, WebviewMessageEvent } from "./types/vscode.js";
+import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./types/messages";
+import type { VSCodeAPI, WebviewMessageEvent } from "./types/vscode";
 
 // Create a better mock implementation for development
-class MockVSCodeAPI implements VSCodeAPI {
+class MockVsCodeApi implements VSCodeAPI {
 	private state: any = { rulesInitialized: false };
 
 	postMessage(message: WebviewToExtensionMessage): void {
@@ -50,7 +50,7 @@ class MockVSCodeAPI implements VSCodeAPI {
 }
 
 // Get the VS Code API - store it in a global variable
-const getVSCodeAPI = () => {
+const getVsCodeApi = () => {
 	// In the VS Code webview
 	if (typeof window.acquireVsCodeApi === "function") {
 		try {
@@ -69,11 +69,11 @@ const getVSCodeAPI = () => {
 
 	// Fallback for development outside VS Code
 	console.log("⚠️ VSCode API not found, using mock implementation");
-	return new MockVSCodeAPI();
+	return new MockVsCodeApi();
 };
 
 // Expose VS Code API to the app through a global variable
-window.vscodeApi = getVSCodeAPI();
+window.vscodeApi = getVsCodeApi();
 console.log("🚀 vscodeApi initialized:", window.vscodeApi);
 
 // Only render once we've ensured the vscodeApi is available

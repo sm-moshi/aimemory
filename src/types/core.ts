@@ -3,9 +3,7 @@
  * Contains fundamental enums, interfaces, and types for the Memory Bank system
  */
 
-// =============================================================================
-// Memory Bank File System Types
-// =============================================================================
+import type { Logger } from "./logging.js";
 
 /**
  * Enumeration of all memory bank file types.
@@ -44,13 +42,39 @@ export interface MemoryBankFileMetadata {
 }
 
 /**
+ * YAML frontmatter metadata structure
+ */
+export interface FrontmatterMetadata {
+	id?: string;
+	type?: string;
+	title?: string;
+	description?: string;
+	tags?: string[];
+	created?: string;
+	updated?: string;
+	version?: string;
+	[key: string]: unknown; // Allow additional properties
+}
+
+/**
  * Represents a file within the memory bank
  */
 export interface MemoryBankFile {
-	type: MemoryBankFileType;
-	content: string;
-	lastUpdated: Date;
-}
+		type: MemoryBankFileType;
+		content: string; // Content WITHOUT frontmatter
+		lastUpdated: Date;
+
+		// Phase 2: Metadata System additions
+		filePath?: string; // Absolute path
+		relativePath?: string; // Path relative to memory-bank root
+		metadata?: FrontmatterMetadata; // Parsed YAML frontmatter
+		created?: Date; // From metadata.created if present
+
+		// Validation (Phase 2.2)
+		validationStatus?: import("./metadata.js").ValidationStatus;
+		validationErrors?: import("zod").ZodIssue[];
+		actualSchemaUsed?: string;
+	}
 
 /**
  * Enhanced MemoryBank interface with Result pattern support
@@ -93,12 +117,6 @@ export interface HealthCheckResult {
 	summary: string;
 }
 
-// =============================================================================
-// Memory Bank Statistics and Monitoring
-// =============================================================================
-
-// Note: LegacyCacheStats is now imported from cache.ts to avoid duplication
-
 /**
  * File operation statistics
  */
@@ -125,14 +143,13 @@ import type { StreamingManager } from "../performance/StreamingManager.js";
 import type { FileCache, LegacyCacheStats } from "./cache.js";
 // Import dependencies
 import type { AsyncResult, MemoryBankError } from "./errorHandling.js";
-import type { MemoryBankLogger } from "./logging.js";
 
 /**
- * Context for file operations in memory bank services (from types.ts)
+ * Context for file operations in memory bank services
  */
 export interface FileOperationContext {
 	memoryBankFolder: string;
-	logger: MemoryBankLogger;
+	logger: Logger;
 	fileCache: Map<string, FileCache>;
 	cacheStats: LegacyCacheStats;
 	streamingManager: StreamingManager;

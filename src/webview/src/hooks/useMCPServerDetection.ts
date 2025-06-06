@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import type { UseMCPServerDetectionReturn } from "../types/hooks.js";
-import { sendLog } from "../utils/message.js";
+import type { UseMCPServerDetectionReturn } from "../types/hooks";
+import { sendLog } from "../utils/message";
 
 const DEFAULT_PORTS = [7331, 7332]; // Default ports to check
 

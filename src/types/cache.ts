@@ -1,7 +1,3 @@
-// =============================================================================
-// Cache Management Types for AI Memory Extension
-// =============================================================================
-
 /**
  * Enhanced cache statistics for monitoring file operations
  */
@@ -18,7 +14,7 @@ export interface CacheStats {
 }
 
 /**
- * Cache entry with access tracking for LRU eviction (from system.ts)
+ * Cache entry with access tracking for LRU eviction
  * This is used by FileOperationContext.
  */
 export interface CacheEntry {
@@ -29,7 +25,7 @@ export interface CacheEntry {
 }
 
 /**
- * Basic Configuration for a cache manager (from system.ts)
+ * Basic Configuration for a cache manager
  */
 export interface BasicCacheConfig {
 	maxSize?: number;
@@ -38,7 +34,7 @@ export interface BasicCacheConfig {
 }
 
 /**
- * Basic file cache entry for legacy compatibility (from system.ts)
+ * Basic file cache entry for legacy compatibility
  */
 export interface FileCache {
 	content: string;

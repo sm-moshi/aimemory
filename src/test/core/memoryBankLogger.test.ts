@@ -1,17 +1,17 @@
+import { standardAfterEach, standardBeforeEach } from "@test-utils/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	MemoryBankLoggerFactory,
-	createStderrLogger,
-} from "../../infrastructure/logging/memory-bank-logger.js";
+import { MemoryBankLoggerFactory, createStderrLogger } from "../../utils/common/generic-logger.js";
 
 describe("MemoryBankLogger", () => {
 	let stderrSpy: any;
 
 	beforeEach(() => {
+		standardBeforeEach();
 		stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
 	});
 
 	afterEach(() => {
+		standardAfterEach();
 		stderrSpy.mockRestore();
 	});
 

@@ -2,45 +2,38 @@ import * as crypto from "node:crypto";
 import * as fsPromises from "node:fs/promises";
 import * as http from "node:http";
 import * as path from "node:path";
+import { getCursorMemoryBankRulesFile } from "@/cursor/rules";
+import type { CursorRulesService } from "@/cursor/rules-service";
+import type { CursorMCPConfig, MCPServerConfig } from "@/types/config";
+import type { MCPServerInterface, MemoryBankFile } from "@/types/index";
+import { LogLevel, type Logger } from "@/utils/vscode/vscode-logger";
 import * as vscode from "vscode";
-import type { VSCodeMemoryBankService } from "../core/vsCodeMemoryBankService.js";
-import { LogLevel, type Logger } from "../infrastructure/logging/vscode-logger.js";
-import type { CursorRulesService } from "../services/cursor/rules-service.js";
-import { getCursorMemoryBankRulesFile } from "../services/cursor/rules.js";
-import type { CursorMCPConfig, MCPServerConfig } from "../types/config.js";
-import type { MCPServerInterface, MemoryBankFile } from "../types/index.js";
 import type {
 	ServerAlreadyRunningMessage,
 	WebviewLogMessage,
 	WebviewToExtensionMessage,
 } from "./src/types/messages.js";
 
-const SELECT_FOLDER_COMMAND = "aimemory.selectWPFolder";
+const _SELECT_FOLDER_COMMAND = "aimemory.selectWPFolder";
+const _WEBVIEW_ASSETS_PATH = "dist/webview";
 
-/**
- * Extract port number from a URL string
- */
-function extractPortFromUrl(url: string): number | null {
-	const regex = /:(\d+)(?:\/|$)/;
-	const match = regex.exec(url);
-	return match?.[1] ? Number(match[1]) : null;
-}
+// TODO: Future utility functions for port extraction
+// function ExtractPortFromUrl(url: string): number | null {
+// 	const regex = /:(\d+)(?:\/|$)/;
+// 	const match = regex.exec(url);
+// 	return match?.[1] ? Number(match[1]) : null;
+// }
 
-/**
- * Extract ports from server arguments array
- */
-function extractPortsFromArgs(args: unknown[]): number[] {
-	const ports: number[] = [];
-
-	for (const arg of args) {
-		const port = Number(arg);
-		if (!Number.isNaN(port) && port > 1024 && port < 65536) {
-			ports.push(port);
-		}
-	}
-
-	return ports;
-}
+// function ExtractPortsFromArgs(args: unknown[]): number[] {
+// 	const ports: number[] = [];
+// 	for (const arg of args) {
+// 		const port = Number(arg);
+// 		if (!Number.isNaN(port) && port > 1024 && port < 65536) {
+// 			ports.push(port);
+// 		}
+// 	}
+// 	return ports;
+// }
 
 /**
  * Extract ports from a single server configuration
@@ -62,7 +55,7 @@ function extractPortsFromServer(server: MCPServerConfig): number[] {
 }
 
 // Utility to extract MCP server ports from .cursor/mcp.json
-async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
+async function getMcpPortsFromConfig(workspaceRoot: string): Promise<number[]> {
 	try {
 		const configPath = path.join(workspaceRoot, ".cursor", "mcp.json");
 		const configRaw = await fsPromises.readFile(configPath, "utf-8");
@@ -88,7 +81,7 @@ async function getMCPPortsFromConfig(workspaceRoot: string): Promise<number[]> {
 export class WebviewManager {
 	private panel: vscode.WebviewPanel | undefined;
 	private readonly extensionUri: vscode.Uri;
-	private readonly memoryBankService: VSCodeMemoryBankService;
+	private readonly memoryBankService: MemoryBankServiceCore;
 	private readonly cursorRulesService: CursorRulesService;
 	private readonly logger: Logger;
 	// private readonly webviewPanelManager?: WebviewPanelManager; // Commented out as type is not available
@@ -104,7 +97,7 @@ export class WebviewManager {
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly mcpServer: MCPServerInterface,
-		memoryBankService: VSCodeMemoryBankService,
+		memoryBankService: MemoryBankServiceCore,
 		cursorRulesService: CursorRulesService,
 		mcpAdapter: MCPServerInterface,
 		logger: Logger,
@@ -127,7 +120,7 @@ export class WebviewManager {
 	// Placeholder method to satisfy linter, actual implementation needed separately.
 	private async refreshAllData(): Promise<void> {
 		this.logger.info("WebviewManager.refreshAllData called (placeholder)");
-		// Implement data refreshing logic here.
+		// TODO: Implement data refreshing logic here.
 		// This would involve fetching current statuses (MCP, MemoryBank, Rules)
 		// and posting them to the webview.
 		// Example calls (if methods exist and are appropriate):
@@ -140,12 +133,12 @@ export class WebviewManager {
 
 	// Checks if an MCP server is already running on a specific port
 	private async checkServerHealth(port: number): Promise<boolean> {
-		return new Promise<boolean>((resolve) => {
-			const request = http.get(`http://localhost:${port}/health`, (res) => {
+		return new Promise<boolean>(resolve => {
+			const request = http.get(`http://localhost:${port}/health`, res => {
 				let data = "";
 
 				// A chunk of data has been received
-				res.on("data", (chunk) => {
+				res.on("data", chunk => {
 					data += chunk;
 				});
 
@@ -168,7 +161,7 @@ export class WebviewManager {
 				});
 			});
 
-			request.on("error", (error) => {
+			request.on("error", error => {
 				console.log(`No server running on port ${port}: ${error.message}`);
 				resolve(false);
 			});
@@ -186,7 +179,7 @@ export class WebviewManager {
 	private async checkForRunningServers() {
 		// Try to get ports from .cursor/mcp.json, fallback to defaults
 		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
-		let portsToCheck = await getMCPPortsFromConfig(workspaceRoot);
+		let portsToCheck = await getMcpPortsFromConfig(workspaceRoot);
 		if (!portsToCheck.length) {
 			// Fallback to default ports if config not found or empty
 			portsToCheck = [7331, 7332]; // Same as DEFAULT_MCP_PORT and ALTERNATIVE_MCP_PORT
@@ -311,15 +304,9 @@ export class WebviewManager {
 	}
 
 	private async handleGetRulesStatus() {
-		if (!this.panel) {
-			return;
-		}
-
-		// Check if Cursor rules file exists in workspace
 		const workspaceFolders = vscode.workspace.workspaceFolders;
-		console.log("Getting rules status for workspace", workspaceFolders);
-		if (!workspaceFolders) {
-			this.panel.webview.postMessage({
+		if (!workspaceFolders || workspaceFolders.length === 0) {
+			this.panel?.webview.postMessage({
 				type: "rulesStatus",
 				initialized: false,
 			});
@@ -346,7 +333,7 @@ export class WebviewManager {
 
 		console.log("Sending rules status:", initialized);
 		// Send status to webview
-		this.panel.webview.postMessage({
+		this.panel?.webview.postMessage({
 			type: "rulesStatus",
 			initialized,
 		});
@@ -422,7 +409,9 @@ export class WebviewManager {
 	 * Perform the actual rules file reset operation
 	 */
 	private async performRulesReset(): Promise<{ success: boolean; error?: string }> {
-		const rulesContent = await getCursorMemoryBankRulesFile();
+		// Access FileOperationManager from the memory bank service
+		const fileOperationManager = this.memoryBankService.getFileOperationManager();
+		const rulesContent = await getCursorMemoryBankRulesFile(fileOperationManager);
 		await this.cursorRulesService.createRulesFile("memory-bank.mdc", rulesContent);
 		vscode.window.showInformationMessage("Memory bank rules have been reset.");
 		this.logger.info("Memory bank rules reset successfully.");

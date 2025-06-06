@@ -3,14 +3,6 @@ description: Cursor Memory Bank Rules
 globs:
 alwaysApply: true
 ---
-
----
-description: Cursor Memory Bank Rules for the AI Memory Extension
-alwaysApply: true
-globs:
-    - "memory-bank/**/*.md"
----
-
 # Cursor Memory Bank Rules (AI Memory v0.6.0+)
 
 Welcome to the AI Memory system. This file acts as the blueprint for how Cursor understands and works with your Memory Bank. It will be transformed automatically into `.cursor/rules/memory-bank.mdc` by the AI Memory extension on first initialization.
@@ -117,7 +109,7 @@ flowchart TD
 
 To ensure robust, up-to-date, and best-practice solutions when working with the memory bank or extension, the AI agent should thoughtfully use all available MCP tools in this environment, including but not limited to:
 
-- **sequentialthinking**: For step-by-step, chain-of-thought reasoning, planning, and hypothesis validation. Use this tool to break down complex problems, validate plans, and check for missed edge cases.
+- **clear-thought**: For step-by-step, chain-of-thought reasoning, planning, and hypothesis validation. Use this tool to break down complex problems, validate plans, and check for missed edge cases.
 - **context7**, **codex-keeper** and/or **docshunter**: For accessing official documentation, best practices, code examples, and checking for deprecations or usage patterns in libraries and frameworks.
 
 ### Guidelines
@@ -138,4 +130,4 @@ This file will be read by `cursor-rules-service.ts` and compiled into a `.mdc` f
 
 Cursor agents should regularly check the .cursor/rules/ directory for other rulesets that may affect project behaviour.
 
-> _Last updated: 2025-05-30_
+>_Last updated: 2025-05-27 🐹_

@@ -256,7 +256,7 @@ pnpm run lint:fix && pnpm test && pnpm run build
 **Documentation:**
 
 - [Implementation Details](docs/wip/IMPLEMENTATION.md) -> not yet public
-- [Phase 1 Architecture](docs/v1.0/PHASE_1_CORE_ARCHITECTURE.md) -> not yet public
+- [Phase 1 Architecture](docs/v1.0/done/PHASE_1_CORE_ARCHITECTURE.md) -> not yet public
 - [GitHub Best Practices](docs/devs/github-repo-guide.md) -> not yet public
 
 **Support:**

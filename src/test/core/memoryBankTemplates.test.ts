@@ -1,6 +1,6 @@
+import { getTemplateForFileType } from "@/shared/templates/memory-bank-templates.js";
 import { describe, expect, it } from "vitest";
-import { getTemplateForFileType } from "../../services/templates/memory-bank-templates.js";
-import { MemoryBankFileType } from "../../types/types.js";
+import { MemoryBankFileType } from "../../types/index.js";
 
 // Unit tests for getTemplateForFileType
 

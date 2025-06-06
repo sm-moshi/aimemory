@@ -2,3 +2,4 @@ archive/
 docs/maybe/
 .vscode-test
 node_modules/
+src/webview/node_modules/
