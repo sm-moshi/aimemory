@@ -8,7 +8,7 @@ import {
 	MEMORY_BANK_UPDATE_CONFIRMATION_PROMPT,
 	MEMORY_BANK_USAGE_TIP_PROMPT,
 	REVIEW_AND_UPDATE_MEMORY_BANK_PROMPT,
-} from "./mcp-prompts.js";
+} from "./mcp-prompts";
 
 export function registerMemoryBankPrompts(server: McpServer): void {
 	// Simple prompts without parameters

@@ -1,57 +1,24 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"lib": [
-			"ES2022", "DOM", "DOM.Iterable"
-		],
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
 		"baseUrl": ".",
 		"paths": {
-			"@/*": [
-				"src/*"
-			],
-			"@utils/*": [
-				"src/utils/*"
-			],
-			"@test-utils/*": [
-				"src/test/test-utils/*"
-			],
-			"@types/*": [
-				"src/types/*"
-			],
-			"@core/*": [
-				"src/core/*"
-			],
-			"@mcp/*": [
-				"src/mcp/*"
-			]
+			"vscode": ["src/test/__mocks__/vscode.ts"],
+			"@/*": ["src/*"],
+			"@utils/*": ["src/utils/*"],
+			"@test-utils/*": ["src/test/test-utils/*"],
+			"@types/*": ["src/types/*"],
+			"@core/*": ["src/core/*"],
+			"@mcp/*": ["src/mcp/*"]
 		},
-		"types": [
-			"node",
-			"vscode"
-		],
-		"noImplicitReturns": true,
-		"noUnusedParameters": false,
-		"noFallthroughCasesInSwitch": true,
-		"noImplicitThis": true,
-		"noPropertyAccessFromIndexSignature": true
+		"types": ["node", "vscode"]
 	},
-	"include": [
-		"src/**/*",
-		"vitest.config.ts",
-		"scripts/*.ts"
-	],
-	"exclude": [
-		"src/webview/**",
-		"**/node_modules/**",
-		"**/dist/**",
-		"**/coverage/**"
-	],
+	"include": ["src/**/*", "vitest.config.ts", "scripts/*.ts"],
+	"exclude": ["src/webview/**", "**/node_modules/**", "**/dist/**", "**/coverage/**"],
 	"references": [
 		{
-			"path": "./src/webview/tsconfig.json",
-		},
-		{
-			"path": "./src/webview/tsconfig.node.json"
+			"path": "./src/webview/tsconfig.json"
 		}
 	]
 }

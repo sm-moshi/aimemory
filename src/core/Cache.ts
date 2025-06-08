@@ -1,19 +1,32 @@
+/**
+ * @file src/core/cache.ts
+ * @description Provides an enhanced cache manager with LRU eviction and performance monitoring.
+ *
+ * This file contains the `CacheManager` class, which handles in-memory caching
+ * of file contents to improve performance. It also includes compatibility
+ * adapters to bridge legacy cache interfaces with the modern implementation.
+ */
+
 import type { Stats } from "node:fs";
-import type { Logger } from "@/types/logging.js";
+import type { Logger } from "../lib/types/core";
 import type {
 	CacheEntry,
 	BasicCacheConfig as CacheManagerConfig,
 	CacheStats,
 	FileCache,
 	LegacyCacheStats,
-} from "@/types/system.js";
-import { formatBytes } from "@utils/common/format-helpers.js";
+} from "../lib/types/system";
+import { formatBytes } from "../lib/utils";
 
 /**
  * Enhanced CacheManager with LRU eviction, bounded capacity, and performance monitoring.
  * Implements proper resource management for file caching operations.
  */
 export class CacheManager {
+	// =================================================================
+	// Section: Properties
+	// =================================================================
+
 	private readonly maxSize: number;
 	private readonly maxAge: number;
 	private readonly enableMetrics: boolean;
@@ -32,6 +45,10 @@ export class CacheManager {
 		currentSize: 0,
 	};
 
+	// =================================================================
+	// Section: Constructor
+	// =================================================================
+
 	constructor(
 		private readonly logger: Logger,
 		config?: CacheManagerConfig,
@@ -41,10 +58,12 @@ export class CacheManager {
 		this.enableMetrics = config?.enableMetrics ?? true;
 		this.stats.maxSize = this.maxSize;
 
-		this.logger.debug(
-			`CacheManager initialized with maxSize: ${this.maxSize}, maxAge: ${this.maxAge}ms`,
-		);
+		this.logger.debug(`CacheManager initialized with maxSize: ${this.maxSize}, maxAge: ${this.maxAge}ms`);
 	}
+
+	// =================================================================
+	// Section: Public API
+	// =================================================================
 
 	/**
 	 * Gets cached content if available and up-to-date
@@ -206,6 +225,10 @@ export class CacheManager {
 		};
 	}
 
+	// =================================================================
+	// Section: Internal Logic & Private Helpers
+	// =================================================================
+
 	/**
 	 * Private: Update access tracking for LRU
 	 */
@@ -270,9 +293,9 @@ export class CacheManager {
 	}
 }
 
-// ============================================================================
-// Legacy Compatibility Adapters
-// ============================================================================
+// =================================================================
+// Section: Legacy Compatibility Adapters
+// =================================================================
 
 /**
  * Adapter classes for performance layer integration
@@ -371,10 +394,7 @@ export class LegacyCacheAdapter implements Map<string, FileCache> {
 		return this.entries();
 	}
 
-	forEach(
-		callbackfn: (value: FileCache, key: string, map: Map<string, FileCache>) => void,
-		thisArg?: unknown,
-	): void {
+	forEach(callbackfn: (value: FileCache, key: string, map: Map<string, FileCache>) => void, thisArg?: unknown): void {
 		for (const [key, value] of this.entries()) {
 			callbackfn.call(thisArg, value, key, this);
 		}

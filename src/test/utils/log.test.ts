@@ -1,6 +1,6 @@
-import { type TestLogger, createTestLogger } from "@/utils/logging.js";
-import { standardAfterEach, standardBeforeEach } from "@test-utils/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type TestLogger, createTestLogger } from "../../utils/logging";
+import { standardAfterEach, standardBeforeEach } from "../test-utils/index";
 
 describe("Centralized Logging System", () => {
 	let testLogger: TestLogger;

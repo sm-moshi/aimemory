@@ -3,18 +3,12 @@
  * Verifies functionality of shared file operation utilities
  */
 
-import type { FileOperationManager } from "@/core/index.js";
-import {
-	validateMemoryBankDirectory,
-	validateSingleFile,
-} from "@/shared/validation/file-validation.js";
-import {
-	createMockFileOperationManager,
-	createMockLogger,
-} from "@/test/__mocks__/test-utilities.js";
-import { MemoryBankFileType } from "@/types/core.js";
-import type { FileOperationContext } from "@/types/core.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { FileOperationManager } from "../../core/index";
+import { validateMemoryBankDirectory, validateSingleFile } from "../../shared/validation/file-validation";
+import { MemoryBankFileType } from "../../types/core";
+import type { FileOperationContext } from "../../types/core";
+import { createMockFileOperationManager, createMockLogger } from "../__mocks__/test-utilities";
 
 // Mock the fs module at the top level with default export
 vi.mock("node:fs/promises", () => ({

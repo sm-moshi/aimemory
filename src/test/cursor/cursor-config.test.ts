@@ -1,30 +1,30 @@
 /**
- * Tests for Cursor Config Helpers
- * Verifies functionality of cursor config management utilities
+ * Tests for Cursor Config Helpers Verifies functionality of cursor config management utilities
  */
 
-import * as os from "node:os";
-import type { FileOperationManager } from "@/core/index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("node:os", () => ({
+	homedir: () => "/mock/home",
+}));
+
+import type { FileOperationManager } from "../../core";
 import {
 	compareServerConfigs,
 	createAIMemoryServerConfig,
 	ensureCursorDirectory,
 	readCursorMCPConfig,
 	writeCursorMCPConfig,
-} from "@/cursor/config-helpers.js";
-import {
-	createMockFileOperationManager,
-	createMockLogger,
-} from "@/test/__mocks__/test-utilities.js";
-import type { CursorMCPConfig, CursorMCPServerConfig } from "@/types/config.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+} from "../../cursor/config-helpers";
+import type { CursorMCPConfig, CursorMCPServerConfig } from "../../types/config";
+import { createMockFileOperationManager, createMockLogger } from "../test-utils";
+
 describe("Cursor Config Helpers", () => {
 	let mockLoggerInstance: any;
 
 	beforeEach(() => {
 		// Use centralized mock logger
 		mockLoggerInstance = createMockLogger();
-		vi.spyOn(os, "homedir").mockReturnValue("/mock/home");
 	});
 
 	afterEach(() => {
@@ -37,7 +37,7 @@ describe("Cursor Config Helpers", () => {
 			expect(result).toEqual({
 				name: "AI Memory",
 				command: "node",
-				args: ["/workspace/path/dist/mcp-server.js", "--workspace", "/workspace/path"],
+				args: ["/workspace/path/dist/mcp-server", "--workspace", "/workspace/path"],
 				cwd: "/workspace/path",
 			});
 		});
@@ -47,11 +47,7 @@ describe("Cursor Config Helpers", () => {
 			expect(result).toEqual({
 				name: "AI Memory",
 				command: "node",
-				args: [
-					"C:\\workspace\\path/dist/mcp-server.js",
-					"--workspace",
-					"C:\\workspace\\path",
-				],
+				args: ["C:\\workspace\\path/dist/mcp-server", "--workspace", "C:\\workspace\\path"],
 				cwd: "C:\\workspace\\path",
 			});
 		});
@@ -60,19 +56,19 @@ describe("Cursor Config Helpers", () => {
 			const config1 = {
 				name: "AI Memory",
 				command: "node",
-				args: ["old-path.js"],
+				args: ["old-path"],
 				cwd: "/old/path",
 			};
 			const config2 = {
 				name: "AI Memory",
 				command: "node",
-				args: ["new-path.js"],
+				args: ["new-path"],
 				cwd: "/new/path",
 			};
 			const result = compareServerConfigs(config1, config2);
 			expect(result.matches).toBe(false);
 			expect(result.differences).toContain("cwd: /old/path → /new/path");
-			expect(result.differences).toContain('args: ["old-path.js"] → ["new-path.js"]');
+			expect(result.differences).toContain('args: ["old-path"] → ["new-path"]');
 		});
 	});
 
@@ -80,7 +76,7 @@ describe("Cursor Config Helpers", () => {
 		const baseConfig: CursorMCPServerConfig = {
 			name: "AI Memory",
 			command: "node",
-			args: ["/ext/dist/index.cjs", "/workspace"],
+			args: ["/ext/dist/index.", "/workspace"],
 			cwd: "/ext",
 		};
 
@@ -145,12 +141,9 @@ describe("Cursor Config Helpers", () => {
 			const result = await ensureCursorDirectory(mockFileOperationManager);
 
 			expect(result).toBe("/mock/home/.cursor");
-			expect(mockFileOperationManager.mkdirWithRetry).toHaveBeenCalledWith(
-				"/mock/home/.cursor",
-				{
-					recursive: true,
-				},
-			);
+			expect(mockFileOperationManager.mkdirWithRetry).toHaveBeenCalledWith("/mock/home/.cursor", {
+				recursive: true,
+			});
 		});
 
 		it("should handle EEXIST error gracefully", async () => {
@@ -165,19 +158,14 @@ describe("Cursor Config Helpers", () => {
 		});
 
 		it("should log unexpected errors", async () => {
-			const mockFileOperationManager =
-				createMockFileOperationManager() as FileOperationManager;
+			const mockFileOperationManager = createMockFileOperationManager() as FileOperationManager;
 			const loggerErrorSpy = vi.spyOn(mockLoggerInstance, "error");
-			vi.spyOn(mockFileOperationManager, "mkdirWithRetry").mockRejectedValue(
-				new Error("Permission denied"),
-			);
+			vi.spyOn(mockFileOperationManager, "mkdirWithRetry").mockRejectedValue(new Error("Permission denied"));
 
 			await ensureCursorDirectory(mockFileOperationManager, mockLoggerInstance);
 
 			expect(loggerErrorSpy).toHaveBeenCalledWith(
-				expect.stringContaining(
-					"Failed to create directory /mock/home/.cursor: Permission denied",
-				),
+				expect.stringContaining("Failed to create directory /mock/home/.cursor: Permission denied"),
 			);
 		});
 	});
@@ -197,9 +185,7 @@ describe("Cursor Config Helpers", () => {
 			const result = await readCursorMCPConfig(mockFileOperationManager);
 
 			expect(result).toEqual(mockConfig);
-			expect(mockFileOperationManager.readFileWithRetry).toHaveBeenCalledWith(
-				"/mock/home/.cursor/mcp.json",
-			);
+			expect(mockFileOperationManager.readFileWithRetry).toHaveBeenCalledWith("/mock/home/.cursor/mcp.json");
 		});
 
 		it("should handle missing config file", async () => {

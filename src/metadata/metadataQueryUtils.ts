@@ -5,22 +5,13 @@
  * Breaks down complex filtering logic into smaller, testable functions.
  */
 
-import type {
-	MetadataFilter,
-	MetadataIndexEntry,
-	SortField,
-	SortOrder,
-	ValidationStatus,
-} from "../types/index.js";
-import { hasAllTags, hasAnyTags, isDateInRange } from "./indexUtils.js";
+import type { MetadataFilter, MetadataIndexEntry, SortField, SortOrder, ValidationStatus } from "../types/index";
+import { hasAllTags, hasAnyTags, isDateInRange } from "./indexUtils";
 
 /**x
  * Apply all filters from a MetadataFilter object to entries
  */
-export function applyMetadataFilters(
-	entries: MetadataIndexEntry[],
-	filter: MetadataFilter,
-): MetadataIndexEntry[] {
+export function applyMetadataFilters(entries: MetadataIndexEntry[], filter: MetadataFilter): MetadataIndexEntry[] {
 	return entries.filter(entry => matchesAllCriteria(entry, filter));
 }
 
@@ -55,10 +46,7 @@ function matchesTags(entry: MetadataIndexEntry, tags?: string[]): boolean {
 /**
  * Filter by validation status
  */
-export function matchesValidationStatus(
-	entry: MetadataIndexEntry,
-	validationStatus?: ValidationStatus,
-): boolean {
+export function matchesValidationStatus(entry: MetadataIndexEntry, validationStatus?: ValidationStatus): boolean {
 	return !validationStatus || entry.validationStatus === validationStatus;
 }
 
@@ -116,10 +104,7 @@ function matchesLineCountRange(entry: MetadataIndexEntry, filter: MetadataFilter
 /**
  * Apply text search to entries
  */
-export function applyTextSearch(
-	entries: MetadataIndexEntry[],
-	query: string,
-): MetadataIndexEntry[] {
+export function applyTextSearch(entries: MetadataIndexEntry[], query: string): MetadataIndexEntry[] {
 	const queryLower = query.toLowerCase().trim();
 	if (!queryLower) return entries;
 
@@ -161,20 +146,14 @@ export function findByType(entries: MetadataIndexEntry[], type: string): Metadat
 /**
  * Find entries by validation status (uses matchesValidationStatus from this file)
  */
-export function findByValidationStatus(
-	entries: MetadataIndexEntry[],
-	status: ValidationStatus,
-): MetadataIndexEntry[] {
+export function findByValidationStatus(entries: MetadataIndexEntry[], status: ValidationStatus): MetadataIndexEntry[] {
 	return entries.filter(entry => matchesValidationStatus(entry, status));
 }
 
 /**
  * Find recently updated entries
  */
-export function findRecentlyUpdated(
-	entries: MetadataIndexEntry[],
-	limit = 10,
-): MetadataIndexEntry[] {
+export function findRecentlyUpdated(entries: MetadataIndexEntry[], limit = 10): MetadataIndexEntry[] {
 	const sorted = sortEntries(entries, "updated", "desc"); // sortEntries comes from indexUtils.ts
 	return sorted.slice(0, limit);
 }
@@ -307,10 +286,7 @@ export function calculateRelevanceScore(query: string, searchableText: string): 
  * Rank search results by relevance to the query.
  * Sorts entries by relevance score in descending order.
  */
-export function rankSearchResults(
-	query: string,
-	entries: MetadataIndexEntry[],
-): MetadataIndexEntry[] {
+export function rankSearchResults(query: string, entries: MetadataIndexEntry[]): MetadataIndexEntry[] {
 	if (!query) return entries;
 
 	const scored = entries.map(entry => ({

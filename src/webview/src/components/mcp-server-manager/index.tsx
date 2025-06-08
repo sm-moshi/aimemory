@@ -142,9 +142,7 @@ export function MCPServerManager(): ReactNode {
 					{port ? (
 						<>
 							Server running on{" "}
-							<span className="font-mono text-blue-300">
-								http://localhost:{port}/sse
-							</span>
+							<span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
 							<br />
 							Your Cursor MCP config has been automatically updated.
 							<br />
@@ -152,13 +150,11 @@ export function MCPServerManager(): ReactNode {
 						</>
 					) : (
 						<>
-							Server running in{" "}
-							<span className="font-mono text-green-300">STDIO</span> mode
+							Server running in <span className="font-mono text-green-300">STDIO</span> mode
 							<br />
 							Ready for Cursor MCP integration via stdio transport.
 							<br />
-							Check your <span className="font-mono">.cursor/mcp.json</span>{" "}
-							configuration.
+							Check your <span className="font-mono">.cursor/mcp.json</span> configuration.
 						</>
 					)}
 				</p>

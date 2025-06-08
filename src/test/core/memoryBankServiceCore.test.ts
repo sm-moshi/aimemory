@@ -1,9 +1,10 @@
 import * as nodePath from "node:path";
-import { StreamingManager } from "@/performance/StreamingManager.js";
-import type { Logger, StreamingManagerConfig } from "@/types/index.js";
-import type { CacheManager } from "@core/Cache.js";
-import type { FileOperationManager } from "@core/FileOperationManager.js";
-import { MemoryBankServiceCore } from "@core/memoryBankServiceCore.js";
+import { afterEach, beforeEach, describe, expect, it, test } from "vitest";
+import type { CacheManager } from "../../core/Cache";
+import type { FileOperationManager } from "../../core/FileOperationManager";
+import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore";
+import { StreamingManager } from "../../performance/StreamingManager";
+import type { Logger, StreamingManagerConfig } from "../../types";
 import {
 	createMockCacheManager,
 	createMockFileOperationManager,
@@ -11,22 +12,16 @@ import {
 	getPath as getSharedPath,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
-import { afterEach, beforeEach, describe, expect, it, test } from "vitest";
+} from "../test-utils";
 
 const createBasicDependencies = async (mockAllowedRoot: string) => {
 	const logger = createMockLogger();
 	const mockFom = createMockFileOperationManager();
 	const mockCacheManager = createMockCacheManager();
 
-	const streamingManager = new StreamingManager(
-		logger,
-		mockFom as unknown as FileOperationManager,
-		mockAllowedRoot,
-		{
-			sizeThreshold: 50,
-		} as StreamingManagerConfig,
-	);
+	const streamingManager = new StreamingManager(logger, mockFom as unknown as FileOperationManager, mockAllowedRoot, {
+		sizeThreshold: 50,
+	} as StreamingManagerConfig);
 	return {
 		logger,
 		fileOperationManager: mockFom,

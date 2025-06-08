@@ -1,12 +1,23 @@
-import { standardBeforeEach } from "@test-utils/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { standardBeforeEach } from "../test-utils/index";
 
-vi.mock("../../mcp/coreMemoryBankMCP.js", () => ({
+vi.mock("commander", () => ({
+	program: {
+		name: vi.fn().mockReturnThis(),
+		description: vi.fn().mockReturnThis(),
+		version: vi.fn().mockReturnThis(),
+		option: vi.fn().mockReturnThis(),
+		parse: vi.fn().mockReturnThis(),
+		opts: vi.fn().mockReturnValue({}),
+	},
+}));
+
+vi.mock("../../mcp/coreMemoryBankMCP", () => ({
 	CoreMemoryBankMCP: vi.fn().mockImplementation(() => ({
 		getServer: vi.fn().mockReturnValue({ connect: vi.fn().mockResolvedValue(undefined) }),
 	})),
 }));
-vi.mock("@modelcontextprotocol/sdk/server/stdio.js", () => ({
+vi.mock("@modelcontextprotocol/sdk/server/stdio", () => ({
 	StdioServerTransport: vi.fn().mockImplementation(() => ({})),
 }));
 
@@ -16,7 +27,7 @@ describe("cli main", () => {
 	});
 
 	it("creates CoreMemoryBankMCP and connects transport", async () => {
-		const cliModule = await import("@/app/cli/index.js");
+		const cliModule = await import("../../app/cli/index");
 		const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue("/mock/path");
 		const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
 			throw new Error("exit");

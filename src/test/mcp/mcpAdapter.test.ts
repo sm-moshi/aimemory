@@ -1,15 +1,11 @@
-import { MemoryBankServiceCore } from "@/core/memoryBankServiceCore.js";
-import { MemoryBankMCPAdapter } from "@/mcp/mcpAdapter.js";
-import {
-	createMockExtensionContext,
-	createMockLogger,
-	mockCommands,
-	mockWindow,
-} from "@test-utils/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ExtensionContext } from "vscode";
 
-vi.mock("@/core/memoryBankServiceCore.js", () => ({
+import type { ExtensionContext } from "vscode";
+import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore";
+import { MemoryBankMCPAdapter } from "../../mcp/mcpAdapter";
+import { createMockExtensionContext, createMockLogger, mockCommands, mockWindow } from "../test-utils";
+
+vi.mock("../../core/memoryBankServiceCore", () => ({
 	MemoryBankServiceCore: vi.fn(() => ({
 		getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true }),
 		initializeFolders: vi.fn().mockResolvedValue({ success: true }),
@@ -30,13 +26,7 @@ describe("MemoryBankMCPAdapter", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockContext = createMockExtensionContext();
-		mockMemoryBankService = new MemoryBankServiceCore(
-			"",
-			{} as any,
-			{} as any,
-			{} as any,
-			{} as any,
-		);
+		mockMemoryBankService = new MemoryBankServiceCore("", {} as any, {} as any, {} as any, {} as any);
 		mockLogger = createMockLogger();
 		adapter = new MemoryBankMCPAdapter(mockContext, mockMemoryBankService, mockLogger as any);
 	});
@@ -52,18 +42,14 @@ describe("MemoryBankMCPAdapter", () => {
 				"ai-memory.mcp-server-status",
 				expect.any(Function),
 			);
-			expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
-				"AI Memory MCP Server Adapter started.",
-			);
+			expect(mockWindow.showInformationMessage).toHaveBeenCalledWith("AI Memory MCP Server Adapter started.");
 		});
 	});
 
 	describe("stop", () => {
 		it("should show an info message when stopped", () => {
 			adapter.stop();
-			expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
-				"AI Memory MCP Server Adapter stopped.",
-			);
+			expect(mockWindow.showInformationMessage).toHaveBeenCalledWith("AI Memory MCP Server Adapter stopped.");
 		});
 	});
 

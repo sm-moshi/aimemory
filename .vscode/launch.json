@@ -165,11 +165,7 @@
 		},
 		{
 			"name": "Full Development Debug",
-			"configurations": [
-				"Launch Extension",
-				"Debug Webview (Chrome)",
-				"Debug Unit Tests (Vitest)"
-			],
+			"configurations": ["Launch Extension", "Debug Webview (Chrome)", "Debug Unit Tests (Vitest)"],
 			"preLaunchTask": "dev:parallel",
 			"stopAll": true
 		}

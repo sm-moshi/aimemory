@@ -2,19 +2,19 @@ import * as crypto from "node:crypto";
 import * as fsPromises from "node:fs/promises";
 import * as http from "node:http";
 import * as path from "node:path";
-import type { MemoryBankServiceCore } from "@/core/memoryBankServiceCore.js";
-import { getCursorMemoryBankRulesFile } from "@/cursor/rules";
-import type { CursorRulesService } from "@/cursor/rules-service";
-import type { MemoryBankMCPAdapter } from "@/mcp/mcpAdapter.js";
-import type { CursorMCPConfig, CursorMCPServerConfig } from "@/types/config";
-import type { MCPServerInterface, MemoryBankFile } from "@/types/index";
-import { LogLevel, type Logger } from "@/utils/vscode/vscode-logger";
+import * as vscode from "vscode";
+import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore";
+import { getCursorMemoryBankRulesFile } from "../../cursor/rules";
+import type { CursorRulesService } from "../../cursor/rules-service";
+import type { MemoryBankMCPAdapter } from "../../mcp/mcpAdapter";
+import type { CursorMCPConfig, CursorMCPServerConfig } from "../../types/config";
+import type { MCPServerInterface, MemoryBankFile } from "../../types/index";
+import type { Logger } from "../../types/logging";
 import type {
 	ServerAlreadyRunningMessage,
 	WebviewLogMessage,
 	WebviewToExtensionMessage,
-} from "@/webview/src/types/messages.js";
-import * as vscode from "vscode";
+} from "../../webview/src/types/messages";
 
 const _SELECT_FOLDER_COMMAND = "aimemory.selectWPFolder";
 const _WEBVIEW_ASSETS_PATH = "dist/webview";
@@ -113,9 +113,7 @@ export class WebviewManager {
 	}
 
 	private setupCommands() {
-		this.disposables.push(
-			vscode.commands.registerCommand("aimemory.refreshWebview", () => this.refreshAllData()),
-		);
+		this.disposables.push(vscode.commands.registerCommand("aimemory.refreshWebview", () => this.refreshAllData()));
 	}
 
 	// Placeholder method to satisfy linter, actual implementation needed separately.
@@ -311,7 +309,7 @@ export class WebviewManager {
 		// Clean up resources when the panel is closed
 		this.panel.onDidDispose(
 			() => {
-				this.panel = undefined;
+				this.onPanelDispose();
 			},
 			null,
 			this.context.subscriptions,
@@ -334,10 +332,7 @@ export class WebviewManager {
 			return;
 		}
 
-		const cursorRulesPath = path.join(
-			workspaceFolders[0]?.uri.fsPath ?? "",
-			".cursor/rules/memory-bank.mdc",
-		);
+		const cursorRulesPath = path.join(workspaceFolders[0]?.uri.fsPath ?? "", ".cursor/rules/memory-bank.mdc");
 
 		let initialized = false;
 		try {
@@ -377,34 +372,26 @@ export class WebviewManager {
 	}
 
 	private async handleResetRules() {
-		if (!this.panel) {
+		if (!this.validateWorkspaceForReset()) {
 			return;
 		}
 
-		try {
-			if (!this.validateWorkspaceForReset()) {
-				return;
-			}
+		const result = await this.performRulesReset();
+		if (this.isUserCancelledOverwrite(result.error)) {
+			// User cancelled overwrite, not an error
+			vscode.window.showInformationMessage("Rules reset cancelled.");
+			return;
+		}
 
-			const resetResult = await this.performRulesReset();
-			this.sendResetResult(resetResult); // For the success case
-		} catch (error: unknown) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			let logMessage = `Error resetting rules: ${errorMessage}`;
-			let logLevelToUse = LogLevel.Error; // Renamed to avoid conflict with LogLevel enum itself
+		this.sendResetResult(result);
 
-			if (this.isUserCancelledOverwrite(error)) {
-				logMessage = `User cancelled rules overwrite: ${errorMessage}`;
-				logLevelToUse = LogLevel.Info;
-			}
-
-			this.logger.log(logLevelToUse, logMessage);
-
-			this.panel?.webview.postMessage({
-				type: "resetRulesResult",
-				success: false,
-				error: errorMessage, // Send the original error message to the webview
+		// Log and show error on failure
+		if (!result.success && result.error) {
+			this.logger.error("Error resetting memory bank rules", {
+				error: result.error,
+				operation: "handleResetRules",
 			});
+			vscode.window.showErrorMessage(`Error resetting memory bank rules: ${result.error}`);
 		}
 	}
 
@@ -480,7 +467,7 @@ export class WebviewManager {
 		const distPath = path.join(this.extensionUri.fsPath, "dist", "webview");
 
 		// Get paths to JS & CSS files
-		const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
+		const scriptPathOnDisk = path.join(distPath, "assets", "index");
 		const stylePathOnDisk = path.join(distPath, "assets", "index.css");
 
 		// Convert paths to webview URIs
@@ -597,10 +584,10 @@ export class WebviewManager {
 				transport: isStdioMode ? "stdio" : "http",
 			});
 
-			this.logger.info(
-				`MCP Server started successfully in ${isStdioMode ? "STDIO" : "HTTP"} mode`,
-				{ port: serverPort, transport: isStdioMode ? "stdio" : "http" },
-			);
+			this.logger.info(`MCP Server started successfully in ${isStdioMode ? "STDIO" : "HTTP"} mode`, {
+				port: serverPort,
+				transport: isStdioMode ? "stdio" : "http",
+			});
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			this.logger.error(`Failed to start MCP server: ${errorMessage}`);
@@ -614,23 +601,37 @@ export class WebviewManager {
 	}
 
 	private async handleStopMCPServer() {
-		try {
-			this.mcpServer.stop();
-			this.panel?.webview.postMessage({
-				type: "MCPServerStatus",
-				status: "stopped",
-			});
-
-			this.logger.info("MCP Server stopped successfully");
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			this.logger.error(`Failed to stop MCP server: ${errorMessage}`);
-		}
+		await this.mcpServer.stop();
+		this.sendCurrentMCPServerStatus();
 	}
 
 	private handleLogMessage(message: WebviewLogMessage) {
-		// Route webview log messages to the Output Channel via Logger
-		const level = message.level === "error" ? LogLevel.Error : LogLevel.Info;
-		this.logger.log(level, message.text, message.meta);
+		const { level, text, meta } = message;
+
+		switch (level) {
+			case "info":
+				this.logger.info(text, meta);
+				break;
+			case "error":
+				this.logger.error(text, meta);
+				break;
+			default: {
+				// biome-ignore lint/suspicious/noExplicitAny: To handle unexpected log levels
+				const exhaustiveCheck: any = level;
+				this.logger.warn(`Unknown log level from webview: ${exhaustiveCheck}`, {
+					text,
+					meta,
+				});
+				break;
+			}
+		}
+	}
+
+	private onPanelDispose() {
+		this.panel = undefined;
+		for (const d of this.disposables) {
+			d.dispose();
+		}
+		this.disposables.length = 0;
 	}
 }

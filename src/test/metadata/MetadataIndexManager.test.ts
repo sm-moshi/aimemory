@@ -1,4 +1,5 @@
-import { MetadataIndexManager } from "@/metadata/MetadataIndexManager.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MetadataIndexManager } from "../../metadata/MetadataIndexManager";
 import {
 	createMockCoreService,
 	createMockFileOperationManager,
@@ -6,11 +7,19 @@ import {
 	createMockMemoryBankFile,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+} from "../test-utils/index";
 
+import { readdir } from "node:fs/promises";
 // Use centralized mocks
-import { mockFsPromisesOperations } from "../__mocks__/node:fs/promises.js";
+import { mockFsPromisesOperations } from "../__mocks__/node:fs/promises";
+
+vi.mock("node:fs/promises", async () => {
+	const original = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+	return {
+		...original,
+		readdir: vi.fn(), // Mock readdir specifically
+	};
+});
 
 // =================== TEST SETUP ===================
 
@@ -58,10 +67,7 @@ afterEach(() => {
 
 // =================== HELPER FUNCTIONS ===================
 
-function expectBuildResult(
-	result: any,
-	expected: { processed: number; indexed: number; errored: number },
-) {
+function expectBuildResult(result: any, expected: { processed: number; indexed: number; errored: number }) {
 	expect(result.filesProcessed).toBe(expected.processed);
 	expect(result.filesIndexed).toBe(expected.indexed);
 	expect(result.filesErrored).toBe(expected.errored);
@@ -268,22 +274,16 @@ describe("MetadataIndexManager - Error Handling & Recovery", () => {
 		});
 
 		await expect(indexManager.initialize()).resolves.not.toThrow();
-		expect(mockLogger.warn).toHaveBeenCalledWith(
-			expect.stringContaining("Failed to load existing index"),
-		);
+		expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Failed to load existing index"));
 	});
 
 	it("should handle filesystem errors gracefully during buildIndex", async () => {
-		mockFsPromisesOperations.readdir.mockRejectedValueOnce(
-			new Error("Simulated readdir failure"),
-		);
+		mockFsPromisesOperations.readdir.mockRejectedValueOnce(new Error("Simulated readdir failure"));
 
 		const result = await indexManager.buildIndex();
 
 		expectBuildResult(result, { processed: 0, indexed: 0, errored: 0 });
-		expect(mockLogger.warn).toHaveBeenCalledWith(
-			expect.stringContaining("Failed to scan directory"),
-		);
+		expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Failed to scan directory"));
 	});
 
 	it("should handle filesystem errors gracefully when statWithRetry fails", async () => {
@@ -347,9 +347,7 @@ describe("MetadataIndexManager - Updates & Persistence", () => {
 			error: { code: "STAT_ERROR", message: "simulated stat error" },
 		});
 
-		await expect(indexManager.updateEntry(filePath)).rejects.toThrow(
-			"Failed to stat file: simulated stat error",
-		);
+		await expect(indexManager.updateEntry(filePath)).rejects.toThrow("Failed to stat file: simulated stat error");
 
 		expect(mockLogger.error).toHaveBeenCalledWith(
 			expect.stringContaining("Failed to update index entry: error-update.md"),
@@ -357,7 +355,6 @@ describe("MetadataIndexManager - Updates & Persistence", () => {
 	});
 
 	it("should save index after modifications", async () => {
-		const { readdir } = await import("node:fs/promises");
 		vi.mocked(readdir).mockResolvedValueOnce([
 			{ name: "persist-test.md", isFile: () => true, isDirectory: () => false } as any,
 		]);

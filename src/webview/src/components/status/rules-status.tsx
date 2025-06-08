@@ -38,9 +38,7 @@ export function RulesStatus(): ReactNode {
 						requestRulesStatus();
 					} else {
 						setFeedback(
-							message.error
-								? `Failed to reset rules: ${message.error}`
-								: "Failed to reset rules.",
+							message.error ? `Failed to reset rules: ${message.error}` : "Failed to reset rules.",
 						);
 					}
 					break;
@@ -78,9 +76,7 @@ export function RulesStatus(): ReactNode {
 				{!isLoading && (
 					<span
 						className={cn(
-							rulesInitialized
-								? "bg-green-200 text-green-800"
-								: "bg-red-200 text-red-800",
+							rulesInitialized ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
 							"px-2 py-0.5 rounded-full text-xs font-semibold",
 						)}
 					>

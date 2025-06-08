@@ -12,25 +12,20 @@ import type {
 	Uri,
 } from "vscode";
 
-import type { CursorMCPConfig, CursorMCPServerConfig } from "@/types/config.js";
-import type { Result } from "@/types/errorHandling.js";
-import { isSuccess } from "@/types/errorHandling.js";
+import type { FileOperationManager } from "../../core/FileOperationManager";
+import type { CursorMCPConfig, CursorMCPServerConfig } from "../../types/config";
+import type { Result } from "../../types/errorHandling";
+import { isSuccess } from "../../types/errorHandling";
 import {
 	type FileError,
 	type FileMetrics,
 	type Logger,
 	type MemoryBankFile,
 	MemoryBankFileType,
-} from "@/types/index.js";
-import type { FileOperationManager } from "@core/FileOperationManager.js";
+} from "../../types/index";
 
 // Import existing shared mocks instead of duplicating them
-import {
-	mockFileOperations,
-	mockLogger,
-	mockValidation,
-	resetSharedMocks,
-} from "@/test/setup/shared-mocks.js";
+import { mockFileOperations, mockLogger, mockValidation, resetSharedMocks } from "../../test/setup/shared-mocks";
 
 export const getPath = async (subPath = "") => {
 	return `${homedir()}/test-files/${subPath}`;
@@ -108,8 +103,8 @@ export function createSecurityMockLogger(): Logger {
 /**
  * Create a mock FileOperationManager - use shared mock infrastructure
  */
-export function createMockFileOperationManager(): Partial<FileOperationManager> {
-	return {
+export function createMockFileOperationManager(): FileOperationManager {
+	const manager = {
 		readFileWithRetry: vi.fn().mockImplementation(mockFileOperations.readFileWithRetry),
 		writeFileWithRetry: vi.fn().mockImplementation(mockFileOperations.writeFileWithRetry),
 		mkdirWithRetry: vi.fn().mockImplementation(mockFileOperations.mkdirWithRetry),
@@ -121,7 +116,20 @@ export function createMockFileOperationManager(): Partial<FileOperationManager> 
 			success: true,
 			data: undefined,
 		}),
+		// Add missing properties to satisfy the full type
+		logger: createMockLogger(),
+		allowedRoot: "/mock/workspace",
+		retryConfig: { maxRetries: 1, baseDelay: 10, maxDelay: 100, backoffFactor: 2 },
+		timeout: 1000,
+		isPathWithinRoot: vi.fn().mockReturnValue(true),
+		ensureRootDirectoryExists: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+		// Private methods are not part of the public interface, but we can add them for test purposes if needed
+		// For now, we'll stick to the public API
 	};
+
+	// We cast to `any` then to `FileOperationManager` to bypass private property checks
+	// during mock creation, which is a common pattern in Vitest/Jest.
+	return manager as any as FileOperationManager;
 }
 
 /**
@@ -259,9 +267,7 @@ export function createMockDirectoryListing(): [string, number][] {
 	];
 }
 
-export function createEnoentError(
-	message = "ENOENT: no such file or directory",
-): NodeJS.ErrnoException {
+export function createEnoentError(message = "ENOENT: no such file or directory"): NodeJS.ErrnoException {
 	const error = new Error(message) as NodeJS.ErrnoException;
 	error.code = "ENOENT";
 	error.errno = -2;

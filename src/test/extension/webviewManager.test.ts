@@ -1,6 +1,7 @@
-import { WebviewManager } from "@/app/extension/webviewManager.js";
-import { mockWindow, standardAfterEach, standardBeforeEach } from "@test-utils/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { WebviewManager } from "../../app/extension/webviewManager";
+import { mockWindow, standardAfterEach, standardBeforeEach } from "../test-utils";
 
 describe("WebviewManager", () => {
 	let webviewManager: WebviewManager;
@@ -71,7 +72,7 @@ describe("WebviewManager", () => {
 		const panel = webviewManager.getWebviewPanel();
 		expect(panel?.webview.html).toContain("<!DOCTYPE html>");
 		expect(panel?.webview.html).toContain('<div id="root"></div>');
-		expect(panel?.webview.html).toContain("main.js"); // Ensure script is referenced
+		expect(panel?.webview.html).toContain("main"); // Ensure script is referenced
 	});
 
 	it("should handle messages from the webview", async () => {

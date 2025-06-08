@@ -1,12 +1,12 @@
-import { MetadataSearchEngine } from "@/metadata/MetadataSearchEngine.js";
-import type { MetadataIndexEntry } from "@/types/index.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MetadataSearchEngine } from "../../metadata/MetadataSearchEngine";
+import type { MetadataIndexEntry } from "../../types/index";
 import {
 	createFileMetrics,
 	createMockMetadataIndexManager,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+} from "../test-utils/index";
 
 // Use centralized mock
 const mockIndexManager = createMockMetadataIndexManager();
@@ -240,10 +240,7 @@ describe("MetadataSearchEngine", () => {
 				fileMetrics: createFileMetrics(100, 5),
 			};
 
-			vi.mocked(mockIndexManager.getIndex).mockReturnValue([
-				...mockEntries,
-				entryWithoutTags,
-			]);
+			vi.mocked(mockIndexManager.getIndex).mockReturnValue([...mockEntries, entryWithoutTags]);
 
 			const result = await searchEngine.search({ tags: ["extension"] });
 
@@ -288,11 +285,9 @@ describe("MetadataSearchEngine", () => {
 			});
 
 			expect(result.results).toHaveLength(2);
-			expect(
-				result.results.every(
-					entry => new Date(entry.created) >= new Date("2025-05-29T00:00:00.000Z"),
-				),
-			).toBe(true);
+			expect(result.results.every(entry => new Date(entry.created) >= new Date("2025-05-29T00:00:00.000Z"))).toBe(
+				true,
+			);
 		});
 
 		it("should filter by createdBefore", async () => {
@@ -301,11 +296,9 @@ describe("MetadataSearchEngine", () => {
 			});
 
 			expect(result.results).toHaveLength(2);
-			expect(
-				result.results.every(
-					entry => new Date(entry.created) <= new Date("2025-05-29T00:00:00.000Z"),
-				),
-			).toBe(true);
+			expect(result.results.every(entry => new Date(entry.created) <= new Date("2025-05-29T00:00:00.000Z"))).toBe(
+				true,
+			);
 		});
 
 		it("should filter by date range", async () => {
@@ -372,9 +365,7 @@ describe("MetadataSearchEngine", () => {
 			const result1 = await searchEngine.search({});
 			const result2 = await searchEngine.search({});
 
-			expect(result1.results.map(r => r.relativePath)).toEqual(
-				result2.results.map(r => r.relativePath),
-			);
+			expect(result1.results.map(r => r.relativePath)).toEqual(result2.results.map(r => r.relativePath));
 		});
 
 		it("should sort results by updated date (newest first)", async () => {

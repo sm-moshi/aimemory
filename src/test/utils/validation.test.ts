@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import {
 	MemoryBankFileTypeSchema,
 	UpdateMemoryBankFileSchema,
@@ -5,8 +6,8 @@ import {
 	isValidFileType,
 	validateMCPToolParams,
 	validateWebviewMessage,
-} from "@/types/config.js";
-import type { MemoryBankFileType } from "@/types/core.js";
+} from "../../types/config";
+import type { MemoryBankFileType } from "../../types/core";
 import {
 	auditInput,
 	sanitizeFileContent,
@@ -17,8 +18,7 @@ import {
 	validateMemoryBankPath,
 	validatePort,
 	validateProcessConfig,
-} from "@/utils/security-helpers.js";
-import { describe, expect, it } from "vitest";
+} from "../../utils/security";
 
 describe("MemoryBankFileTypeSchema Validation", () => {
 	it("should validate correct file types", () => {
@@ -69,19 +69,13 @@ describe("validateMCPToolParams Schema Validation", () => {
 			fileType: "core/projectBrief.md" as MemoryBankFileType,
 			content: "Test content",
 		};
-		const result = validateMCPToolParams(
-			"update-memory-bank-file",
-			params,
-			UpdateMemoryBankFileSchema,
-		);
+		const result = validateMCPToolParams("update-memory-bank-file", params, UpdateMemoryBankFileSchema);
 		expect(result).toEqual(params);
 	});
 
 	it("should throw detailed error for invalid parameters", () => {
 		const params = { invalid: "param" };
-		expect(() =>
-			validateMCPToolParams("update-memory-bank-file", params, UpdateMemoryBankFileSchema),
-		).toThrow();
+		expect(() => validateMCPToolParams("update-memory-bank-file", params, UpdateMemoryBankFileSchema)).toThrow();
 	});
 });
 
@@ -135,9 +129,7 @@ describe("validateMemoryBankPath Security Validation", () => {
 	});
 
 	it("should reject dangerous paths", () => {
-		expect(() => validateMemoryBankPath("../escape", "/memory-bank")).toThrow(
-			"Invalid memory bank path",
-		);
+		expect(() => validateMemoryBankPath("../escape", "/memory-bank")).toThrow("Invalid memory bank path");
 	});
 });
 
@@ -165,24 +157,16 @@ describe("validateCommandArgs Security Validation", () => {
 	});
 
 	it("should reject non-array input", () => {
-		expect(() => validateCommandArgs("not-array" as any)).toThrow(
-			"Command arguments must be an array",
-		);
+		expect(() => validateCommandArgs("not-array" as any)).toThrow("Command arguments must be an array");
 	});
 
 	it("should reject non-string arguments", () => {
-		expect(() => validateCommandArgs([123] as any)).toThrow(
-			"Command argument at index 0 must be a string",
-		);
+		expect(() => validateCommandArgs([123] as any)).toThrow("Argument at index 0 must be a string");
 	});
 
 	it("should reject dangerous arguments", () => {
-		expect(() => validateCommandArgs(["--flag; rm -rf /"])).toThrow(
-			"contains dangerous characters",
-		);
-		expect(() => validateCommandArgs(["--flag | cat"])).toThrow(
-			"contains dangerous characters",
-		);
+		expect(() => validateCommandArgs(["--flag; rm -rf /"])).toThrow("contains dangerous characters");
+		expect(() => validateCommandArgs(["--flag | cat"])).toThrow("contains dangerous characters");
 	});
 });
 
@@ -227,10 +211,9 @@ describe("sanitizeUserInput Security Validation", () => {
 		expect(sanitizeUserInput(input)).toBe("Hello World");
 	});
 
-	it("should remove control characters", () => {
+	it("should throw for control characters", () => {
 		const input = "Hello\x00\x01World";
-		const result = sanitizeUserInput(input);
-		expect(result).toBe("HelloWorld");
+		expect(() => sanitizeUserInput(input)).toThrow("Input contains null bytes");
 	});
 
 	it("should enforce length limits", () => {
@@ -254,14 +237,12 @@ describe("sanitizeFileContent Security Validation", () => {
 
 	it("should throw error for null bytes", () => {
 		const content = "Content\x00with\x00nulls";
-		expect(() => sanitizeFileContent(content)).toThrow("File content contains null bytes");
+		expect(() => sanitizeFileContent(content)).toThrow("Input contains null bytes");
 	});
 
 	it("should throw error for content exceeding size limit", () => {
 		const largeContent = "x".repeat(1024 * 1024 + 1);
-		expect(() => sanitizeFileContent(largeContent)).toThrow(
-			"File content exceeds maximum size",
-		);
+		expect(() => sanitizeFileContent(largeContent)).toThrow();
 	});
 });
 

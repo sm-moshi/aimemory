@@ -1,10 +1,10 @@
 import type { ChildProcess } from "node:child_process";
 import type { ExtensionContext } from "vscode";
-import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
-import type { MemoryBankFileType } from "../types/core.js";
-import type { Logger } from "../types/logging.js";
-import type { MCPServerInterface } from "../types/mcpTypes.js";
-import { launchMCPServerProcess } from "../utils/system/process-helpers.js";
+import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore";
+import type { MemoryBankFileType } from "../types/core";
+import type { Logger } from "../types/logging";
+import type { MCPServerInterface } from "../types/mcpTypes";
+import { launchMCPServerProcess } from "../utils/system/process-helpers";
 
 /**
  * Adapter that provides the same interface as MemoryBankMCPServer
@@ -51,9 +51,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 					this.childProcess = null;
 				},
 				onExit: (code, signal) => {
-					this.logger.info(
-						`MCP server process exited with code ${code}, signal ${signal}`,
-					);
+					this.logger.info(`MCP server process exited with code ${code}, signal ${signal}`);
 					this.isRunning = false;
 					this.childProcess = null;
 				},
@@ -64,9 +62,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 
 			this.isRunning = true;
 		} catch (error) {
-			this.logger.error(
-				`Failed to start MCP adapter: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			this.logger.error(`Failed to start MCP adapter: ${error instanceof Error ? error.message : String(error)}`);
 			this.cleanup();
 			throw error;
 		}
@@ -101,9 +97,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 * Note: STDIO transport doesn't use external servers, but we maintain interface compatibility
 	 */
 	setExternalServerRunning(port: number): void {
-		this.logger.info(
-			`setExternalServerRunning called with port ${port} (STDIO adapter ignores this)`,
-		);
+		this.logger.info(`setExternalServerRunning called with port ${port} (STDIO adapter ignores this)`);
 		// STDIO transport doesn't use external servers, so this is a no-op for compatibility
 	}
 
@@ -181,16 +175,12 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 				}
 
 				default:
-					this.logger.info(
-						`MCP Adapter NOTE: Unknown command '${command}' being handled by default case.`,
-					);
+					this.logger.info(`MCP Adapter NOTE: Unknown command '${command}' being handled by default case.`);
 					return `Unknown command: ${command}`;
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			this.logger.error(
-				`MCP Adapter: Error handling command '${command}' directly: ${errorMessage}`,
-			);
+			this.logger.error(`MCP Adapter: Error handling command '${command}' directly: ${errorMessage}`);
 			return `Error executing command '${command}': ${errorMessage}`;
 		}
 	}

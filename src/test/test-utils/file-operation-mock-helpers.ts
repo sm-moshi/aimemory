@@ -1,21 +1,18 @@
 import type { Stats } from "node:fs";
 import { dirname } from "node:path";
-import { MemoryBankFileType } from "@/types/index.js";
-import { validateAndConstructFilePath } from "@/utils/path-validation.js";
+import { MemoryBankFileType } from "../../types/index";
+import { validateAndConstructKnownFilePath } from "../../utils/security";
 
 /**
  * Helper function for the 'healthy' fs.stat mock implementation
  */
-export async function healthyStatMockImplementation(
-	pathToStat: string,
-	memoryBankFolder: string,
-): Promise<Stats> {
+export async function healthyStatMockImplementation(pathToStat: string, memoryBankFolder: string): Promise<Stats> {
 	const pathStr = pathToStat.toString();
 	if (pathStr === memoryBankFolder) {
 		return { isDirectory: () => true, isFile: () => false } as Stats;
 	}
 	const isAParentDir = Object.values(MemoryBankFileType).some(ft => {
-		const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
+		const expectedFilePath = validateAndConstructKnownFilePath(memoryBankFolder, ft);
 		return dirname(expectedFilePath) === pathStr;
 	});
 	if (isAParentDir) {
@@ -44,18 +41,12 @@ export async function folderMissingStatMockImplementation(
 /**
  * Helper function for the 'files missing' fs.stat mock implementation
  */
-export async function filesMissingStatMockImplementation(
-	pathToStat: string,
-	memoryBankFolder: string,
-): Promise<Stats> {
+export async function filesMissingStatMockImplementation(pathToStat: string, memoryBankFolder: string): Promise<Stats> {
 	if (pathToStat.toString() === memoryBankFolder) {
 		return { isDirectory: () => true, isFile: () => false } as Stats;
 	}
 	const filePathStr = pathToStat.toString();
-	if (
-		filePathStr.endsWith("core/projectBrief.md") ||
-		filePathStr.endsWith("progress/current.md")
-	) {
+	if (filePathStr.endsWith("core/projectBrief.md") || filePathStr.endsWith("progress/current.md")) {
 		const error = new Error("ENOENT") as NodeJS.ErrnoException;
 		error.code = "ENOENT";
 		throw error;
@@ -89,7 +80,7 @@ export function createHealthyFileOperationManagerMock(memoryBankFolder: string) 
 			};
 		}
 		const isAParentDir = Object.values(MemoryBankFileType).some(ft => {
-			const expectedFilePath = validateAndConstructFilePath(memoryBankFolder, ft);
+			const expectedFilePath = validateAndConstructKnownFilePath(memoryBankFolder, ft);
 			return dirname(expectedFilePath) === pathToStat.toString();
 		});
 		if (isAParentDir) {
@@ -147,11 +138,9 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 		}
 
 		const isCoreProjectBrief =
-			validateAndConstructFilePath(memoryBankFolder, MemoryBankFileType.ProjectBrief) ===
-			pathStr;
+			validateAndConstructKnownFilePath(memoryBankFolder, MemoryBankFileType.ProjectBrief) === pathStr;
 		const isProgressCurrent =
-			validateAndConstructFilePath(memoryBankFolder, MemoryBankFileType.ProgressCurrent) ===
-			pathStr;
+			validateAndConstructKnownFilePath(memoryBankFolder, MemoryBankFileType.ProgressCurrent) === pathStr;
 
 		if (isCoreProjectBrief || isProgressCurrent) {
 			const error = new Error("ENOENT") as NodeJS.ErrnoException;
@@ -161,7 +150,7 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 
 		if (
 			Object.values(MemoryBankFileType).some(
-				ft => validateAndConstructFilePath(memoryBankFolder, ft) === pathStr,
+				ft => validateAndConstructKnownFilePath(memoryBankFolder, ft) === pathStr,
 			)
 		) {
 			return {
@@ -175,7 +164,7 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 		}
 		if (
 			Object.values(MemoryBankFileType).some(
-				ft => dirname(validateAndConstructFilePath(memoryBankFolder, ft)) === pathStr,
+				ft => dirname(validateAndConstructKnownFilePath(memoryBankFolder, ft)) === pathStr,
 			)
 		) {
 			return {
@@ -187,9 +176,7 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 				} as Stats,
 			};
 		}
-		const error = new Error(
-			"Unknown path in mock for filesMissing scenario",
-		) as NodeJS.ErrnoException;
+		const error = new Error("Unknown path in mock for filesMissing scenario") as NodeJS.ErrnoException;
 		error.code = "ENOENT";
 		return { success: false, error };
 	};
@@ -198,10 +185,7 @@ export function createFilesMissingFileOperationManagerMock(memoryBankFolder: str
 /**
  * Helper function for cache test file operation manager mock
  */
-export function createCacheTestFileOperationManagerMock(
-	expectedFilePath: string,
-	cachedMtimeMs: number,
-) {
+export function createCacheTestFileOperationManagerMock(expectedFilePath: string, cachedMtimeMs: number) {
 	return async (pathArg: string) => {
 		if (pathArg === expectedFilePath) {
 			return {
@@ -228,10 +212,7 @@ export function createCacheTestFileOperationManagerMock(
 /**
  * Helper function for stale cache test file operation manager mock
  */
-export function createStaleCacheTestFileOperationManagerMock(
-	expectedFilePath: string,
-	diskMtimeMs: number,
-) {
+export function createStaleCacheTestFileOperationManagerMock(expectedFilePath: string, diskMtimeMs: number) {
 	return async (pathArg: string) => {
 		if (pathArg === expectedFilePath) {
 			return {

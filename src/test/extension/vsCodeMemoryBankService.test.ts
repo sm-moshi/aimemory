@@ -1,4 +1,5 @@
-import { MemoryBankFileType, isSuccess } from "@/types/index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryBankFileType, isSuccess } from "../../types";
 import {
 	commonModuleMocks,
 	createMockCoreService,
@@ -9,8 +10,7 @@ import {
 	setupVSCodeMock,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+} from "../test-utils";
 
 // Apply common module mocks
 commonModuleMocks.memoryBankRules();
@@ -149,10 +149,7 @@ describe("VSCodeMemoryBankService - File Management & Caching", () => {
 
 		if (initialFileLoaded && initialFileLoaded.lastUpdated instanceof Date) {
 			await service.updateFile(MemoryBankFileType.ProjectBrief, "new content");
-			expect(mockCoreService.updateFile).toHaveBeenCalledWith(
-				MemoryBankFileType.ProjectBrief,
-				"new content",
-			);
+			expect(mockCoreService.updateFile).toHaveBeenCalledWith(MemoryBankFileType.ProjectBrief, "new content");
 		}
 	});
 
@@ -166,10 +163,7 @@ describe("VSCodeMemoryBankService - File Management & Caching", () => {
 		const result = await service.updateFile(MemoryBankFileType.ProjectBrief, "new content");
 
 		expect(result).toEqual({ success: false, error: new Error("Write update failed") });
-		expect(mockCoreService.updateFile).toHaveBeenCalledWith(
-			MemoryBankFileType.ProjectBrief,
-			"new content",
-		);
+		expect(mockCoreService.updateFile).toHaveBeenCalledWith(MemoryBankFileType.ProjectBrief, "new content");
 	});
 
 	it("can invalidate specific file cache", async () => {

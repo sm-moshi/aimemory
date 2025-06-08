@@ -14,10 +14,10 @@ export {
 	mockNodeFs,
 	mockWebviewManager,
 	mockMemoryBank,
-} from "../setup/shared-mocks.js";
+} from "../setup/shared-mocks";
 
 // Re-export vscode-specific mocks
-export { mockVscodeWindow } from "../__mocks__/vscode.js";
+export { mockVscodeWindow } from "../__mocks__/vscode";
 
 // MCP-specific mocks (import directly when needed)
 export {
@@ -47,7 +47,7 @@ export {
 	// Test setup functions
 	standardBeforeEach,
 	standardAfterEach,
-} from "./utilities.js";
+} from "./utilities";
 
 // Centralized service mocks
 export {
@@ -58,7 +58,7 @@ export {
 	createMockCoreService,
 	createMockMemoryBankWithDefaults,
 	commonModuleMocks,
-} from "../__mocks__/services.js";
+} from "../__mocks__/services";
 
 export {
 	expectSuccess,
@@ -73,7 +73,7 @@ export {
 	setupMaliciousPathRejection,
 	setupValidPathAcceptance,
 	setupSecurityValidationError,
-} from "./utilities.js";
+} from "./utilities";
 
 export {
 	getPath,
@@ -81,7 +81,7 @@ export {
 	getOriginalValidateMemoryBankPath,
 	getOriginalSanitizePath,
 	getOriginalValidateCommand,
-} from "./utilities.js";
+} from "./utilities";
 
-export { SECURITY_TEST_DATA } from "./utilities.js";
-export { resetSharedMocks } from "../setup/shared-mocks.js";
+export { SECURITY_TEST_DATA } from "./utilities";
+export { resetSharedMocks } from "../setup/shared-mocks";

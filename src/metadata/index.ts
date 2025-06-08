@@ -5,14 +5,14 @@
  */
 
 // Core metadata management
-export { MetadataIndexManager } from "./MetadataIndexManager.js";
-export { MetadataSearchEngine } from "./MetadataSearchEngine.js";
+export { MetadataIndexManager } from "./MetadataIndexManager";
+export { MetadataSearchEngine } from "./MetadataSearchEngine";
 
 // Utility functions
-export * from "./indexUtils.js";
+export * from "./indexUtils";
 
 // Specialized utility modules
-export * from "./metadataQueryUtils.js";
+export * from "./metadataQueryUtils";
 
 // Re-export types for convenience
 export type {
@@ -28,4 +28,4 @@ export type {
 	IndexChangeListener,
 	FileMetrics,
 	DateRangeFilter,
-} from "../types/index.js";
+} from "../types/index";

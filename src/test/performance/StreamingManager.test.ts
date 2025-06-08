@@ -1,17 +1,21 @@
 import * as path from "node:path";
-import { StreamingManager } from "@/performance/StreamingManager.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { FileOperationManager } from "../../core/FileOperationManager";
+import { StreamingManager } from "../../performance/StreamingManager";
 import {
 	createMockFileOperationManager,
 	createMockLogger,
-	mockNodeFs,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { FileOperationManager } from "../../core/FileOperationManager.js";
+} from "../test-utils/index";
+
+// Mock the actual fs module that StreamingManager uses
+vi.mock("node:fs/promises", () => ({
+	stat: vi.fn(),
+}));
 
 // Mock sanitizePath directly, as it's a clean dependency of the SUT.
-vi.mock("@/utils/system/path-sanitizer.js", () => ({
+vi.mock("../../utils/security", () => ({
 	sanitizePath: vi.fn((inputPath, root) => {
 		const resolvedRoot = path.resolve(root ?? "/test/memory-bank");
 		if (inputPath.includes("..")) {
@@ -23,7 +27,7 @@ vi.mock("@/utils/system/path-sanitizer.js", () => ({
 
 // Mock FileStreamer to intercept the streaming call.
 const mockSharedStreamFile = vi.fn();
-vi.mock("@/performance/FileStreamer.js", () => ({
+vi.mock("../../performance/FileStreamer", () => ({
 	FileStreamer: vi.fn().mockImplementation(() => ({
 		streamFile: mockSharedStreamFile,
 	})),
@@ -41,8 +45,12 @@ describe("StreamingManager", () => {
 	let mockFileOperationManager: FileOperationManager;
 	const mockLogger = createMockLogger();
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		standardBeforeEach();
+
+		// Get the mocked fs module
+		const fs = await import("node:fs/promises");
+		const mockFs = vi.mocked(fs);
 
 		mockFileOperationManager = createMockFileOperationManager() as FileOperationManager;
 		streamingManager = new StreamingManager(mockLogger, mockFileOperationManager, TEST_DIR, {
@@ -50,6 +58,9 @@ describe("StreamingManager", () => {
 			chunkSize: 10,
 			timeout: 1000,
 		});
+
+		// Reset all mocks
+		vi.clearAllMocks();
 	});
 
 	afterEach(() => {
@@ -57,8 +68,12 @@ describe("StreamingManager", () => {
 	});
 
 	it("should use normal read for small files", async () => {
+		// Get the mocked fs module
+		const fs = await import("node:fs/promises");
+		const mockFs = vi.mocked(fs);
+
 		// ARRANGE - Configure centralized mocks
-		mockNodeFs.stat.mockResolvedValue({ size: SMALL_FILE_SIZE } as any);
+		mockFs.stat.mockResolvedValue({ size: SMALL_FILE_SIZE } as any);
 		const mockRead = vi
 			.mocked(mockFileOperationManager.readFileWithRetry)
 			.mockResolvedValue({ success: true, data: SMALL_CONTENT });
@@ -73,8 +88,12 @@ describe("StreamingManager", () => {
 	});
 
 	it("should use streaming for large files", async () => {
+		// Get the mocked fs module
+		const fs = await import("node:fs/promises");
+		const mockFs = vi.mocked(fs);
+
 		// ARRANGE - Configure centralized mocks
-		mockNodeFs.stat.mockResolvedValue({ size: LARGE_FILE_SIZE } as any);
+		mockFs.stat.mockResolvedValue({ size: LARGE_FILE_SIZE } as any);
 		mockSharedStreamFile.mockResolvedValue({
 			success: true,
 			data: { content: LARGE_CONTENT, wasStreamed: true },
@@ -82,6 +101,12 @@ describe("StreamingManager", () => {
 
 		// ACT
 		const result = await streamingManager.readFile("large.txt");
+
+		// DEBUG - Log the result to understand what's happening
+		console.log("Result:", result);
+		if (!result.success) {
+			console.log("Error:", result.error);
+		}
 
 		// ASSERT
 		expect(mockSharedStreamFile).toHaveBeenCalledTimes(1);
@@ -92,8 +117,12 @@ describe("StreamingManager", () => {
 	});
 
 	it("should handle streaming failures", async () => {
+		// Get the mocked fs module
+		const fs = await import("node:fs/promises");
+		const mockFs = vi.mocked(fs);
+
 		// ARRANGE - Configure centralized mocks
-		mockNodeFs.stat.mockResolvedValue({ size: LARGE_FILE_SIZE } as any);
+		mockFs.stat.mockResolvedValue({ size: LARGE_FILE_SIZE } as any);
 		mockSharedStreamFile.mockResolvedValue({
 			success: false,
 			error: { code: "STREAMING_FAILURE", message: "test" },
@@ -111,8 +140,12 @@ describe("StreamingManager", () => {
 	});
 
 	it("should track mixed operations in stats", async () => {
+		// Get the mocked fs module
+		const fs = await import("node:fs/promises");
+		const mockFs = vi.mocked(fs);
+
 		// ARRANGE & ACT (Small File)
-		mockNodeFs.stat.mockResolvedValueOnce({ size: SMALL_FILE_SIZE } as any);
+		mockFs.stat.mockResolvedValueOnce({ size: SMALL_FILE_SIZE } as any);
 		vi.mocked(mockFileOperationManager.readFileWithRetry).mockResolvedValueOnce({
 			success: true,
 			data: SMALL_CONTENT,
@@ -120,7 +153,7 @@ describe("StreamingManager", () => {
 		await streamingManager.readFile("small.txt");
 
 		// ARRANGE & ACT (Large File)
-		mockNodeFs.stat.mockResolvedValueOnce({ size: LARGE_FILE_SIZE } as any);
+		mockFs.stat.mockResolvedValueOnce({ size: LARGE_FILE_SIZE } as any);
 		mockSharedStreamFile.mockResolvedValueOnce({
 			success: true,
 			data: { content: LARGE_CONTENT, wasStreamed: true },

@@ -1,5 +1,5 @@
-import { registerMemoryBankPrompts } from "@/cursor/mcp-prompts-registry.js";
 import { describe, expect, it } from "vitest";
+import { registerMemoryBankPrompts } from "../../cursor/mcp-prompts-registry";
 
 describe("registerMemoryBankPrompts", () => {
 	it("registers all expected prompt names", () => {

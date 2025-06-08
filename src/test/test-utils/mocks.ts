@@ -40,12 +40,12 @@ const mockMcpServerSingleton = createMockMcpServerInstance();
 const MockResourceTemplateSingleton = createMockResourceTemplateStatic();
 const MockStdioTransportSingleton = createMockStdioTransportStatic();
 
-vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
+vi.mock("@modelcontextprotocol/sdk/server/mcp", () => ({
 	McpServer: vi.fn(() => mockMcpServerSingleton),
 	ResourceTemplate: MockResourceTemplateSingleton,
 }));
 
-vi.mock("@modelcontextprotocol/sdk/server/stdio.js", () => ({
+vi.mock("@modelcontextprotocol/sdk/server/stdio", () => ({
 	StdioServerTransport: MockStdioTransportSingleton,
 }));
 

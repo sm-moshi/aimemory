@@ -2,47 +2,45 @@
 	"[ignore]": {
 		"editor.defaultFormatter": "foxundermoon.shell-format"
 	},
-	"[javascript]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"[javascriptreact]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"[json]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
 	"[jsonc]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"[properties]": {
-		"editor.defaultFormatter": "foxundermoon.shell-format"
-	},
-	"[typescript]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"[typescriptreact]": {
-		"editor.defaultFormatter": "biomejs.biome"
+		"editor.defaultFormatter": "vscode.json-language-features"
 	},
 	"aimemory.logLevel": "debug",
-	"coverage-gutters.coverageFileNames": ["lcov.info", "cov.xml", "coverage.xml", "coverage.lcov"],
-	"coverage-gutters.showGutterCoverage": true,
-	"coverage-gutters.showLineCoverage": true,
-	"coverage-gutters.showRulerCoverage": true,
-	"debug.javascript.enableNetworkView": true,
+	"chat.editor.wordWrap": "on",
+	"cursor.composer.collapsePaneInputBoxPills": true,
+	"cursor.composer.shouldChimeAfterChatFinishes": true,
+	"cursor.composer.shouldQueueWhenGenerating": true,
+	"cursor.composer.shouldShowMarkdownHoverParticipantActions2": true,
+	"cursor.general.enableShadowWorkspace": false,
+	"debug.javascript.enableNetworkView": false,
+	"debug.showVariableTypes": true,
+	"dependi.npm.enabled": true,
 	"dependi.npm.informPatchUpdates": true,
 	"dependi.npm.lockFileEnabled": false,
 	"dependi.npm.unstableFilter": "IncludeAlways",
 	"dependi.vulnerability.ghsa.enabled": true,
-	"diffEditor.maxFileSize": 25,
-	"editor.codeActionsOnSave": {
-		"source.fixAll.biome": "explicit",
-		"source.organizeImports.biome": "explicit"
-	},
-	"editor.formatOnSave": true,
+	"diffEditor.experimental.showMoves": true,
+	"diffEditor.experimental.useTrueInlineView": true,
+	"editor.experimentalEditContextEnabled": true,
+	"editor.foldingImportsByDefault": true,
+	"editor.guides.bracketPairs": true,
+	"editor.inlineSuggest.syntaxHighlightingEnabled": true,
+	"editor.linkedEditing": true,
+	"editor.semanticHighlighting.enabled": true,
+	"editor.wordWrapColumn": 120,
+	"errorLens.codeLensEnabled": true,
 	"files.associations": {
-		"*.cjs": "javascript"
+		"*.cjs": "javascript",
+		"*.css": "tailwindcss"
 	},
-	"files.autoSave": "off",
+	"files.autoSaveWhenNoErrors": true,
+	"files.exclude": {
+		"**/.repomix/**": true,
+		"**/.vscode-test/**": true,
+		"**/archive/**": true,
+		"**/coverage/**": true,
+		"**/node_modules/**": true
+	},
 	"files.watcherExclude": {
 		"**/.repomix/**": true,
 		"**/.vscode-test/**": true,
@@ -50,49 +48,45 @@
 		"**/dist/**": true,
 		"**/node_modules/**": true
 	},
-	"javascript.suggest.completeFunctionCalls": true,
-	"javascript.updateImportsOnFileMove.enabled": "always",
-	"javascript.updateImportsOnPaste.enabled": true,
 	"js/ts.implicitProjectConfig.checkJs": true,
-	"json.indent": "4",
+	"js/ts.implicitProjectConfig.experimentalDecorators": true,
 	"json.schemaDownload.enable": true,
-	"npm-intellisense.packageSubfoldersIntellisense": true,
-	"npm-intellisense.scanDevDependencies": true,
-	"npm.fetchOnlinePackageInfo": true,
-	"path-intellisense.autoSlashAfterDirectory": true,
-	"path-intellisense.autoTriggerNextSuggestion": true,
-	"path-intellisense.extensionOnImport": true,
+	"problems.showCurrentInStatus": true,
+	"problems.visibility": true,
 	"rewrap.autoWrap.enabled": true,
-	"rewrap.wrappingColumn": 100,
+	"rewrap.wrappingColumn": 120,
 	"search.exclude": {
 		"**/.vscode-test": true,
 		"**/coverage": true,
 		"**/dist": true,
 		"**/node_modules": true
 	},
+	"search.quickOpen.includeHistory": true,
 	"sonarlint.connectedMode.project": {
 		"connectionId": "sm-moshi-org",
 		"projectKey": "sm-moshi_aimemory"
 	},
+	"testing.coverageToolbarEnabled": true,
 	"typescript.enablePromptUseWorkspaceTsdk": true,
+	"typescript.experimental.expandableHover": false,
 	"typescript.experimental.useTsgo": true,
 	"typescript.implementationsCodeLens.enabled": true,
 	"typescript.implementationsCodeLens.showOnInterfaceMethods": true,
-	"typescript.inlayHints.enumMemberValues.enabled": true,
-	"typescript.inlayHints.functionLikeReturnTypes.enabled": true,
-	"typescript.inlayHints.parameterNames.enabled": "literals",
-	"typescript.inlayHints.parameterTypes.enabled": true,
-	// CRITICAL: Prevent TypeScript from auto-fixing on save - let Biome handle it
-	"typescript.preferences.includePackageJsonAutoImports": "off",
-	"typescript.preferences.preferTypeOnlyAutoImports": true,
+	"typescript.preferGoToSourceDefinition": true,
 	"typescript.suggest.autoImports": true,
 	"typescript.suggest.includeAutomaticOptionalChainCompletions": true,
 	"typescript.suggest.paths": true,
 	"typescript.tsserver.experimental.enableProjectDiagnostics": true,
 	"typescript.updateImportsOnFileMove.enabled": "always",
-	"typescript.updateImportsOnPaste.enabled": true,
-	"vite.buildCommand": "pnpm run build",
-	"vite.devCommand": "pnpm run dev",
-	"vite.https": true,
-	"yaml.format.printWidth": 100
+	"versionlens.suggestions.showOnStartup": true,
+	"versionlens.suggestions.showSuggestionsStats": true,
+	"vsicons.presets.jsonOfficial": true,
+	"workbench.commandPalette.experimental.suggestCommands": true,
+	"workbench.commandPalette.history": 100,
+	"workbench.commandPalette.preserveInput": true,
+	"yaml.format.printWidth": 120,
+	"gitlens.ai.experimental.generateRebase.enabled": true,
+	"gitlens.ai.experimental.generateCommits.enabled": true,
+	"editor.experimental.asyncTokenization": true,
+	"gitlens.gitkraken.cli.integration.enabled": true
 }

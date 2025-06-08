@@ -1,13 +1,13 @@
 /**
  * Metadata Index Manager
  *
- * Manages a centralized index of metadata for all memory bank files.
- * Provides efficient querying and updating capabilities.
+ * Manages a centralized index of metadata for all memory bank files. Provides efficient querying
+ * and updating capabilities.
  */
 
 import * as path from "node:path";
-import type { FileOperationManager } from "../core/FileOperationManager.js";
-import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore.js";
+import type { FileOperationManager } from "../core/FileOperationManager";
+import type { MemoryBankServiceCore } from "../core/memoryBankServiceCore";
 import type {
 	IndexChangeEvent,
 	IndexChangeListener,
@@ -16,18 +16,18 @@ import type {
 	Logger,
 	MetadataIndexConfig,
 	MetadataIndexEntry,
-} from "../types/index.js";
-import { calculateFileMetrics, debounce, deepClone, inferFileType } from "./indexUtils.js";
+} from "../types/index";
+import { calculateFileMetrics, debounce, deepClone, inferFileType } from "./indexUtils";
 
 // Constants for metadata property names
 const METADATA_PROPS = {
-	ID: "id",
-	TYPE: "type",
-	TITLE: "title",
-	DESCRIPTION: "description",
-	TAGS: "tags",
-	CREATED: "created",
-	UPDATED: "updated",
+	id: "id",
+	type: "type",
+	title: "title",
+	description: "description",
+	tags: "tags",
+	created: "created",
+	updated: "updated",
 } as const;
 
 /**
@@ -92,9 +92,7 @@ export class MetadataIndexManager {
 			const indexAge = Date.now() - new Date(stats.lastBuildTime).getTime();
 
 			if (indexAge > this.config.maxIndexAge) {
-				this.logger.info(
-					`Index is stale, rebuilding - age: ${Math.round(indexAge / (60 * 60 * 1000))} hours`,
-				);
+				this.logger.info(`Index is stale, rebuilding - age: ${Math.round(indexAge / (60 * 60 * 1000))} hours`);
 				await this.buildIndex();
 			}
 		} catch (error) {
@@ -166,42 +164,38 @@ export class MetadataIndexManager {
 					const indexEntry: MetadataIndexEntry = {
 						relativePath,
 						created:
-							(metadata[METADATA_PROPS.CREATED] as string) ??
+							(metadata[METADATA_PROPS.created] as string) ??
 							fileStats.birthtime?.toISOString() ??
 							new Date().toISOString(),
-						updated:
-							(metadata[METADATA_PROPS.UPDATED] as string) ??
-							fileStats.mtime.toISOString(),
+						updated: (metadata[METADATA_PROPS.updated] as string) ?? fileStats.mtime.toISOString(),
 						fileMetrics,
 						validationStatus: "unchecked", // Will be validated later if needed
 						lastIndexed: new Date().toISOString(),
 					};
 
 					// Conditionally add optional properties
-					const id = metadata[METADATA_PROPS.ID] as string | undefined;
+					const id = metadata[METADATA_PROPS.id] as string | undefined;
 					if (id) {
 						indexEntry.id = id;
 					}
 
-					const type =
-						(metadata[METADATA_PROPS.TYPE] as string | undefined) ??
-						inferFileType(relativePath);
+					const type = (metadata[METADATA_PROPS.type] as string | undefined) ?? inferFileType(relativePath);
 					if (type) {
 						indexEntry.type = type;
 					}
 
-					const title = metadata[METADATA_PROPS.TITLE] as string | undefined;
+					const title = metadata[METADATA_PROPS.title] as string | undefined;
 					if (title) {
 						indexEntry.title = title;
 					}
 
-					const description = metadata[METADATA_PROPS.DESCRIPTION] as string | undefined;
+					const description = metadata[METADATA_PROPS.description] as string | undefined;
 					if (description) {
 						indexEntry.description = description;
 					}
 
-					const tags = Array.isArray(metadata[METADATA_PROPS.TAGS])
-						? (metadata[METADATA_PROPS.TAGS] as string[])
+					const tags = Array.isArray(metadata[METADATA_PROPS.tags])
+						? (metadata[METADATA_PROPS.tags] as string[])
 						: undefined;
 					if (tags) {
 						indexEntry.tags = tags;
@@ -318,50 +312,45 @@ export class MetadataIndexManager {
 			const updatedEntry: MetadataIndexEntry = {
 				relativePath,
 				created:
-					(metadata[METADATA_PROPS.CREATED] as string) ??
+					(metadata[METADATA_PROPS.created] as string) ??
 					fileStats.birthtime?.toISOString() ??
 					new Date().toISOString(),
-				updated:
-					(metadata[METADATA_PROPS.UPDATED] as string) ?? fileStats.mtime.toISOString(),
+				updated: (metadata[METADATA_PROPS.updated] as string) ?? fileStats.mtime.toISOString(),
 				fileMetrics,
 				validationStatus: "unchecked",
 				lastIndexed: new Date().toISOString(),
 			};
 
 			// Conditionally add optional properties only if they have values
-			const id = metadata[METADATA_PROPS.ID] as string | undefined;
+			const id = metadata[METADATA_PROPS.id] as string | undefined;
 			if (id) {
 				updatedEntry.id = id;
 			}
 
-			const type =
-				(metadata[METADATA_PROPS.TYPE] as string | undefined) ??
-				inferFileType(relativePath);
+			const type = (metadata[METADATA_PROPS.type] as string | undefined) ?? inferFileType(relativePath);
 			if (type) {
 				updatedEntry.type = type;
 			}
 
-			const title = metadata[METADATA_PROPS.TITLE] as string | undefined;
+			const title = metadata[METADATA_PROPS.title] as string | undefined;
 			if (title) {
 				updatedEntry.title = title;
 			}
 
-			const description = metadata[METADATA_PROPS.DESCRIPTION] as string | undefined;
+			const description = metadata[METADATA_PROPS.description] as string | undefined;
 			if (description) {
 				updatedEntry.description = description;
 			}
 
-			const tags = Array.isArray(metadata[METADATA_PROPS.TAGS])
-				? (metadata[METADATA_PROPS.TAGS] as string[])
+			const tags = Array.isArray(metadata[METADATA_PROPS.tags])
+				? (metadata[METADATA_PROPS.tags] as string[])
 				: undefined;
 			if (tags) {
 				updatedEntry.tags = tags;
 			}
 
 			// Find existing entry and update or add new
-			const existingIndex = this.index.findIndex(
-				entry => entry.relativePath === relativePath,
-			);
+			const existingIndex = this.index.findIndex(entry => entry.relativePath === relativePath);
 			const isUpdate = existingIndex !== -1;
 
 			if (isUpdate) {
@@ -543,18 +532,13 @@ export class MetadataIndexManager {
 		await this.ensureIndexDirectory();
 		const indexData = JSON.stringify(this.index, null, 2);
 
-		const writeResult = await this.fileOperationManager.writeFileWithRetry(
-			this.indexPath,
-			indexData,
-		);
+		const writeResult = await this.fileOperationManager.writeFileWithRetry(this.indexPath, indexData);
 
 		if (!writeResult.success) {
 			throw new Error(`Failed to save index: ${writeResult.error.message}`);
 		}
 
-		this.logger.debug(
-			`Saved metadata index to disk - entries: ${this.index.length}, path: ${this.indexPath}`,
-		);
+		this.logger.debug(`Saved metadata index to disk - entries: ${this.index.length}, path: ${this.indexPath}`);
 	}
 
 	/**
@@ -579,16 +563,14 @@ export class MetadataIndexManager {
 
 		const scanDirectory = async (dirPath: string, relativePath = ""): Promise<void> => {
 			try {
-				// Use streaming manager for reading directory contents if available
-				// For now, we'll use direct readdir but this could be improved
+				// Use streaming manager for reading directory contents if available For now, we'll
+				// use direct readdir but this could be improved
 				const _matter = await import("gray-matter");
 				const fs = await import("node:fs/promises");
 				const items = await fs.readdir(dirPath, { withFileTypes: true });
 
 				for (const item of items) {
-					const itemRelativePath = relativePath
-						? path.join(relativePath, item.name)
-						: item.name;
+					const itemRelativePath = relativePath ? path.join(relativePath, item.name) : item.name;
 					const itemFullPath = path.join(dirPath, item.name);
 
 					if (item.isDirectory()) {

@@ -5,6 +5,6 @@
  * without breaking existing code.
  */
 
-export { CacheManager, LegacyCacheAdapter, LegacyStatsAdapter } from "./Cache.js";
-export { MemoryBankServiceCore } from "./memoryBankServiceCore.js";
-export { FileOperationManager } from "./FileOperationManager.js";
+export { CacheManager, LegacyCacheAdapter, LegacyStatsAdapter } from "./cache";
+export { MemoryBankManager } from "./memory-bank";
+export { FileOperationManager } from "./file-operations";

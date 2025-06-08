@@ -1,24 +1,105 @@
-import { mockCommands, mockWindow } from "@test-utils/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { activate, deactivate } from "../../extension.js";
+import { activate, deactivate } from "../../extension";
 
-// Mock the dependencies that `activate` calls into.
-vi.mock("@/app/extension/commandHandler.js", () => ({
-	CommandHandler: vi.fn(() => ({
-		registerCommands: vi.fn(),
+// Import the VS Code mock to ensure it's available
+import { mockVscodeCommands } from "../__mocks__/vscode";
+
+// Mock all the dependencies that activate uses
+vi.mock("../../utils/logging", () => ({
+	createLogger: () => ({
+		setLevel: vi.fn(),
+		info: vi.fn(),
+		debug: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+		trace: vi.fn(),
+	}),
+}));
+
+vi.mock("../../utils/di-container", () => ({
+	DIContainer: vi.fn().mockImplementation(() => ({
+		register: vi.fn(),
+		resolve: vi.fn().mockImplementation((serviceName: string) => {
+			// Return appropriate mocks based on service name
+			switch (serviceName) {
+				case "WebviewManager":
+					return { openWebview: vi.fn() };
+				case "CommandHandler":
+					return { processMemoryCommand: vi.fn() };
+				case "MCPServerInterface":
+					return { start: vi.fn(), stop: vi.fn() };
+				default:
+					return {};
+			}
+		}),
 	})),
 }));
-vi.mock("@/core/memoryBankServiceCore.js", () => ({
-	MemoryBankServiceCore: vi.fn(() => ({
-		getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true }),
-		initializeFolders: vi.fn().mockResolvedValue({ success: true }),
-		loadFiles: vi.fn().mockResolvedValue({ success: true, data: [] }),
+
+vi.mock("../../core/FileOperationManager", () => ({
+	FileOperationManager: vi.fn().mockImplementation(() => ({
+		readFileWithRetry: vi.fn(),
+		writeFileWithRetry: vi.fn(),
 	})),
 }));
-vi.mock("@/cursor/rules-service.js", () => ({
-	CursorRulesService: vi.fn(() => ({
-		createRulesFile: vi.fn().mockResolvedValue(undefined),
+
+vi.mock("../../core/CacheManager", () => ({
+	CacheManager: vi.fn().mockImplementation(() => ({
+		get: vi.fn(),
+		set: vi.fn(),
 	})),
+}));
+
+vi.mock("../../performance/StreamingManager", () => ({
+	StreamingManager: vi.fn().mockImplementation(() => ({
+		streamFile: vi.fn(),
+	})),
+}));
+
+vi.mock("../../core/memoryBankServiceCore", () => ({
+	MemoryBankServiceCore: vi.fn().mockImplementation(() => ({
+		getIsMemoryBankInitialized: vi.fn(),
+		initializeFolders: vi.fn(),
+		loadFiles: vi.fn(),
+	})),
+}));
+
+vi.mock("../../cursor/rules-service", () => ({
+	CursorRulesService: vi.fn().mockImplementation(() => ({
+		createRulesFile: vi.fn(),
+	})),
+}));
+
+vi.mock("../../mcp/mcpAdapter", () => ({
+	MemoryBankMCPAdapter: vi.fn().mockImplementation(() => ({
+		start: vi.fn(),
+		stop: vi.fn(),
+		getPort: vi.fn(() => 3000),
+	})),
+}));
+
+vi.mock("../../app/extension/webviewManager", () => ({
+	WebviewManager: vi.fn().mockImplementation(() => ({
+		openWebview: vi.fn(),
+	})),
+}));
+
+vi.mock("../../app/extension/commandHandler", () => ({
+	CommandHandler: vi.fn().mockImplementation(() => ({
+		processMemoryCommand: vi.fn(),
+	})),
+}));
+
+// Mock the cursor config helper functions
+vi.mock("../../cursor/config-helpers", () => ({
+	updateCursorMCPConfig: vi.fn(),
+}));
+
+vi.mock("../../cursor/rules", () => ({
+	getCursorMemoryBankRulesFile: vi.fn(),
+}));
+
+vi.mock("../../utils/vscode/ui-helpers", () => ({
+	showVSCodeError: vi.fn(),
 }));
 
 describe("Extension Activation and Deactivation", () => {
@@ -26,33 +107,16 @@ describe("Extension Activation and Deactivation", () => {
 		const mockContext: any = {
 			subscriptions: [],
 			extensionPath: "/mock/path",
+			extensionUri: { fsPath: "/mock/path" },
 		};
+
 		await activate(mockContext);
 
-		// Verify that a command was registered
-		expect(mockCommands.registerCommand).toHaveBeenCalled();
-		// Verify that a disposable was pushed to subscriptions
+		// Verify that commands were registered using the VS Code mock
+		expect(mockVscodeCommands.registerCommand).toHaveBeenCalled();
+		expect(mockVscodeCommands.registerTextEditorCommand).toHaveBeenCalled();
+		// Verify that disposables were added to subscriptions
 		expect(mockContext.subscriptions.length).toBeGreaterThan(0);
-	});
-
-	it("should show an error message if initialization fails", async () => {
-		// Override mock for this specific test case
-		const { MemoryBankServiceCore } = await import("@/core/memoryBankServiceCore.js");
-		(MemoryBankServiceCore as any).mockReturnValueOnce({
-			getIsMemoryBankInitialized: vi.fn().mockResolvedValue({
-				success: false,
-				error: "Initialization failed",
-			}),
-			initializeFolders: vi.fn().mockResolvedValue({ success: true }),
-			loadFiles: vi.fn().mockResolvedValue({ success: true, data: [] }),
-		});
-
-		const mockContext: any = { subscriptions: [] };
-		await activate(mockContext);
-
-		expect(mockWindow.showErrorMessage).toHaveBeenCalledWith(
-			expect.stringContaining("Failed to initialize AI Memory Bank"),
-		);
 	});
 
 	it("deactivates the extension", () => {

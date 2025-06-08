@@ -4,15 +4,7 @@
 		"composite": true,
 		"module": "ES2022",
 		"moduleResolution": "bundler",
-		"types": [
-			"node",
-			"vite/client"
-		],
-		// "outDir": "dist"
+		"types": ["node", "vite/client"]
 	},
-	"include": [
-		"vite.config.mts",
-		"vitest.config.ts",
-		"*.config.*"
-	]
+	"include": ["vite.config.mts", "vitest.config.ts", "*.config.*"]
 }

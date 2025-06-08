@@ -1,5 +1,5 @@
-import { createMockFileOperationManager, createMockLogger } from "@/test/test-utils/utilities.js";
 import { vi } from "vitest";
+import { createMockFileOperationManager, createMockLogger } from "../test-utils/utilities";
 
 /**
  * Centralized service mocks to reduce boilerplate across test files
@@ -126,22 +126,22 @@ export const streamFileMock = mockStreamFile;
 export const createModuleMocks = () => ({
 	// Extension dependencies
 	extensionDependencies: () => {
-		vi.mock("@/app/extension/commandHandler.js", () => ({
-			CommandHandler: vi.fn(() => ({
+		vi.mock("@/app/extension/commandHandler", () => ({
+			commandHandler: vi.fn(() => ({
 				registerCommands: vi.fn(),
 			})),
 		}));
-		vi.mock("@/core/memoryBankServiceCore.js", () => ({
-			MemoryBankServiceCore: vi.fn(() => createMockCoreService()),
+		vi.mock("@/core/memoryBankServiceCore", () => ({
+			memoryBankServiceCore: vi.fn(() => createMockCoreService()),
 		}));
-		vi.mock("@/cursor/rules-service.js", () => ({
-			CursorRulesService: vi.fn(() => createMockCursorRulesService()),
+		vi.mock("@/cursor/rules-service", () => ({
+			cursorRulesService: vi.fn(() => createMockCursorRulesService()),
 		}));
 	},
 
 	// Memory bank file helpers
 	memoryBankHelpers: (helpers = createMockHelperFunctions()) => {
-		vi.mock("@/core/memory-bank-file-helpers.js", () => ({
+		vi.mock("@/core/memory-bank-file-helpers", () => ({
 			validateMemoryBankDirectory: helpers.mockValidateMemoryBankDirectory,
 			validateAllMemoryBankFiles: helpers.mockValidateAllMemoryBankFiles,
 			loadAllMemoryBankFiles: helpers.mockLoadAllMemoryBankFiles,
@@ -153,12 +153,12 @@ export const createModuleMocks = () => ({
 
 	// Streaming dependencies
 	streamingDependencies: () => {
-		vi.mock("@/performance/FileStreamer.js", () => ({
-			FileStreamer: vi.fn().mockImplementation(() => ({
+		vi.mock("@/performance/FileStreamer", () => ({
+			fileStreamer: vi.fn().mockImplementation(() => ({
 				streamFile: mockStreamFile,
 			})),
 		}));
-		vi.mock("@/utils/system/path-sanitizer.js", () => ({
+		vi.mock("@/utils/system/path-sanitizer", () => ({
 			sanitizePath: vi.fn((inputPath, root) => {
 				const path = require("node:path");
 				const resolvedRoot = path.resolve(root ?? "/test/memory-bank");
@@ -172,17 +172,17 @@ export const createModuleMocks = () => ({
 
 	// Template mocks
 	templateMocks: () => {
-		vi.mock("@/shared/templates/template-registry.js", () => ({
+		vi.mock("@/shared/templates/template-registry", () => ({
 			getTemplateForFileType: vi.fn((fileType: string) => `Template for ${fileType}`),
 		}));
-		vi.mock("@/lib/memoryBankTemplates.js", () => ({
+		vi.mock("@/lib/memoryBankTemplates", () => ({
 			getTemplateForFileType: vi.fn().mockReturnValue("mock template content"),
 		}));
 	},
 
 	// Logger mocks
 	loggerMocks: () => {
-		vi.mock("@/utils/log.js", () => ({
+		vi.mock("@/utils/log", () => ({
 			logger: {
 				getInstance: () => createMockLogger(),
 			},
@@ -196,13 +196,13 @@ export const createModuleMocks = () => ({
  */
 export const commonModuleMocks = {
 	memoryBankServiceCore: () => {
-		vi.mock("@/core/memoryBankServiceCore.js", () => ({
-			MemoryBankServiceCore: vi.fn(() => createMockCoreService()),
+		vi.mock("@/core/memoryBankServiceCore", () => ({
+			memoryBankServiceCore: vi.fn(() => createMockCoreService()),
 		}));
 	},
 
 	baseMcpServer: () => {
-		vi.mock("@/mcp/shared/baseMcpServer.js", () => ({
+		vi.mock("@/mcp/shared/baseMcpServer", () => ({
 			BaseMCPServer: vi.fn().mockImplementation(() => ({
 				server: {
 					resource: vi.fn(),
@@ -219,7 +219,7 @@ export const commonModuleMocks = {
 	},
 
 	mcpPromptsRegistry: () => {
-		vi.mock("@/cursor/mcp-prompts-registry.js", () => ({
+		vi.mock("@/cursor/mcp-prompts-registry", () => ({
 			registerMemoryBankPrompts: vi.fn(),
 		}));
 	},

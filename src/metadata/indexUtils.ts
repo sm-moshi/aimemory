@@ -5,7 +5,7 @@
  * and search functionality. No external dependencies or side effects.
  */
 
-import type { FileMetrics } from "../types/index.js";
+import type { FileMetrics } from "../types/index";
 
 /**
  * Count the number of lines in a text string
@@ -48,11 +48,7 @@ export function formatFileSize(bytes: number): string {
 /**
  * Calculate comprehensive file metrics from content and file stats
  */
-export function calculateFileMetrics(
-	fullContent: string,
-	contentOnly: string,
-	fileSizeBytes: number,
-): FileMetrics {
+export function calculateFileMetrics(fullContent: string, contentOnly: string, fileSizeBytes: number): FileMetrics {
 	return {
 		sizeBytes: fileSizeBytes,
 		sizeFormatted: formatFileSize(fileSizeBytes),

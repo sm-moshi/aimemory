@@ -1,27 +1,26 @@
-import { CacheManager } from "@/core/Cache.js";
-import { FileOperationManager } from "@/core/FileOperationManager.js";
-import type { MemoryBankServiceCore } from "@/core/memoryBankServiceCore.js";
-import { MemoryBankServiceCore as ConcreteMemoryBankServiceCore } from "@/core/memoryBankServiceCore.js";
-import { registerMemoryBankPrompts } from "@/cursor/mcp-prompts-registry.js";
-import { StreamingManager } from "@/performance/StreamingManager.js";
-import { UpdateMemoryBankFileSchema } from "@/types/config.js";
-import type { MemoryBankFileType } from "@/types/core.js";
-import { isError } from "@/types/errorHandling.js";
-import type { Logger } from "@/types/logging.js";
-import type { BaseMCPServerConfig } from "@/types/mcpTypes.js";
-import { validateFileType } from "@/utils/common/type-guards.js";
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { createLogger } from "@utils/logging.js";
-import { getExtensionVersion } from "@utils/version.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { CacheManager } from "../../core/Cache";
+import { FileOperationManager } from "../../core/FileOperationManager";
+import type { MemoryBankServiceCore } from "../../core/memoryBankServiceCore";
+import { MemoryBankServiceCore as ConcreteMemoryBankServiceCore } from "../../core/memoryBankServiceCore";
+import { registerMemoryBankPrompts } from "../../cursor/mcp-prompts-registry";
+import { StreamingManager } from "../../performance/StreamingManager";
+import { UpdateMemoryBankFileSchema } from "../../types/config";
+import type { MemoryBankFileType } from "../../types/core";
+import { isError } from "../../types/errorHandling";
+import type { Logger } from "../../types/logging";
+import type { BaseMCPServerConfig } from "../../types/mcpTypes";
+import { getExtensionVersion, isValidMemoryBankFileType as validateFileType } from "../../utils/helpers";
+import { createLogger } from "../../utils/logging";
 import {
 	MemoryBankOperations,
 	createErrorResponse,
 	createMemoryBankTool,
 	createSimpleMemoryBankTool,
 	ensureMemoryBankReady,
-} from "./mcpToolHelpers.js";
-import type { MetadataToolRegistrar } from "./metadataToolRegistrar.js";
+} from "./mcpToolHelpers";
+import type { MetadataToolRegistrar } from "./metadataToolRegistrar";
 
 /**
  * Base MCP Server class that provides common functionality
@@ -42,9 +41,7 @@ export abstract class BaseMCPServer {
 
 		// Ensure we have a valid path
 		if (!memoryBankPath) {
-			throw new Error(
-				"MCPServer requires either memoryBankPath or workspacePath to be specified",
-			);
+			throw new Error("MCPServer requires either memoryBankPath or workspacePath to be specified");
 		}
 
 		const serverName = config.name ?? "BaseMCPServer";
@@ -75,17 +72,12 @@ export abstract class BaseMCPServer {
 			// Create the required dependencies for MemoryBankServiceCore
 			const cacheManager = new CacheManager(this.logger);
 			const fileOperationManager = new FileOperationManager(this.logger, memoryBankPath);
-			const streamingManager = new StreamingManager(
-				this.logger,
-				fileOperationManager,
-				memoryBankPath,
-				{
-					sizeThreshold: 1024 * 1024, // 1MB
-					chunkSize: 64 * 1024, // 64KB
-					timeout: 5000, // 5 seconds
-					enableProgressCallbacks: false,
-				},
-			);
+			const streamingManager = new StreamingManager(this.logger, fileOperationManager, memoryBankPath, {
+				sizeThreshold: 1024 * 1024, // 1MB
+				chunkSize: 64 * 1024, // 64KB
+				timeout: 5000, // 5 seconds
+				enableProgressCallbacks: false,
+			});
 
 			this.memoryBank = new ConcreteMemoryBankServiceCore(
 				memoryBankPath,
@@ -116,44 +108,36 @@ export abstract class BaseMCPServer {
 	 * Registers common resources that all MCP servers need
 	 */
 	private registerCommonResources(): void {
-		this.server.resource(
-			"memory-bank-files",
-			new ResourceTemplate("memory-bank://{fileType}", {
-				list: async () => ({
-					resources: [
-						{
-							uri: "memory-bank://",
-							name: "Memory Bank Files",
-						},
-					],
-				}),
-			}),
-			async (uri, { fileType }) => {
-				const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-				if (isError(readyCheck)) {
-					throw readyCheck.error;
-				}
-				const fileTypeValue = Array.isArray(fileType) ? fileType[0] : fileType;
-				if (!fileTypeValue) {
-					throw new Error("fileType parameter is required");
-				}
-				const type = this.validateFileType(fileTypeValue);
-				const file = this.memoryBank.getFile(type);
+		this.server.resource("memory-bank-files", "memory-bank://{fileType}", async (uri: URL) => {
+			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
+			if (isError(readyCheck)) {
+				throw readyCheck.error;
+			}
 
-				if (!file) {
-					throw new Error(`File ${type} not found`);
-				}
+			// Extract fileType from URI params
+			const params = new URLSearchParams(uri.search);
+			const fileType = params.get("fileType");
 
-				return {
-					contents: [
-						{
-							uri: uri.href,
-							text: file.content,
-						},
-					],
-				};
-			},
-		);
+			if (!fileType) {
+				throw new Error("fileType parameter is required");
+			}
+
+			const type = this.validateFileType(fileType);
+			const file = this.memoryBank.getFile(type);
+
+			if (!file) {
+				throw new Error(`File ${type} not found`);
+			}
+
+			return {
+				contents: [
+					{
+						uri: uri.toString(),
+						text: file.content,
+					},
+				],
+			};
+		});
 
 		this.server.resource("memory-bank-root", "memory-bank://", async () => {
 			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
@@ -240,9 +224,7 @@ export abstract class BaseMCPServer {
 						const formattedErrors = validationResult.error.errors
 							.map(e => `Parameter '${e.path.join(".")}': ${e.message}`)
 							.join(", ");
-						throw new Error(
-							`Invalid parameters for update-memory-bank-file: ${formattedErrors}`,
-						);
+						throw new Error(`Invalid parameters for update-memory-bank-file: ${formattedErrors}`);
 					}
 					const validatedArgs = validationResult.data;
 
@@ -277,8 +259,44 @@ export abstract class BaseMCPServer {
 		);
 	}
 
-	private validateFileType(fileType: string): MemoryBankFileType {
-		return validateFileType(fileType);
+	protected registerDefaultResources(server: McpServer) {
+		server.resource("memory-bank-file", "file:///{filepath}?fileType={fileType}", async (uri: URL) => {
+			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
+			if (isError(readyCheck)) {
+				throw readyCheck.error;
+			}
+
+			// Extract fileType from URI params
+			const params = new URLSearchParams(uri.search);
+			const fileType = params.get("fileType");
+
+			if (!fileType) {
+				throw new Error("fileType parameter is required");
+			}
+
+			const type = this.validateFileType(fileType);
+			const file = this.memoryBank.getFile(type);
+
+			if (!file) {
+				throw new Error(`File of type ${type} not found in memory bank.`);
+			}
+
+			return {
+				contents: [
+					{
+						uri: uri.toString(),
+						text: file.content,
+					},
+				],
+			};
+		});
+	}
+
+	protected validateFileType(fileType: string): MemoryBankFileType {
+		if (!validateFileType(fileType)) {
+			throw new Error(`Invalid file type: ${fileType}`);
+		}
+		return fileType;
 	}
 
 	protected registerCustomResources(): void {
@@ -296,9 +314,7 @@ export abstract class BaseMCPServer {
 			if (isError(readyCheck)) {
 				return createErrorResponse(readyCheck.error, toolName);
 			}
-			const { content, nextAction } = MemoryBankOperations.buildReviewResponsePayload(
-				this.memoryBank,
-			);
+			const { content, nextAction } = MemoryBankOperations.buildReviewResponsePayload(this.memoryBank);
 			return {
 				content,
 				nextAction,

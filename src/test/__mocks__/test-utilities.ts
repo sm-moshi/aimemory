@@ -1,5 +1,7 @@
 import type { Stats } from "node:fs";
-import type { FileOperationManager } from "@/core/FileOperationManager.js";
+import { expect, vi } from "vitest";
+import type { ExtensionContext } from "vscode";
+import type { FileOperationManager } from "../../core/FileOperationManager";
 import type {
 	CursorMCPConfig,
 	CursorMCPServerConfig,
@@ -9,9 +11,7 @@ import type {
 	MemoryBankFile,
 	MemoryBankFileType,
 	Result,
-} from "@/types/index.js";
-import { expect, vi } from "vitest";
-import type { ExtensionContext } from "vscode";
+} from "../../types/index";
 
 // =============================================================================
 // CORE TEST UTILITIES - Essential functions used across multiple test files
@@ -303,9 +303,7 @@ export function createMockDirectoryListing(): [string, number][] {
 /**
  * Create standard Node.js errno exceptions for testing
  */
-export function createEnoentError(
-	message = "ENOENT: no such file or directory",
-): NodeJS.ErrnoException {
+export function createEnoentError(message = "ENOENT: no such file or directory"): NodeJS.ErrnoException {
 	const error = new Error(message) as NodeJS.ErrnoException;
 	error.code = "ENOENT";
 	error.errno = -2;

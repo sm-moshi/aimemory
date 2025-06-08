@@ -1,0 +1,87 @@
+---
+description: Build System, Software Stack & Tooling Rules
+globs:
+alwaysApply: false
+---
+# Build System & Tooling Rules
+
+## Build Pipeline Requirements
+
+### Technology Stack
+- **Primary Build**: Rollup 4.42+ with SWC plugin for TypeScript compilation
+- **Webview Build**: Vite 6.3.5+ with React 19 support
+- **Code Quality**: Biome for unified linting and formatting
+- **Testing**: Vitest 3.2+ with MSW 2.10+ for API mocking
+- **Package Manager**: pnpm with workspace configuration
+
+### TypeScript Compilation
+- **Primary Compiler**: tsgo via `@typescript/native-preview` for early future compability
+- **Editor Integration**: Enable `"typescript.experimental.useTsgo": true` in VS Code/Cursor settings
+- **Fallback to tsc**: Use standard `tsc` when tsgo limitations require it:
+  - Project references (`--build` mode)
+  - Full declaration emit requirements
+  - Incremental builds (not yet supported)
+- **Module Resolution**: Use `nodenext` or `bundler` (avoid deprecated `node`/`node10`/`node16`)
+
+### Build Targets
+- Extension: CommonJS for main process
+- MCP CLI: CommonJS for Node.js
+- Webview: ES modules for browser
+
+## Configuration Standards
+
+### TypeScript
+- Strict mode enabled for main codebase
+- Test files: relaxed rules for easier implementation
+- Use verbatimModuleSyntax and path mapping
+- Multi-config structure with project references
+
+### Code Quality
+- Biome: tabs (4 spaces), 120 char lines, double quotes
+- No bypassing formatting/linting rules without justification
+- Automated fixes: `biome check --write .`
+
+### Testing
+- **Unified Vitest Projects**: Single config with extension/webview projects pattern
+- Coverage threshold: >80% with V8 provider
+- Use `vitest run` flag (not watch mode by default)
+- **Centralized mocking**: Standardized VS Code API mocks, avoid scattered vi.mock() overrides
+- **Single testing strategy**: Consistent patterns across entire codebase
+
+## Development Workflow
+
+### TypeScript Workflow
+- **Type Checking**: Use `tsgo --noEmit` for fast validation
+- **Build Scripts**: Default to tsgo, fallback to tsc for unsupported features
+- **CI/CD**: Validate both tsgo and tsc compatibility for production builds
+
+### Performance Requirements
+- SWC compilation for 20x faster TypeScript processing
+- Tree-shaking with ES2022 imports
+- Source maps: development only
+- HMR: Sub-100ms updates for webview
+- Parallel development: watch mode + dev server
+- Quality gates: type checking + linting + testing
+
+## Forbidden
+
+### Build Configuration
+- No manual compilation/reinstall/restart workflows
+- No hardcoded performance benchmarks in rules
+- No bypassing quality gates in CI/CD
+- No shell: true in child_process operations
+- **No over-engineered folder structures**: Follow function-based organization, not arbitrary depth limits
+
+### Dependencies
+- Pin critical build tools (Rollup, SWC, Biome) to exact versions
+- Use overrides for security patches in pnpm
+- Commit pnpm-lock.yaml for reproducible builds
+
+---
+
+**Cross-References:**
+#rollup #swc #vite #biome #vitest #tsgo #performance #bundle-optimization #testing-framework #ci-cd #unified-testing #kiss-compliance
+
+**See Also:** @/techContext/stack.md for detailed technology rationale
+**Phase 4 Updates:** Unified vitest projects pattern, simplified folder organization, KISS principle enforcement.
+Last updated: 2025-06-07

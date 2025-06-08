@@ -1,11 +1,11 @@
 import { vi } from "vitest";
 
-// Modern Vitest pattern: Create properly structured mock objects
-// Note: vi.hoisted() is for module-level hoisting, not for creating shared instances
+// Modern Vitest pattern: Create properly structured mock objects Note: vi.hoisted() is for
+// module-level hoisting, not for creating shared instances
 
 /**
- * Shared logger mock - used across multiple test files
- * Replaces individual logger mocking in every test
+ * Shared logger mock - used across multiple test files Replaces individual logger mocking in every
+ * test
  */
 export const mockLogger = {
 	info: vi.fn(),
@@ -30,8 +30,7 @@ export const mockOutputChannel = {
 };
 
 /**
- * Shared MCP server instance mock
- * Consolidates MCP server mocking patterns
+ * Shared MCP server instance mock Consolidates MCP server mocking patterns
  */
 export const mockMcpServer = {
 	registerTool: vi.fn(),
@@ -43,8 +42,7 @@ export const mockMcpServer = {
 };
 
 /**
- * Shared memory bank service core mock
- * Replaces duplicate memory bank service mocking
+ * Shared memory bank service core mock Replaces duplicate memory bank service mocking
  */
 export const mockMemoryBankServiceCore = {
 	initialize: vi.fn().mockResolvedValue(undefined),
@@ -58,8 +56,8 @@ export const mockMemoryBankServiceCore = {
 };
 
 /**
- * Shared file system operations mock
- * Consolidates common file operation patterns with proper Result pattern
+ * Shared file system operations mock Consolidates common file operation patterns with proper Result
+ * pattern
  */
 export const mockFileOperations = {
 	ensureDir: vi.fn().mockResolvedValue(undefined),
@@ -75,8 +73,7 @@ export const mockFileOperations = {
 };
 
 /**
- * Shared path utilities mock
- * Replaces path-related mocking across tests
+ * Shared path utilities mock Replaces path-related mocking across tests
  */
 export const mockPathUtils = {
 	join: vi.fn((...parts: string[]) => parts.join("/")),
@@ -88,8 +85,7 @@ export const mockPathUtils = {
 };
 
 /**
- * Shared validation mock
- * Consolidates validation patterns
+ * Shared validation mock Consolidates validation patterns
  */
 export const mockValidation = {
 	validateMemoryBankPath: vi.fn().mockReturnValue(true),
@@ -99,8 +95,7 @@ export const mockValidation = {
 };
 
 /**
- * Shared VS Code window mock
- * Replaces mockVscodeWindow from global-mocks
+ * Shared VS Code window mock Replaces mockVscodeWindow from global-mocks
  */
 export const mockWindow = {
 	showInformationMessage: vi.fn(),
@@ -112,8 +107,7 @@ export const mockWindow = {
 };
 
 /**
- * Shared VS Code commands mock
- * Replaces mockVscodeCommands from global-mocks
+ * Shared VS Code commands mock Replaces mockVscodeCommands from global-mocks
  */
 export const mockCommands = {
 	registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
@@ -122,8 +116,8 @@ export const mockCommands = {
 };
 
 /**
- * Shared VS Code workspace mock - with proper structure
- * Replaces mockVscodeWorkspace from global-mocks
+ * Shared VS Code workspace mock - with proper structure Replaces mockVscodeWorkspace from
+ * global-mocks
  */
 export const mockWorkspace = {
 	fs: {
@@ -211,8 +205,8 @@ export const mockFileStreamer = {
 };
 
 /**
- * Helper function to safely clear mock functions in an object
- * Provides explicit control while reducing repetitive code
+ * Helper function to safely clear mock functions in an object Provides explicit control while
+ * reducing repetitive code
  */
 function clearMockGroup(mockObj: Record<string, any>, groupName: string): void {
 	if (!mockObj) {
@@ -221,9 +215,7 @@ function clearMockGroup(mockObj: Record<string, any>, groupName: string): void {
 	}
 
 	// Verify at least one property has mockClear before proceeding
-	const hasAnyMockClear = Object.values(mockObj).some(
-		prop => prop && typeof prop.mockClear === "function",
-	);
+	const hasAnyMockClear = Object.values(mockObj).some(prop => prop && typeof prop.mockClear === "function");
 
 	if (!hasAnyMockClear) {
 		console.warn(`Mock group "${groupName}" has no mockClear functions, skipping cleanup`);
@@ -243,8 +235,8 @@ function clearMockGroup(mockObj: Record<string, any>, groupName: string): void {
 }
 
 /**
- * Reset all shared mocks to their initial state
- * Explicitly handles each mock group for maintainability and debugging
+ * Reset all shared mocks to their initial state Explicitly handles each mock group for
+ * maintainability and debugging
  */
 export function resetSharedMocks() {
 	// Core service mocks - explicitly listed for clarity

@@ -131,24 +131,14 @@ export default [
 			compact: isProduction,
 			validate: isDevelopment,
 		},
-		external: [
-			"vscode",
-			"canvas",
-			"node:test",
-			"node:worker_threads",
-			"gray-matter",
-			/^node:*/,
-		],
+		external: ["vscode", "canvas", "node:test", "node:worker_threads", "gray-matter", /^node:*/],
 
 		plugins: getPlugins(),
 
 		onwarn(warning, warn) {
 			const suppressedCodes = ["CIRCULAR_DEPENDENCY", "THIS_IS_UNDEFINED", "EVAL"];
 
-			if (
-				suppressedCodes.includes(warning.code) &&
-				warning.message.includes("node_modules")
-			) {
+			if (suppressedCodes.includes(warning.code) && warning.message.includes("node_modules")) {
 				return;
 			}
 
@@ -177,10 +167,7 @@ export default [
 		external: ["vscode", "canvas", "node:test", "node:worker_threads", "gray-matter"],
 		plugins: getPlugins(),
 		onwarn(warning, warn) {
-			if (
-				warning.code === "CIRCULAR_DEPENDENCY" &&
-				warning.message.includes("node_modules")
-			) {
+			if (warning.code === "CIRCULAR_DEPENDENCY" && warning.message.includes("node_modules")) {
 				return;
 			}
 			if (warning.code === "THIS_IS_UNDEFINED" && warning.message.includes("node_modules")) {

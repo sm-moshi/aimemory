@@ -5,10 +5,7 @@ import type { MemoryBankStatusProps } from "../../types/components";
 import { cn } from "../../utils/cn";
 import { sendLog } from "../../utils/message";
 
-export function MemoryBankStatus({
-	onReviewAllFiles,
-	reviewLoading,
-}: MemoryBankStatusProps): ReactNode {
+export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBankStatusProps): ReactNode {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMemoryBankInitialized, setIsMemoryBankInitialized] = useState(false);
 	const [updateLoading, setUpdateLoading] = useState(false);
@@ -87,9 +84,7 @@ export function MemoryBankStatus({
 				{!isLoading && (
 					<span
 						className={cn(
-							isMemoryBankInitialized
-								? "bg-green-200 text-green-800"
-								: "bg-red-200 text-red-800",
+							isMemoryBankInitialized ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
 							"px-2 py-0.5 rounded-full text-xs font-semibold",
 						)}
 					>

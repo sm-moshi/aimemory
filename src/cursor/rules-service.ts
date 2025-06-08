@@ -1,7 +1,7 @@
 import { join } from "node:path";
-import type { Logger } from "@/types/logging.js";
-import { createLogger } from "@utils/logging.js";
 import { type ExtensionContext, FileType, Uri, window, workspace } from "vscode";
+import type { Logger } from "../types/logging";
+import { createLogger } from "../utils/logging";
 
 export class CursorRulesService {
 	private readonly cursorRulesPath = ".cursor/rules/";

@@ -1,0 +1,277 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Project Structure Consolidation Rules
+
+## Purpose
+
+Guides the systematic consolidation of the AI Memory Extension codebase from 55 TypeScript files to 21 files (62% reduction) while maintaining functionality, performance, and VS Code extension best practices.
+
+**Reference Documents:**
+- [Project Structure Plan](mdc:docs/project-structure.md)
+- [Detailed Refactoring Plan](mdc:docs/refactoring-plan.md)
+
+---
+
+## Target Structure (21 Files)
+
+### Core Architecture
+```
+src/
+├── extension.ts                    # 🎯 Minimal entry point (~300 lines)
+│
+├── vscode/                         # 🔧 VS Code Integration (3 files)
+│   ├── webview-provider.ts         # Webview creation & postMessage (~450 lines)
+│   ├── commands.ts                 # All extension commands (~400 lines)
+│   └── workspace.ts                # Configuration & workspace Management (~350 lines)
+│
+├── mcp/                           # 🚀 MCP Server (3 files)
+│   ├── server.ts                  # Server logic & tool registry (~450 lines)
+│   ├── tools.ts                   # All MCP tools implementation (~550 lines)
+│   └── transport.ts               # stdio communication (~300 lines)
+│
+├── core/                          # 💼 Business Logic (3 files)
+│   ├── memory-bank.ts             # Memory bank operations (~500 lines)
+│   ├── file-operations.ts         # File streaming & management (~400 lines)
+│   └── metadata.ts                # Search index & metadata (~350 lines)
+│
+├── lib/                           # 🛠️ Shared Utilities (5 files)
+│   ├── types/                     # Type definitions (3 files)
+│   │   ├── core.ts                # Core types (~400 lines)
+│   │   ├── operations.ts          # File ops, MCP, validation types (~450 lines)
+│   │   └── system.ts              # Cache, config, metadata types (~400 lines)
+│   ├── validation.ts              # Zod schemas & security (~350 lines)
+│   └── utils.ts                   # Helper functions (~300 lines)
+│
+├── cursor-integration.ts          # 🎯 Cursor MCP config & rules (~400 lines)
+├── templates/                     # 📋 All Templates (5 files)
+│   ├── core.ts                    # Core memory bank templates (~300 lines)
+│   ├── tech.ts                    # Technology context templates (~350 lines)
+│   ├── system.ts                  # System patterns templates (~280 lines)
+│   ├── progress.ts                # Progress tracking templates (~250 lines)
+│   └── memory-bank-rules.md       # Memory bank rules template (~150 lines)
+│
+├── webview/                       # ⚛️ React App (unchanged)
+└── assets/                        # 🎨 Static Resources
+```
+
+---
+
+## Consolidation Principles
+
+### File Size Guidelines
+- **Target**: 300-550 lines per file (manageable, not overwhelming)
+- **Maximum**: 600 lines before considering split
+- **Logic**: Group related functionality, not arbitrary limits
+- **Performance**: Maintain fast VS Code extension activation
+- **Best Practices**:
+
+### Folder Organization
+- **6 main folders**: Clear functional separation
+- **No deep nesting**: Maximum 2-3 levels deep
+- **Logical grouping**: By function (vscode/, mcp/, core/, lib/)
+- **Template isolation**: Separate folder for all template files
+
+### Import Strategy
+- **Relative imports preferred**: Reduce path alias complexity
+- **Clear dependencies**: Explicit import paths
+- **No circular dependencies**: Validate during migration
+- **Type-only imports**: Use `import type` where appropriate
+
+---
+
+## Migration Rules
+
+### Phase-Based Approach
+1. **Phase 1**: Create new structure (empty files with exports)
+2. **Phase 2**: Migrate content systematically
+3. **Phase 3**: Update build configuration
+4. **Phase 4**: Validate and cleanup
+
+### Content Migration Priority
+1. **Types first**: Safest migration (lib/types/)
+2. **Utilities second**: Core dependencies (lib/)
+3. **Templates third**: Self-contained (templates/)
+4. **Core logic**: Business functionality (core/)
+5. **MCP server**: Server implementation (mcp/)
+6. **VS Code integration**: Extension APIs (vscode/)
+7. **Cursor integration**: Configuration logic
+
+### Safety Requirements
+- **Git commits**: After each major section
+- **Build validation**: After each phase
+- **Test verification**: Continuous validation
+- **Rollback ready**: Keep old files until complete
+
+---
+
+## File Consolidation Mapping
+
+### Types Consolidation
+**Target: lib/types/ (3 files)**
+- `core.ts` ← `src/types/{core,errorHandling,logging}.ts`
+- `operations.ts` ← `src/types/{fileOperations,mcpTypes,memoryBankSchemas}.ts`
+- `system.ts` ← `src/types/{system,config,metadata}.ts`
+
+### Core Business Logic
+**Target: core/ (3 files)**
+- `memory-bank.ts` ← `src/core/{memoryBankServiceCore,Cache}.ts`
+- `file-operations.ts` ← `src/core/FileOperationManager.ts` + `src/performance/{FileStreamer,StreamingManager}.ts`
+- `metadata.ts` ← `src/metadata/*.ts`
+
+### MCP Server Logic
+**Target: mcp/ (3 files)**
+- `server.ts` ← `src/mcp/{mcpServerCliClass,mcpAdapter}.ts` + `src/mcp/shared/baseMcpServer.ts`
+- `tools.ts` ← `src/mcp/{coreMemoryBankMCP,metadataMemoryBankMCP}.ts` + `src/mcp/shared/*.ts`
+- `transport.ts` ← `src/mcp/mcpServerCliEntry.ts`
+
+### VS Code Integration
+**Target: vscode/ (3 files)**
+- `webview-provider.ts` ← `src/app/extension/webviewManager.ts`
+- `commands.ts` ← `src/app/extension/commandHandler.ts`
+- `workspace.ts` ← Extension lifecycle from `src/extension.ts`
+
+### Utilities & Validation
+**Target: lib/ (2 files)**
+- `validation.ts` ← `src/shared/validation/*.ts` + security validation
+- `utils.ts` ← `src/utils/*.ts` (all utility functions)
+
+### Templates & Configuration
+**Target: templates/ (5 files)**
+- Move `src/shared/templates/*.ts` → `src/templates/*.ts`
+- Move `src/cursor/memory-bank-rules.md` → `src/templates/memory-bank-rules.md`
+- Cursor integration: `src/cursor/*.ts` → `src/cursor-integration.ts`
+
+---
+
+## Build System Updates
+
+### TypeScript Configuration
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/lib/*": ["./src/lib/*"],
+      "@/core/*": ["./src/core/*"],
+      "@/mcp/*": ["./src/mcp/*"],
+      "@/vscode/*": ["./src/vscode/*"],
+      "@/templates/*": ["./src/templates/*"]
+    }
+  }
+}
+```
+
+### Rollup Configuration Updates
+- Update path aliases to match new structure
+- Modify copy rules for template files
+- Validate bundle analysis works with consolidated files
+
+---
+
+## Quality Assurance
+
+### Validation Commands
+```bash
+# Type checking
+pnpm type-check
+
+# Build validation
+pnpm build
+
+# Test validation
+pnpm test
+
+# Linting
+pnpm lint
+```
+
+### Success Criteria
+- [ ] All 21 target files created and populated
+- [ ] Extension activates in <2 seconds
+- [ ] All MCP tools functional
+- [ ] Webview communication working
+- [ ] Test suite passes (>80% coverage)
+- [ ] Build system updated and working
+- [ ] No circular dependencies
+- [ ] Clean import structure
+
+### Performance Requirements
+- **Extension activation**: <2 seconds
+- **Memory usage**: No increase from current
+- **Build time**: Should improve with fewer files
+- **Development workflow**: Maintain hot reload functionality
+
+---
+
+## Integration with Existing Rules
+
+### VS Code Extension Standards
+- Follow [001-vsix-extension.mdc](mdc:.cursor/rules/001-vsix-extension.mdc) for architecture
+- Apply security requirements for webview CSP compliance
+- Maintain extension lifecycle best practices
+
+### Build System Compliance
+- Align with [002-build-system-tooling.mdc](mdc:.cursor/rules/002-build-system-tooling.mdc)
+- Use SWC compilation and Rollup bundling
+- Maintain unified testing with Vitest
+
+### Memory Bank Integration
+- Preserve [003-memory-bank-integration.mdc](mdc:.cursor/rules/003-memory-bank-integration.mdc) patterns
+- Maintain MCP tool functionality
+- Keep error boundary patterns
+
+### Development Workflow
+- Apply [005-gitflow.mdc](mdc:.cursor/rules/005-gitflow.mdc) branching strategy
+- Use feature branches for consolidation work
+- Maintain conventional commit format
+
+---
+
+## Rollback Strategy
+
+### If Issues Arise
+```bash
+# Rollback to previous commit
+git reset --hard HEAD~1
+
+# Restore specific files
+git checkout HEAD~1 -- src/path/to/file.ts
+```
+
+### Validation Steps
+1. **After each file**: Import validation
+2. **After each section**: Build validation
+3. **After each phase**: Full test suite
+4. **Before cleanup**: Complete system validation
+
+---
+
+## Expected Benefits
+
+### Reduced Complexity
+- **62% fewer files**: 55 → 21 TypeScript files
+- **60% fewer folders**: 15+ → 6 main folders
+- **Improved navigation**: Logical file organization
+- **Cleaner imports**: Reduced import complexity
+
+### Maintained Quality
+- **Same functionality**: No feature regression
+- **Same performance**: Extension activation speed preserved
+- **Same reliability**: Error handling patterns maintained
+- **Same testability**: Test coverage maintained
+
+### Enhanced Maintainability
+- **Logical grouping**: Related code co-located
+- **Reasonable file sizes**: 300-550 lines per file
+- **Clear boundaries**: Function-based organization
+- **Better documentation**: Structure matches intent
+
+---
+
+**Status**: Planning Phase
+**Next Steps**: Begin Phase 1 implementation
+**Reference**: [Detailed Refactoring Plan](mdc:docs/refactoring-plan.md)
+
+**Last Updated**: 2025-06-08

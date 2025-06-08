@@ -16,11 +16,7 @@ export const postMessage = (message: WebviewToExtensionMessage) => {
  * @param level The log level ("info" | "error"). Defaults to "info".
  * @param meta Optional structured metadata for context.
  */
-export function sendLog(
-	text: string,
-	level: WebviewLogLevel = "info",
-	meta?: Record<string, unknown>,
-) {
+export function sendLog(text: string, level: WebviewLogLevel = "info", meta?: Record<string, unknown>) {
 	const message: WebviewToExtensionMessage = {
 		command: "logMessage",
 		level,

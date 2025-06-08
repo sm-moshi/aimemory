@@ -94,43 +94,43 @@ export const Uri = {
 	})),
 };
 
-// VS Code enums and constants with proper typing
+// VS Code enums and constants with proper typing^
 export const FileType = {
-	File: 1,
-	Directory: 2,
-	SymbolicLink: 64,
-	Unknown: 0,
+	file: 1,
+	directory: 2,
+	symbolicLink: 64,
+	unknown: 0,
 } as const;
 
 export const ExtensionMode = {
-	Production: 1,
-	Development: 2,
-	Test: 3,
+	production: 1,
+	development: 2,
+	test: 3,
 } as const;
 
 export const ConfigurationTarget = {
-	Global: 1,
-	Workspace: 2,
-	WorkspaceFolder: 3,
+	global: 1,
+	workspace: 2,
+	workspaceFolder: 3,
 } as const;
 
 export const StatusBarAlignment = {
-	Left: 1,
-	Right: 2,
+	left: 1,
+	right: 2,
 } as const;
 
 export const TreeItemCollapsibleState = {
-	None: 0,
-	Collapsed: 1,
-	Expanded: 2,
+	none: 0,
+	collapsed: 1,
+	expanded: 2,
 } as const;
 
 export const ViewColumn = {
-	One: 1,
-	Two: 2,
-	Three: 3,
-	Active: -1,
-	Beside: -2,
+	one: 1,
+	two: 2,
+	three: 3,
+	active: -1,
+	beside: -2,
 } as const;
 
 // Export mock instances for test assertions with proper types

@@ -1,36 +1,32 @@
 import { resolve } from "node:path";
-import {
-	INITIALIZE_MEMORY_BANK_PROMPT,
-	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
-} from "@/cursor/mcp-prompts.js";
-import type { MemoryBankFileType } from "@/types/core.js";
-import { MemoryBankError, isError, tryCatchAsync } from "@/types/index.js";
-import type { AsyncResult, Result } from "@/types/index.js";
-import type { BaseMCPServerConfig, MCPServerCLIOptions } from "@/types/mcpTypes.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createLogger } from "@utils/logging.js";
-import { getExtensionVersion } from "@utils/version.js";
 import { z } from "zod";
-import { BaseMCPServer } from "./shared/baseMcpServer.js";
+import { INITIALIZE_MEMORY_BANK_PROMPT, MEMORY_BANK_ALREADY_INITIALIZED_PROMPT } from "../cursor/mcp-prompts";
+import type { MemoryBankFileType } from "../types/core";
+import { MemoryBankError, isError, tryCatchAsync } from "../types/index";
+import type { AsyncResult, Result } from "../types/index";
+import type { BaseMCPServerConfig, MCPServerCLIOptions } from "../types/mcpTypes";
+import { getExtensionVersion } from "../utils/helpers";
+import { createLogger } from "../utils/logging";
+import { BaseMCPServer } from "./shared/baseMcpServer";
 import {
 	MemoryBankOperations,
 	createErrorResponse,
 	createMemoryBankTool,
 	createSuccessResponse,
 	ensureMemoryBankReady,
-} from "./shared/mcpToolHelpers.js";
+} from "./shared/mcpToolHelpers";
 
 /**
- * Improved CLI-based MCP Server that extends BaseMCPServer
- * and provides proper dependency injection and testability.
+ * Improved CLI-based MCP Server that extends BaseMCPServer and provides proper dependency injection
+ * and testability.
  */
 export class MCPServerCLI extends BaseMCPServer {
 	private readonly logLevel: string;
 	constructor(config?: MCPServerCLIOptions) {
 		// Handle flexible path configuration
 		const { MEMORY_BANK_PATH } = process.env;
-		const memoryBankPath =
-			config?.memoryBankPath ?? config?.workspacePath ?? MEMORY_BANK_PATH ?? process.cwd();
+		const memoryBankPath = config?.memoryBankPath ?? config?.workspacePath ?? MEMORY_BANK_PATH ?? process.cwd();
 
 		// Create the unified config for the base class
 		const baseConfig: BaseMCPServerConfig = {
@@ -76,10 +72,7 @@ export class MCPServerCLI extends BaseMCPServer {
 							errorCode: initFoldersResult.error.code || "UNKNOWN",
 							operation: "initializeFolders",
 						});
-						return createErrorResponse(
-							initFoldersResult.error,
-							"Error initializing memory bank folders",
-						);
+						return createErrorResponse(initFoldersResult.error, "Error initializing memory bank folders");
 					}
 					const loadFilesResult = await this.memoryBank.loadFiles();
 					if (isError(loadFilesResult)) {
@@ -125,16 +118,11 @@ export class MCPServerCLI extends BaseMCPServer {
 			{ fileType: z.string() },
 			createMemoryBankTool(
 				this.memoryBank,
-				async ({
-					fileType,
-				}: { fileType: string }): AsyncResult<string, MemoryBankError> => {
+				async ({ fileType }: { fileType: string }): AsyncResult<string, MemoryBankError> => {
 					const result = await tryCatchAsync(async () => {
 						const file = this.memoryBank.getFile(fileType as MemoryBankFileType);
 						if (!file) {
-							throw new MemoryBankError(
-								`File ${fileType} not found.`,
-								"FILE_NOT_FOUND",
-							);
+							throw new MemoryBankError(`File ${fileType} not found.`, "FILE_NOT_FOUND");
 						}
 						return file.content;
 					});
@@ -185,22 +173,18 @@ export class MCPServerCLI extends BaseMCPServer {
 					error: error instanceof Error ? error.message : String(error),
 					operation: "review-and-update-memory-bank",
 				});
-				return createErrorResponse(
-					error,
-					"Unexpected error reviewing memory bank via CLI tool",
-				);
+				return createErrorResponse(error, "Unexpected error reviewing memory bank via CLI tool");
 			}
 		});
 	}
 
 	/**
-	 * Register CLI-specific tools with custom initialization logic
+	 * Register CLI-specific tools with custom initialization logic Note: init-memory-bank tool is
+	 * already registered by BaseMCPServer.registerCommonTools()
 	 */
 	protected override registerCustomTools(): void {
-		this._registerInitMemoryBankTool();
 		this._registerReadMemoryBankFileTool();
 		this._registerReviewAndUpdateTool();
-		this._registerMetadataTools();
 	}
 
 	/**
@@ -218,9 +202,7 @@ export class MCPServerCLI extends BaseMCPServer {
 		const workspaceArg = args[2];
 
 		if (!workspaceArg) {
-			throw new Error(
-				"Workspace path argument not provided. MCP server cannot start without a workspace path.",
-			);
+			throw new Error("Workspace path argument not provided. MCP server cannot start without a workspace path.");
 		}
 
 		// Create a temporary logger for initialization logging

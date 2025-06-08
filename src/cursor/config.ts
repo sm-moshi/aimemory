@@ -1,5 +1,5 @@
-import type { FileOperationManager } from "@/core/FileOperationManager.js";
-import { updateCursorMCPServerConfig } from "./config-helpers.js";
+import type { FileOperationManager } from "../core/FileOperationManager";
+import { updateCursorMCPServerConfig } from "./config-helpers";
 
 /**
  * Updates the Cursor MCP config to point to our MCP server (STDIO mode)

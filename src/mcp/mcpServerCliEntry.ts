@@ -8,7 +8,7 @@
  * and better testability.
  */
 
-import { MCPServerCLI } from "./mcpServerCliClass.js";
+import { MCPServerCLI } from "./mcpServerCliClass";
 
 /**
  * Main entry point for the CLI MCP server
@@ -21,9 +21,7 @@ function main(): void {
 		// Connect to STDIO transport
 		server.connect();
 
-		console.error(
-			"[MCPServerCLI] Server started successfully and connected to STDIO transport",
-		);
+		console.error("[MCPServerCLI] Server started successfully and connected to STDIO transport");
 	} catch (error) {
 		console.error(
 			`[MCPServerCLI] Failed to start server: ${error instanceof Error ? error.message : String(error)}`,

@@ -1,6 +1,6 @@
-import { LogLevel } from "@/types/index.js";
-import { createConsoleLogger, createLogger, createTestLogger } from "@/utils/logging.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LogLevel } from "../../types/index";
+import { createConsoleLogger, createLogger, createTestLogger } from "../../utils/logging";
 
 describe("Centralized Logging System", () => {
 	let stderrSpy: any;

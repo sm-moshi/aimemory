@@ -12,17 +12,16 @@
 			"**/coverage/**",
 			".vscode-test/**",
 			".cursor/**",
-			".repomix/**",
 			"**/*.d.ts",
 			"**/build/**",
 			"**/.next/**",
-			"**/.cache/**",
-			"**/tsconfig*.json"
+			"**/.cache/**"
 		]
 	},
 	"formatter": {
+		"enabled": true,
 		"indentWidth": 4,
-		"lineWidth": 100
+		"lineWidth": 120
 	},
 	"javascript": {
 		"formatter": {
@@ -33,6 +32,7 @@
 		}
 	},
 	"linter": {
+		"enabled": true,
 		"rules": {
 			"performance": {
 				"noAccumulatingSpread": "warn",
@@ -50,7 +50,6 @@
 				"useNamingConvention": {
 					"level": "error",
 					"options": {
-						"requireAscii": false,
 						"strictCase": false,
 						"conventions": [
 							{
@@ -72,16 +71,8 @@
 								"formats": ["PascalCase"]
 							},
 							{
-								"selector": {
-									"kind": "objectLiteralProperty"
-								},
-								"formats": ["camelCase", "CONSTANT_CASE", "PascalCase"]
-							},
-							{
-								"selector": {
-									"kind": "classProperty"
-								},
-								"formats": ["camelCase", "PascalCase"]
+								"selector": { "kind": "classProperty" },
+								"formats": ["camelCase", "PascalCase", "CONSTANT_CASE"]
 							}
 						]
 					}
@@ -99,18 +90,17 @@
 	},
 	"overrides": [
 		{
-			"include": [
-				"**/*.test.ts",
-				"**/*.test.tsx",
-				"**/*.spec.ts",
-				"**/*.spec.tsx",
-				"**/test/**/*.ts",
-				"**/tests/**/*.ts"
-			],
+			"include": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/test/**/*.ts"],
 			"linter": {
 				"rules": {
+					"style": {
+						"useNamingConvention": "off"
+					},
 					"suspicious": {
 						"noExplicitAny": "off"
+					},
+					"correctness": {
+						"noUnusedVariables": "off"
 					}
 				}
 			}
@@ -123,16 +113,7 @@
 						"noExplicitAny": "off"
 					},
 					"style": {
-						"useNamingConvention": "off",
-						"useFilenamingConvention": "off"
-					},
-					"a11y": {
-						"noBlankTarget": {
-							"level": "error",
-							"options": {
-								"allowDomains": ["localhost"]
-							}
-						}
+						"useNamingConvention": "off"
 					}
 				}
 			}
@@ -142,8 +123,7 @@
 				"**/*.config.{js,ts}",
 				"**/vite.config.{js,ts}",
 				"**/rollup.config.{js,ts}",
-				"**/vitest.config.{js,ts}",
-				"**/tsconfig*.json"
+				"**/vitest.config.{js,ts}"
 			],
 			"linter": {
 				"rules": {
@@ -152,39 +132,6 @@
 					},
 					"style": {
 						"useNamingConvention": "off"
-					}
-				}
-			}
-		},
-		{
-			"include": ["src/types/config.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"useNamingConvention": "off"
-					}
-				}
-			}
-		},
-		{
-			"include": ["src/utils/logging.ts"],
-			"linter": {
-				"rules": {
-					"complexity": {
-						"useLiteralKeys": "off"
-					}
-				}
-			}
-		},
-		{
-			"include": ["src/test/__mocks__/services.ts"],
-			"linter": {
-				"rules": {
-					"correctness": {
-						"noUnusedVariables": "off"
-					},
-					"suspicious": {
-						"noExplicitAny": "off"
 					}
 				}
 			}

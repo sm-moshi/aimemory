@@ -1,19 +1,18 @@
-import type { Logger } from "@/types/logging.js";
-import { createMockConsole, standardAfterEach, standardBeforeEach } from "@test-utils/utilities.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // Import after mocking
-import { CoreMemoryBankMCP } from "../../mcp/coreMemoryBankMCP.js";
+import { CoreMemoryBankMCP } from "../../mcp/coreMemoryBankMCP";
+import type { Logger } from "../../types/logging";
+import { createMockConsole, standardAfterEach, standardBeforeEach } from "../test-utils/utilities";
 
 // Mock the template provider to return valid, non-empty templates
-vi.mock("@/shared/templates/template-registry.js", () => ({
+vi.mock("../../shared/templates/template-registry", () => ({
 	getTemplateForFileType: vi.fn(
-		(fileType: string) =>
-			`---\ntitle: Test ${fileType}\ntype: ${fileType}\n---\n\nTest content for ${fileType}.\n`,
+		(fileType: string) => `---\ntitle: Test ${fileType}\ntype: ${fileType}\n---\n\nTest content for ${fileType}.\n`,
 	),
 }));
 
 // Mock the core dependencies
-vi.mock("@/core/memoryBankServiceCore.js", () => ({
+vi.mock("../../core/memoryBankServiceCore", () => ({
 	MemoryBankServiceCore: vi.fn(() => ({
 		getIsMemoryBankInitialized: vi.fn().mockResolvedValue({ success: true, data: true }),
 		initializeFolders: vi.fn().mockResolvedValue({ success: true }),
@@ -23,9 +22,7 @@ vi.mock("@/core/memoryBankServiceCore.js", () => ({
 		updateFile: vi.fn(),
 		// Mock metadata-related methods
 		rebuildMetadataIndex: vi.fn().mockResolvedValue({ success: true }),
-		getMetadataIndexStats: vi
-			.fn()
-			.mockResolvedValue({ success: true, data: { fileCount: 0, totalSize: 0 } }),
+		getMetadataIndexStats: vi.fn().mockResolvedValue({ success: true, data: { fileCount: 0, totalSize: 0 } }),
 		getFileMetadata: vi.fn(),
 	})),
 }));

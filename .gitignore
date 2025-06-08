@@ -19,7 +19,6 @@ src/webview/node_modules/
 .secrets
 
 # Cursor
-# .cursor/
 memory-bank/*.md
 **/.log
 docs/devs/

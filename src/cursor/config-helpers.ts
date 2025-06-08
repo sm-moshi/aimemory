@@ -7,21 +7,17 @@
 
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { FileOperationManager } from "@/core/FileOperationManager.js";
-import type {
-	ConfigComparisonResult,
-	CursorMCPConfig,
-	CursorMCPServerConfig,
-} from "@/types/config.js";
-import type { Logger } from "@/types/logging.js";
+import { window } from "vscode";
+import type { FileOperationManager } from "../core/FileOperationManager";
+import type { ConfigComparisonResult, CursorMCPConfig, CursorMCPServerConfig } from "../types/config";
+import type { LogContext, Logger } from "../types/logging";
 import {
 	ensureDirectory as genericEnsureDirectory,
 	readJsonFile as genericReadJsonFile,
 	writeJsonFile as genericWriteJsonFile,
-} from "@utils/config-io-helpers.js";
-import { validateWorkspace } from "@utils/system/process-helpers.js";
-import { Logger as VSCodeLoggerSingleton } from "@utils/vscode/vscode-logger.js";
-import { window } from "vscode";
+} from "../utils/helpers";
+import { createLogger } from "../utils/logging";
+import { validateWorkspace } from "../utils/system/process-helpers";
 
 /**
  * Ensures the .cursor directory exists in the user's home directory.
@@ -35,56 +31,49 @@ export async function ensureCursorDirectory(
 ): Promise<string> {
 	const homeDir = homedir();
 	const cursorDir = join(homeDir, ".cursor");
-	const logger = loggerOverride ?? VSCodeLoggerSingleton.getInstance();
-	const loggerAdapter: Logger = {
-		error: (message: string, context?: unknown) =>
-			logger.error(message, context ? { context } : undefined),
-		warn: (message: string, context?: unknown) =>
-			logger.warn(message, context ? { context } : undefined),
-		info: (message: string, context?: unknown) =>
-			logger.info(message, context ? { context } : undefined),
-		debug: (message: string, context?: unknown) =>
-			logger.debug(message, context ? { context } : undefined),
-		trace: (message: string, context?: unknown) =>
-			logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
-		setLevel: () => {
-			/* no-op */
-		},
-	};
-	return genericEnsureDirectory(cursorDir, fileOperationManager, loggerAdapter);
+	const logger = loggerOverride ?? createLogger();
+	try {
+		const loggerAdapter: Logger = {
+			error: (message: string, context?: unknown) => logger.error(message, context ? { context } : undefined),
+			warn: (message: string, context?: unknown) => logger.warn(message, context ? { context } : undefined),
+			info: (message: string, context?: unknown) => logger.info(message, context ? { context } : undefined),
+			debug: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined),
+			trace: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
+			setLevel: () => {
+				/* no-op */
+			},
+		};
+		return await genericEnsureDirectory(cursorDir, fileOperationManager, loggerAdapter);
+	} catch (error) {
+		const context: LogContext = {
+			operation: "ensureCursorDirectory",
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+		};
+		logger.error("Unexpected error creating .cursor directory", context);
+		throw error;
+	}
 }
 
 /**
  * Reads and parses the Cursor MCP configuration file
  */
-export async function readCursorMCPConfig(
-	fileOperationManager: FileOperationManager,
-): Promise<CursorMCPConfig> {
+export async function readCursorMCPConfig(fileOperationManager: FileOperationManager): Promise<CursorMCPConfig> {
 	const homeDir = homedir();
 	const mcpConfigPath = join(homeDir, ".cursor", "mcp.json");
 	const defaultConfig: CursorMCPConfig = { mcpServers: {} };
-	const logger = VSCodeLoggerSingleton.getInstance();
+	const logger = createLogger();
 	const loggerAdapter: Logger = {
-		error: (message: string, context?: unknown) =>
-			logger.error(message, context ? { context } : undefined),
-		warn: (message: string, context?: unknown) =>
-			logger.warn(message, context ? { context } : undefined),
-		info: (message: string, context?: unknown) =>
-			logger.info(message, context ? { context } : undefined),
-		debug: (message: string, context?: unknown) =>
-			logger.debug(message, context ? { context } : undefined),
-		trace: (message: string, context?: unknown) =>
-			logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
+		error: (message: string, context?: unknown) => logger.error(message, context ? { context } : undefined),
+		warn: (message: string, context?: unknown) => logger.warn(message, context ? { context } : undefined),
+		info: (message: string, context?: unknown) => logger.info(message, context ? { context } : undefined),
+		debug: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined),
+		trace: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
 		setLevel: () => {
 			/* no-op */
 		},
 	};
-	return genericReadJsonFile<CursorMCPConfig>(
-		mcpConfigPath,
-		fileOperationManager,
-		loggerAdapter,
-		defaultConfig,
-	);
+	return genericReadJsonFile<CursorMCPConfig>(mcpConfigPath, fileOperationManager, loggerAdapter, defaultConfig);
 }
 
 /**
@@ -108,7 +97,7 @@ export function createAIMemoryServerConfig(workspacePath: string): CursorMCPServ
 	return {
 		name: "AI Memory",
 		command: "node",
-		args: [join(workspacePath, "dist", "mcp-server.js"), "--workspace", workspacePath],
+		args: [join(workspacePath, "dist", "mcp-server"), "--workspace", workspacePath],
 		cwd: workspacePath,
 	};
 }
@@ -150,10 +139,8 @@ export function compareServerConfigs(
 /**
  * High-level orchestrator for updating Cursor MCP configuration
  */
-export async function updateCursorMCPServerConfig(
-	fileOperationManager: FileOperationManager,
-): Promise<void> {
-	const logger = VSCodeLoggerSingleton.getInstance();
+export async function updateCursorMCPServerConfig(fileOperationManager: FileOperationManager): Promise<void> {
+	const logger = createLogger();
 
 	try {
 		// Validate workspace and get path

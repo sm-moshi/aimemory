@@ -1,19 +1,15 @@
-import { CommandHandler } from "@/app/extension/commandHandler.js";
-import { MemoryBankFileType } from "@/types/index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CommandHandler } from "../../app/extension/commandHandler";
 import {
 	createMockMCPServer,
 	createMockMemoryBankWithDefaults,
-	createMockWebviewManager,
-	mockWindow,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+} from "../test-utils";
 
 // Use centralized mocks
 const mockMemoryBank = createMockMemoryBankWithDefaults();
 const mockMCPServer = createMockMCPServer();
-const mockWebviewManager = createMockWebviewManager();
 
 // Connect the mocks
 mockMCPServer.getMemoryBank.mockReturnValue(mockMemoryBank);
@@ -30,64 +26,102 @@ describe("CommandHandler", () => {
 	afterEach(standardAfterEach);
 
 	describe("processMemoryCommand", () => {
-		it("should initialize memory bank if not initialized", async () => {
+		it("should return undefined for non-memory commands", async () => {
+			const result = await commandHandler.processMemoryCommand("some random text");
+			expect(result).toBeUndefined();
+		});
+
+		it("should return help text for invalid memory commands", async () => {
+			const result = await commandHandler.processMemoryCommand("/memory");
+			expect(result).toContain("AI Memory Bank Commands:");
+		});
+
+		it("should perform health check on '/memory health' command", async () => {
+			mockMemoryBank.checkHealth.mockResolvedValue({
+				success: true,
+				data: "Memory bank is healthy",
+			});
+
+			const result = await commandHandler.processMemoryCommand("/memory health");
+			expect(result).toBe("Memory bank is healthy");
+		});
+
+		it("should handle failed health check", async () => {
+			mockMemoryBank.checkHealth.mockResolvedValue({
+				success: false,
+				error: "Health check failed",
+			});
+
+			const result = await commandHandler.processMemoryCommand("/memory health");
+			expect(result).toContain("Error checking memory bank health");
+		});
+
+		it("should initialize memory bank on '/memory init' command", async () => {
+			mockMemoryBank.initializeFolders.mockResolvedValue({ success: true });
+			mockMemoryBank.loadFiles.mockResolvedValue({ success: true });
+
+			const result = await commandHandler.processMemoryCommand("/memory init");
+			expect(mockMemoryBank.initializeFolders).toHaveBeenCalled();
+			expect(mockMemoryBank.loadFiles).toHaveBeenCalled();
+			expect(result).toBe("Memory bank initialised successfully.");
+		});
+
+		it("should handle status command when not initialized", async () => {
 			mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
 				success: true,
 				data: false,
 			});
-			mockMemoryBank.initialize.mockResolvedValue({ success: true });
-			await commandHandler.processMemoryCommand("show");
-			expect(mockMemoryBank.initialize).toHaveBeenCalled();
+
+			const result = await commandHandler.processMemoryCommand("/memory status");
+			expect(result).toContain("Memory Bank Status: Not initialized");
 		});
 
-		it("should show webview on 'show' command", async () => {
+		it("should handle status command when initialized", async () => {
 			mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
 				success: true,
 				data: true,
 			});
-			await commandHandler.processMemoryCommand("show");
-			expect(mockWebviewManager.openWebview).toHaveBeenCalled();
+			mockMemoryBank.loadFiles.mockResolvedValue({ success: true, data: [] });
+			mockMemoryBank.getAllFiles.mockReturnValue([]);
+
+			const result = await commandHandler.processMemoryCommand("/memory status");
+			expect(result).toContain("Memory Bank Status: Initialized");
 		});
 
-		it("should perform health check on 'healthCheck' command", async () => {
-			mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
-				success: true,
-				data: true,
-			});
-			mockMemoryBank.healthCheck.mockResolvedValue({ success: true });
-			await commandHandler.processMemoryCommand("healthCheck");
-			expect(mockMemoryBank.healthCheck).toHaveBeenCalled();
-			expect(mockWindow.showInformationMessage).toHaveBeenCalledWith(
-				"AI Memory Bank health check passed.",
-			);
+		it("should handle update command with valid arguments", async () => {
+			mockMCPServer.updateMemoryBankFile.mockResolvedValue(undefined);
+
+			const result = await commandHandler.processMemoryCommand("/memory update projectbrief.md New content");
+			expect(mockMCPServer.updateMemoryBankFile).toHaveBeenCalledWith("projectbrief.md", "New content");
+			expect(result).toBe("Successfully updated projectbrief.md");
 		});
 
-		it("should handle failed health check", async () => {
-			mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
-				success: true,
-				data: true,
-			});
-			mockMemoryBank.healthCheck.mockResolvedValue({
-				success: false,
-				error: "Health check failed",
-			});
-			await commandHandler.processMemoryCommand("healthCheck");
-			expect(mockWindow.showErrorMessage).toHaveBeenCalledWith(
-				"AI Memory Bank health check failed: Health check failed",
-			);
+		it("should handle update command with missing arguments", async () => {
+			const result = await commandHandler.processMemoryCommand("/memory update");
+			expect(result).toContain("Error: /memory update requires a file type argument");
 		});
 
-		it("should create a new file on 'new' command", async () => {
-			mockMemoryBank.getIsMemoryBankInitialized.mockResolvedValue({
-				success: true,
-				data: true,
-			});
-			mockMemoryBank.createFile.mockResolvedValue({ success: true });
-			await commandHandler.processMemoryCommand("new");
-			expect(mockMemoryBank.createFile).toHaveBeenCalledWith(
-				MemoryBankFileType.ProgressCurrent,
-				"",
-			);
+		it("should handle write command with valid arguments", async () => {
+			mockMemoryBank.writeFileByPath.mockResolvedValue({ success: true });
+
+			const result = await commandHandler.processMemoryCommand("/memory write test.md Test content");
+			expect(mockMemoryBank.writeFileByPath).toHaveBeenCalledWith("test.md", "Test content");
+			expect(result).toBe("Successfully wrote to test.md");
+		});
+
+		it("should handle write command with missing arguments", async () => {
+			const result = await commandHandler.processMemoryCommand("/memory write test.md");
+			expect(result).toContain("Error: /memory write requires a relative path and content");
+		});
+
+		it("should handle help command", async () => {
+			const result = await commandHandler.processMemoryCommand("/memory help");
+			expect(result).toContain("AI Memory Bank Commands:");
+		});
+
+		it("should handle unknown commands", async () => {
+			const result = await commandHandler.processMemoryCommand("/memory unknown");
+			expect(result).toContain('Command "unknown" is not supported');
 		});
 	});
 });

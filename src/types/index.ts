@@ -1,14 +1,13 @@
 /**
- * Centralized Type Exports for AI Memory Extension
- * Updated to reflect consolidated type structure
+ * Centralized Type Exports for AI Memory Extension Updated to reflect consolidated type structure
  */
 
 // Core Memory Bank Types (includes logging types)
-export * from "./core.js";
+export * from "./core";
 
 // Logging Types (explicit exports)
-export type { Logger, LoggerConfig, LogContext } from "./logging.js";
-export { LogLevel } from "./logging.js";
+export type { Logger, LoggerConfig, LogContext } from "./logging";
+export { LogLevel } from "./logging";
 
 // File Operations Types (explicit to avoid FileValidationResult conflict)
 export type {
@@ -36,16 +35,16 @@ export type {
 	CachedFileStats,
 	StreamSetupParameters,
 	StreamSetupState,
-} from "./fileOperations.js";
+} from "./fileOperations";
 
 // System-level Types (cache, resources, process config - consolidated)
-export * from "./system.js";
+export * from "./system";
 
 // Error Handling and Result Pattern Types
-export * from "./errorHandling.js";
+export * from "./errorHandling";
 
 // Memory Bank Schemas (Zod)
-export * from "./memoryBankSchemas.js";
+export * from "./memoryBankSchemas";
 
 // Configuration and Validation Types (consolidated - explicit exports to avoid conflicts)
 export type {
@@ -70,7 +69,7 @@ export type {
 	ValidationSummary,
 	FileProcessingResult,
 	SchemaValidationResult,
-} from "./config.js";
+} from "./config";
 
 // Validation Schemas and Functions (consolidated into config.ts)
 export type {
@@ -96,7 +95,7 @@ export type {
 	SafeProcessConfig,
 	SecurityAuditResult,
 	SchemaValidationResult as ValidationFileResult,
-} from "./config.js";
+} from "./config";
 
 // Export validation functions explicitly
 export {
@@ -104,7 +103,7 @@ export {
 	validateWebviewMessage,
 	isValidFileType,
 	isSafePath,
-} from "./config.js";
+} from "./config";
 
 // MCP Types (explicit exports to avoid MCPServerConfig conflict)
 export type {
@@ -119,10 +118,10 @@ export type {
 	CLIServerConfig,
 	MCPServerInstanceConfig,
 	CommandResult,
-} from "./mcpTypes.js";
+} from "./mcpTypes";
 
 // Re-export the TypeValidationError class
-export { TypeValidationError } from "./mcpTypes.js";
+export { TypeValidationError } from "./mcpTypes";
 
 // Metadata System Types (explicit to avoid conflicts)
 export type {
@@ -142,7 +141,7 @@ export type {
 	MetadataIndexConfig,
 	IndexChangeEvent,
 	IndexChangeListener,
-} from "./metadata.js";
+} from "./metadata";
 
 // Explicitly export from the new ResourceManager file path if it's not covered by core.ts
-export { ResourceManager } from "../utils/common/resource-manager.js";
+// export { ResourceManager } from "../utils/helpers";

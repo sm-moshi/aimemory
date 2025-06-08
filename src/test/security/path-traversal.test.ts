@@ -4,10 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	sanitizePath as actualSanitizePath,
 	validateMemoryBankPath as actualValidateMemoryBankPath,
-} from "@/utils/security-helpers.js";
+} from "../../utils/security";
 
 // Mock the security validation module using a factory
-vi.mock("../../utils/security-helpers.js", () => ({
+vi.mock("../../utils/security", () => ({
 	validateMemoryBankPath: vi.fn(path => path), // Default pass-through implementation
 	sanitizePath: vi.fn(path => path), // Default pass-through implementation
 }));
@@ -23,12 +23,12 @@ import {
 	setupValidPathAcceptance,
 	standardAfterEach,
 	standardBeforeEach,
-} from "@test-utils/index.js";
+} from "../test-utils/index";
 
 // THEN import other things, including helpers that will use the above mocks
-import { FileOperationManager } from "../../core/FileOperationManager.js";
-import { FileStreamer } from "../../performance/FileStreamer.js";
-import { StreamingManager } from "../../performance/StreamingManager.js";
+import { FileOperationManager } from "../../core/FileOperationManager";
+import { FileStreamer } from "../../performance/FileStreamer";
+import { StreamingManager } from "../../performance/StreamingManager";
 
 const mockLogger = createSecurityMockLogger();
 
@@ -114,10 +114,7 @@ describe("Path Traversal Security Tests", () => {
 
 		it("should check if file would be streamed safely", async () => {
 			setupMaliciousPathRejection();
-			const result = await streamingManager.wouldStreamFile(
-				"../../../etc/passwd",
-				ALLOWED_ROOT,
-			);
+			const result = await streamingManager.wouldStreamFile("../../../etc/passwd", ALLOWED_ROOT);
 			expectValidationFailure(result, "PATH_VALIDATION_ERROR");
 		});
 	});
@@ -176,9 +173,7 @@ describe("Path Traversal Security Tests", () => {
 			setupMaliciousPathRejection();
 			await fileOperationManager.readFileWithRetry("../../../etc/passwd");
 
-			expect(mockLogger.error).toHaveBeenCalledWith(
-				expect.stringContaining("Path validation failed"),
-			);
+			expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Path validation failed"));
 		});
 
 		it("should maintain security across all file operation types", async () => {

@@ -1,14 +1,14 @@
-import { CursorRulesService } from "@/cursor/rules-service.js";
-import { CURSOR_MEMORY_BANK_FILENAME, getCursorMemoryBankRulesFile } from "@/cursor/rules.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
+import type { ExtensionContext } from "vscode";
+import { CURSOR_MEMORY_BANK_FILENAME, getCursorMemoryBankRulesFile } from "../../cursor/rules";
+import { CursorRulesService } from "../../cursor/rules-service";
 import {
 	createMockExtensionContext,
 	createMockFileOperationManager,
 	createMockLogger,
 	createTestRulesFilePath,
-} from "@test-utils/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
-import type { ExtensionContext } from "vscode";
+} from "../test-utils/index";
 
 // Apply the proven template: Mock VS Code module at top level
 vi.mock("vscode", () => ({
@@ -122,7 +122,7 @@ import { FileType, window, workspace } from "vscode";
 
 // Mock the logger at the module level
 const mockLoggerInstance = createMockLogger();
-vi.mock("@/utils/vscode/vscode-logger.js", () => ({
+vi.mock("../../utils/vscode/vscode-logger", () => ({
 	Logger: {
 		getInstance: () => mockLoggerInstance,
 	},
@@ -149,9 +149,8 @@ describe("CursorRulesService", () => {
 			if (fileExists) {
 				vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any);
 				if (userChoice) {
-					vi.mocked(window.showWarningMessage).mockResolvedValue({
-						title: userChoice,
-					} as any);
+					// showWarningMessage returns the selected string directly, not an object
+					vi.mocked(window.showWarningMessage).mockResolvedValue(userChoice as any);
 				}
 			} else {
 				vi.mocked(workspace.fs.stat).mockRejectedValue(new Error("File not found"));
@@ -167,7 +166,7 @@ describe("CursorRulesService", () => {
 
 			expect(vi.mocked(workspace.fs.createDirectory)).toHaveBeenCalledWith(
 				expect.objectContaining({
-					fsPath: "/mock/workspace/.cursor/rules",
+					fsPath: "/mock/workspace/.cursor/rules/", // VS Code adds trailing slash to directories
 				}),
 			);
 			expect(vi.mocked(workspace.fs.writeFile)).toHaveBeenCalledWith(
@@ -269,7 +268,7 @@ describe("CursorRulesService", () => {
 			]);
 			expect(vi.mocked(workspace.fs.readDirectory)).toHaveBeenCalledWith(
 				expect.objectContaining({
-					fsPath: "/mock/workspace/.cursor/rules",
+					fsPath: "/mock/workspace/.cursor/rules/", // VS Code adds trailing slash to directories
 				}),
 			);
 		});
@@ -288,6 +287,40 @@ describe("CursorRulesService", () => {
 			const result = await rulesService.listAllRulesFilesInfo();
 
 			expect(result).toEqual([]);
+		});
+	});
+
+	describe("getCursorMemoryBankRulesFile with hot-reloading", () => {
+		let fileOpManager: ReturnType<typeof createMockFileOperationManager>;
+
+		beforeEach(() => {
+			fileOpManager = createMockFileOperationManager();
+			// Reset modules to ensure we get a fresh import
+			vi.resetModules();
+		});
+
+		it("should re-read the file if doMock is used", async () => {
+			// Mock the initial file content
+			vi.doMock("../../cursor/rules", () => ({
+				getCursorMemoryBankRulesFile: async () => "Initial Content",
+			}));
+			const { getCursorMemoryBankRulesFile: initialGetCursorMemoryBankRulesFile } = await import(
+				"../../cursor/rules"
+			);
+			expect(await initialGetCursorMemoryBankRulesFile(fileOpManager)).toBe("Initial Content");
+
+			// Mock a change in the file content
+			vi.doMock("../../cursor/rules", () => ({
+				getCursorMemoryBankRulesFile: async () => "Updated Content",
+			}));
+			// Re-import the module to get the updated version
+			const { getCursorMemoryBankRulesFile: freshGetCursorMemoryBankRulesFile } = await import(
+				"../../cursor/rules"
+			);
+			expect(await freshGetCursorMemoryBankRulesFile(fileOpManager)).toBe("Updated Content");
+
+			// Clean up the mock
+			vi.doUnmock("../../cursor/rules");
 		});
 	});
 });
@@ -312,9 +345,9 @@ describe("CursorRulesService - Error Handling", () => {
 	it("should handle directory creation failure", async () => {
 		vi.mocked(workspace.fs.createDirectory).mockRejectedValue(new Error("Create dir failed"));
 
-		await expect(
-			cursorRulesService.createRulesFile("test-rules.mdc", "Test content"),
-		).rejects.toThrow("Failed to create rules directory: Error: Create dir failed");
+		await expect(cursorRulesService.createRulesFile("test-rules.mdc", "Test content")).rejects.toThrow(
+			"Failed to create rules directory: Error: Create dir failed",
+		);
 	});
 
 	it("should handle file write failure", async () => {
@@ -322,9 +355,9 @@ describe("CursorRulesService - Error Handling", () => {
 		vi.mocked(workspace.fs.stat).mockRejectedValue(new Error("File not found"));
 		vi.mocked(workspace.fs.writeFile).mockRejectedValue(new Error("Write failed"));
 
-		await expect(
-			cursorRulesService.createRulesFile("test-rules.mdc", "Test content"),
-		).rejects.toThrow("Failed to write rules file: Error: Write failed");
+		await expect(cursorRulesService.createRulesFile("test-rules.mdc", "Test content")).rejects.toThrow(
+			"Failed to write rules file: Error: Write failed",
+		);
 	});
 });
 
@@ -360,13 +393,11 @@ ${rawContent}
 	it("should handle memory bank rules file read failure", async () => {
 		// Note: Due to caching in getCursorMemoryBankRulesFile, we test this in isolation
 		// by creating a fresh module mock that bypasses the cache
-		vi.doMock("@/cursor/rules.js", () => ({
+		vi.doMock("../../cursor/rules", () => ({
 			getCursorMemoryBankRulesFile: async (fom: any) => {
 				const readResult = await fom.readFileWithRetry();
 				if (!readResult.success) {
-					throw new Error(
-						`Failed to load memory bank rules: ${readResult.error.message}`,
-					);
+					throw new Error(`Failed to load memory bank rules: ${readResult.error.message}`);
 				}
 				return readResult.data;
 			},
@@ -374,9 +405,7 @@ ${rawContent}
 			cursorMemoryBankFilename: "memory-bank.mdc",
 		}));
 
-		const { getCursorMemoryBankRulesFile: freshGetCursorMemoryBankRulesFile } = await import(
-			"@/cursor/rules.js"
-		);
+		const { getCursorMemoryBankRulesFile: freshGetCursorMemoryBankRulesFile } = await import("../../cursor/rules");
 		const mockFileOperationManager = createMockFileOperationManager() as any;
 
 		(mockFileOperationManager.readFileWithRetry as Mock).mockResolvedValue({
@@ -388,6 +417,6 @@ ${rawContent}
 			"Failed to load memory bank rules: File not found",
 		);
 
-		vi.doUnmock("@/cursor/rules.js");
+		vi.doUnmock("../../cursor/rules");
 	});
 });

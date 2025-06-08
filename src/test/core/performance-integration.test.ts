@@ -1,16 +1,10 @@
-import { StreamingManager } from "@/performance/StreamingManager.js";
-import type { Logger } from "@/types/index.js";
-import { CacheManager } from "@core/Cache.js";
-import { FileOperationManager } from "@core/FileOperationManager.js";
-import { MemoryBankServiceCore } from "@core/memoryBankServiceCore.js";
-import {
-	createMockLogger,
-	mockFileOperations,
-	mockNodeFs,
-	standardAfterEach,
-	standardBeforeEach,
-} from "@test-utils/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { CacheManager } from "../../core/Cache";
+import { FileOperationManager } from "../../core/FileOperationManager";
+import { MemoryBankServiceCore } from "../../core/memoryBankServiceCore";
+import { StreamingManager } from "../../performance/StreamingManager";
+import type { Logger } from "../../types";
+import { createMockLogger, mockFileOperations, mockNodeFs, standardAfterEach, standardBeforeEach } from "../test-utils";
 
 describe("Performance Layer Integration", () => {
 	let memoryBankService: MemoryBankServiceCore;
@@ -116,10 +110,7 @@ describe("Performance Layer Integration", () => {
 		it("should handle concurrent operations safely", async () => {
 			// Create multiple concurrent write operations
 			const concurrentWrites = Array.from({ length: 5 }, (_, i) =>
-				memoryBankService.writeFileByPath(
-					`concurrent-${i}.md`,
-					`# File ${i}\n\nContent for file ${i}.`,
-				),
+				memoryBankService.writeFileByPath(`concurrent-${i}.md`, `# File ${i}\n\nContent for file ${i}.`),
 			);
 
 			// All operations should succeed

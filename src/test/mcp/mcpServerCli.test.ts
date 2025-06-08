@@ -1,8 +1,8 @@
-import { MCPServerCLI } from "@/mcp/mcpServerCliClass.js";
 import { afterEach, beforeEach, describe, it, vi } from "vitest";
+import { MCPServerCLI } from "../../mcp/mcpServerCliClass";
 
 // Mock dependencies
-vi.mock("@/mcp/coreMemoryBankMCP.js", () => {
+vi.mock("../../mcp/coreMemoryBankMCP", () => {
 	return {
 		CoreMemoryBankMCP: vi.fn().mockImplementation(() => {
 			return {

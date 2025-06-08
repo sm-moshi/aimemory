@@ -5,13 +5,7 @@
  * Supports text search, metadata filtering, sorting, and pagination.
  */
 
-import type {
-	MetadataFilter,
-	MetadataIndexEntry,
-	SearchOptions,
-	SearchResult,
-	ValidationStatus,
-} from "../types/index.js";
+import type { MetadataFilter, MetadataIndexEntry, SearchOptions, SearchResult, ValidationStatus } from "../types/index";
 
 import {
 	applyMetadataFilters,
@@ -27,9 +21,9 @@ import {
 	findRecentlyUpdated,
 	rankSearchResults,
 	sortEntries,
-} from "./metadataQueryUtils.js";
+} from "./metadataQueryUtils";
 
-import type { MetadataIndexManager } from "./MetadataIndexManager.js";
+import type { MetadataIndexManager } from "./MetadataIndexManager";
 
 /**
  * Advanced search and filtering engine for metadata
@@ -55,11 +49,7 @@ export class MetadataSearchEngine {
 			if (options.sortBy === "relevance" && options.query) {
 				filteredEntries = rankSearchResults(options.query, filteredEntries);
 			} else {
-				filteredEntries = sortEntries(
-					filteredEntries,
-					options.sortBy,
-					options.sortOrder ?? "desc",
-				);
+				filteredEntries = sortEntries(filteredEntries, options.sortBy, options.sortOrder ?? "desc");
 			}
 		} else if (options.query) {
 			filteredEntries = rankSearchResults(options.query, filteredEntries);
@@ -182,8 +172,7 @@ export class MetadataSearchEngine {
 
 		if (options.type !== undefined) filters.type = options.type;
 		if (options.tags !== undefined) filters.tags = options.tags;
-		if (options.validationStatus !== undefined)
-			filters.validationStatus = options.validationStatus;
+		if (options.validationStatus !== undefined) filters.validationStatus = options.validationStatus;
 		if (options.createdAfter !== undefined) filters.createdAfter = options.createdAfter;
 		if (options.createdBefore !== undefined) filters.createdBefore = options.createdBefore;
 		if (options.updatedAfter !== undefined) filters.updatedAfter = options.updatedAfter;

@@ -2,7 +2,9 @@
 
 ## Purpose
 
-These rules ensure consistent, linter-compliant markdown formatting across all memory bank templates and generated content. They specifically address the MD036 rule (no-emphasis-as-heading) and establish standards for professional documentation.
+These rules ensure consistent, linter-compliant markdown formatting across all memory bank templates
+and generated content. They specifically address the MD036 rule (no-emphasis-as-heading) and
+establish standards for professional documentation.
 
 ## Core Formatting Rules
 
@@ -28,7 +30,8 @@ These rules ensure consistent, linter-compliant markdown formatting across all m
 ## Section Heading
 ```
 
-**Rationale:** Using emphasis (*text*) for document descriptions triggers MD036. Blockquotes provide semantic meaning and visual distinction without violating linting rules.
+**Rationale:** Using emphasis (*text*) for document descriptions triggers MD036. Blockquotes provide
+semantic meaning and visual distinction without violating linting rules.
 
 ### 2. Timestamps and Metadata
 
@@ -46,7 +49,8 @@ These rules ensure consistent, linter-compliant markdown formatting across all m
 *Last updated: 2025-06-05*
 ```
 
-**Rationale:** Consistent with document description formatting and avoids emphasis-as-heading violations.
+**Rationale:** Consistent with document description formatting and avoids emphasis-as-heading
+violations.
 
 ### 3. Section Comments and Notes
 
@@ -68,7 +72,8 @@ Content here...
 Content here...
 ```
 
-**Rationale:** HTML comments are invisible to readers but provide guidance for template maintainers without triggering linting rules.
+**Rationale:** HTML comments are invisible to readers but provide guidance for template maintainers
+without triggering linting rules.
 
 ### 4. Status Indicators and Labels
 
@@ -89,7 +94,8 @@ Content here...
 - [x] *Requirement completed*
 ```
 
-**Rationale:** Bold text (**text**) for labels with descriptive content is semantically correct. Emoji provide visual status indication.
+**Rationale:** Bold text (**text**) for labels with descriptive content is semantically correct.
+Emoji provide visual status indication.
 
 ## Template Structure Standards
 
@@ -214,7 +220,8 @@ Expected result: Zero MD036 violations and clean linting output.
 
 ---
 
-These rules ensure professional, consistent documentation that passes automated quality checks while remaining highly readable and maintainable.
+These rules ensure professional, consistent documentation that passes automated quality checks while
+remaining highly readable and maintainable.
 
 ---
 > Last updated: 2025-06-05
