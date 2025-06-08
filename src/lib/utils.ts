@@ -171,7 +171,9 @@ class TestLogger implements Logger {
 		this.logs.push({ level: "ERROR", message, ...(context && { context }) });
 	}
 
-	setLevel(_level: LogLevel): void {}
+	setLevel(_level: LogLevel): void {
+		/* empty */
+	}
 
 	clear(): void {
 		this.logs = [];
@@ -538,4 +540,180 @@ export async function launchMCPServerProcess(
 	await waitForProcessStartup(childProcess);
 	logger.info("MCP STDIO server started successfully");
 	return childProcess;
+}
+
+/**
+ * Formats markdown content to comply with the most critical linting rules
+ *
+ * This function applies comprehensive formatting rules to prevent markdown linting
+ * errors when content is written to memory bank files. Based on research of the
+ * most commonly violated markdownlint rules.
+ *
+ * Critical rules applied:
+ * - MD036: Replace emphasis-as-heading with proper blockquotes or headings
+ * - MD032: Lists should be surrounded by blank lines
+ * - MD031: Fenced code blocks should be surrounded by blank lines
+ * - MD022: Headings should be surrounded by blank lines
+ * - MD047: Files should end with a single newline character
+ * - MD012: Multiple consecutive blank lines
+ * - MD009: Trailing spaces
+ * - MD018: No space after hash on ATX style heading
+ * - MD019: Multiple spaces after hash on ATX style heading
+ */
+export function formatMarkdownContent(content: string): string {
+	if (!content || typeof content !== "string") {
+		return "";
+	}
+
+	let formatted = content;
+
+	// MD010: Replace hard tabs with spaces (2 spaces is standard)
+	formatted = formatted.replace(/\t/g, "  ");
+
+	// MD036: Fix emphasis used as headings
+	// Convert standalone emphasized text to blockquotes
+	formatted = formatted.replace(/^[\s]*\*([^*\n]+)\*[\s]*$/gm, "> $1");
+	formatted = formatted.replace(/^[\s]*_([^_\n]+)_[\s]*$/gm, "> $1");
+
+	// Convert emphasized labels with colons to bold (specific pattern matching)
+	formatted = formatted.replace(/\*([^*]+)\*:\s/g, "**$1**: ");
+	formatted = formatted.replace(/_([^_]+)_:\s/g, "**$1**: ");
+
+	// Convert common status indicators to bold (with space after)
+	formatted = formatted.replace(/\*(Status|Priority|Timeline|Progress|Phase|Sprint|Goal|Target)\*\s/gi, "**$1** ");
+
+	// Convert timestamp patterns to blockquotes
+	formatted = formatted.replace(/\*(Last updated|Updated|Created|Modified):\s*([^*\n]*)\*/gi, "> $1: $2");
+
+	// Process lines individually for special formatting that requires line context
+	formatted = formatted
+		.split("\n")
+		.map((line, index, lines) => {
+			// If this line was converted to bold status and next line exists, ensure spacing
+			if (line.match(/^\*\*(Status|Priority|Timeline|Progress|Phase|Sprint|Goal|Target)\*\* /i)) {
+				const nextLine = lines[index + 1];
+				if (
+					nextLine &&
+					nextLine.trim() !== "" &&
+					!nextLine.match(/^\*\*(Status|Priority|Timeline|Progress|Phase|Sprint|Goal|Target)\*\* /i)
+				) {
+					// Mark for extra spacing - will be handled in the line-by-line processor
+					return `${line}|||NEEDS_SPACING|||`;
+				}
+			}
+			return line;
+		})
+		.join("\n");
+
+	// MD018: Ensure space after hash on ATX headings
+	formatted = formatted.replace(/^(#{1,6})([^\s#])/gm, "$1 $2");
+
+	// MD019: Remove multiple spaces after hash on ATX headings
+	formatted = formatted.replace(/^(#{1,6})\s{2,}/gm, "$1 ");
+
+	// MD037: Remove spaces inside emphasis markers
+	formatted = formatted.replace(/\*\s+([^*]+)\s+\*/g, "*$1*");
+	formatted = formatted.replace(/_\s+([^_]+)\s+_/g, "_$1_");
+	formatted = formatted.replace(/\*\*\s+([^*]+)\s+\*\*/g, "**$1**");
+	formatted = formatted.replace(/__\s+([^_]+)\s+__/g, "__$1__");
+
+	// MD038: Remove spaces inside code span elements
+	formatted = formatted.replace(/`\s+([^`]+)\s+`/g, "`$1`");
+
+	// MD039: Remove spaces inside link text
+	formatted = formatted.replace(/\[\s+([^\]]+)\s+\]/g, "[$1]");
+
+	// Process line by line for better control of list and heading spacing
+	const lines = formatted.split("\n");
+	const processedLines: string[] = [];
+
+	for (let i = 0; i < lines.length; i++) {
+		const currentLine = lines[i];
+		const prevLine = i > 0 ? lines[i - 1] : null;
+		const nextLine = i < lines.length - 1 ? lines[i + 1] : null;
+
+		// Skip if currentLine is undefined
+		if (!currentLine) continue;
+
+		// MD022: Headings should be surrounded by blank lines
+		if (currentLine.match(/^#{1,6}\s/)) {
+			// Add blank line before heading (except at start of document)
+			if (i > 0 && prevLine && prevLine.trim() !== "" && processedLines[processedLines.length - 1] !== "") {
+				processedLines.push("");
+			}
+			processedLines.push(currentLine);
+			// Add blank line after heading (except if next line is heading or empty)
+			if (nextLine && nextLine.trim() !== "" && !nextLine.match(/^#{1,6}\s/)) {
+				processedLines.push("");
+			}
+		}
+		// MD032: Lists should be surrounded by blank lines
+		else if (currentLine.match(/^[\s]*[-*+]\s/) || currentLine.match(/^[\s]*\d+\.\s/)) {
+			const isFirstListItem = !prevLine?.match(/^[\s]*[-*+]\s/) && !prevLine?.match(/^[\s]*\d+\.\s/);
+			const isLastListItem = !nextLine?.match(/^[\s]*[-*+]\s/) && !nextLine?.match(/^[\s]*\d+\.\s/);
+
+			// Add blank line before first list item
+			if (
+				isFirstListItem &&
+				prevLine &&
+				prevLine.trim() !== "" &&
+				processedLines[processedLines.length - 1] !== ""
+			) {
+				processedLines.push("");
+			}
+			processedLines.push(currentLine);
+			// Add blank line after last list item
+			if (
+				isLastListItem &&
+				nextLine &&
+				nextLine.trim() !== "" &&
+				processedLines[processedLines.length - 1] !== ""
+			) {
+				// Will be added after the loop completes for this item
+			}
+		}
+		// MD031: Fenced code blocks should be surrounded by blank lines
+		else if (currentLine.match(/^```/)) {
+			const isOpeningFence = !currentLine.match(/^```.*```$/); // Not a single-line code block
+
+			if (isOpeningFence) {
+				// Add blank line before opening fence
+				if (prevLine && prevLine.trim() !== "" && processedLines[processedLines.length - 1] !== "") {
+					processedLines.push("");
+				}
+			}
+			processedLines.push(currentLine);
+		} else {
+			processedLines.push(currentLine);
+		}
+
+		// Check if we need to add blank line after list
+		if (
+			(currentLine.match(/^[\s]*[-*+]\s/) || currentLine.match(/^[\s]*\d+\.\s/)) &&
+			nextLine &&
+			nextLine.trim() !== "" &&
+			!nextLine.match(/^[\s]*[-*+]\s/) &&
+			!nextLine.match(/^[\s]*\d+\.\s/)
+		) {
+			processedLines.push("");
+		}
+
+		// Check if we need blank line after closing code fence
+		if (currentLine.match(/^```$/) && nextLine && nextLine.trim() !== "") {
+			processedLines.push("");
+		}
+	}
+
+	formatted = processedLines.join("\n");
+
+	// MD009: Remove trailing spaces
+	formatted = formatted.replace(/[ \t]+$/gm, "");
+
+	// MD012: Remove multiple consecutive blank lines
+	formatted = formatted.replace(/\n{3,}/g, "\n\n");
+
+	// MD047: Ensure file ends with a single newline
+	formatted = formatted.replace(/\n*$/, "\n");
+
+	return formatted;
 }

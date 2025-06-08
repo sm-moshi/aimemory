@@ -8,6 +8,7 @@
  */
 
 import type { Stats } from "node:fs";
+import { formatBytes } from "../lib/helpers";
 import type { Logger } from "../lib/types/core";
 import type {
 	CacheEntry,
@@ -16,7 +17,6 @@ import type {
 	FileCache,
 	LegacyCacheStats,
 } from "../lib/types/system";
-import { formatBytes } from "../lib/utils";
 
 /**
  * Enhanced CacheManager with LRU eviction, bounded capacity, and performance monitoring.

@@ -11,7 +11,7 @@
  */
 
 import { z } from "zod";
-import type { DIContainer } from "../../core/di-container";
+import type { DIContainer } from "../di-container";
 import { MemoryBankFileType } from "./core";
 
 // =================================================================

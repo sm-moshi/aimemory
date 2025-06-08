@@ -2,7 +2,7 @@
  * Lightweight Dependency Injection Container
  */
 
-import type { DependencyFactory, Registration } from "../types";
+import type { DependencyFactory, Registration } from "../lib/types/system";
 
 export class DIContainer {
 	private readonly registrations = new Map<string, Registration<unknown>>();

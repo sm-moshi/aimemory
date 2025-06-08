@@ -8,9 +8,11 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": resolve(__dirname, "./src"),
-			"@utils": resolve(__dirname, "./src/utils"),
 			"@test-utils": resolve(__dirname, "./src/test/test-utils"),
-			"@types": resolve(__dirname, "./src/types"),
+			"@/lib": resolve(__dirname, "./src/lib"),
+			"@/vscode": resolve(__dirname, "./src/vscode"),
+			"@/templates": resolve(__dirname, "./src/templates"),
+			"@types": resolve(__dirname, "./src/lib/types"),
 			"@core": resolve(__dirname, "./src/core"),
 			"@mcp": resolve(__dirname, "./src/mcp"),
 			vscode: resolve(__dirname, "./src/test/__mocks__/vscode.ts"),

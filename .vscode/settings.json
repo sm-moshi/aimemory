@@ -3,7 +3,7 @@
 		"editor.defaultFormatter": "foxundermoon.shell-format"
 	},
 	"[jsonc]": {
-		"editor.defaultFormatter": "vscode.json-language-features"
+		"editor.defaultFormatter": "biomejs.biome"
 	},
 	"aimemory.logLevel": "debug",
 	"chat.editor.wordWrap": "on",

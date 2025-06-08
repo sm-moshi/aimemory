@@ -39,10 +39,15 @@ import { ReadMemoryBankFileSchema } from "../lib/types/system";
 import type { SearchOptions } from "../lib/types/system";
 
 // Utility imports
-import { createLogger, getExtensionVersion, isValidMemoryBankFileType as validateFileType } from "../lib/utils";
+import {
+	createLogger,
+	formatMarkdownContent,
+	getExtensionVersion,
+	isValidMemoryBankFileType as validateFileType,
+} from "../lib/utils";
 
 // Base server import
-import { BaseMCPServer } from "./shared/baseMcpServer";
+import { BaseMCPServer } from "./server";
 
 // ============================================================================
 // TOOL HELPERS AND UTILITIES
@@ -245,7 +250,10 @@ export const MemoryBankOperations = {
 			};
 		}
 
-		const updateResult = await memoryBank.updateFile(fileType as MemoryBankFileType, content);
+		// Apply markdown formatting to prevent linting errors (MD036, MD032, etc.)
+		const formattedContent = formatMarkdownContent(content);
+
+		const updateResult = await memoryBank.updateFile(fileType as MemoryBankFileType, formattedContent);
 		if (isError(updateResult)) {
 			return updateResult;
 		}
@@ -593,22 +601,19 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 
 	/**
 	 * Registers all metadata-related tools using the MetadataToolRegistrar.
+	 * TODO: Re-enable when metadata system is production ready
 	 */
 	private _registerMetadataTools(): void {
-		if (this.metadataToolRegistrar) {
-			this.logger.info("[CoreMemoryBankMCP] Registering metadata tools...");
-			// Call the actual, individual tool registration methods
-			this.metadataToolRegistrar.registerQueryMemoryIndexTool(this.server);
-			this.metadataToolRegistrar.registerValidateMemoryFileTool(this.server);
-			this.metadataToolRegistrar.registerRebuildMetadataIndexTool(this.server);
-			this.metadataToolRegistrar.registerGetMetadataForFileTool(this.server);
-			this.metadataToolRegistrar.registerGetMetadataIndexStatsTool(this.server);
-			this.logger.info("[CoreMemoryBankMCP] Metadata tools registered.");
-		} else {
-			this.logger.warn(
-				"[CoreMemoryBankMCP] MetadataToolRegistrar not initialized. Skipping metadata tool registration.",
-			);
-		}
+		this.logger.warn(
+			"[CoreMemoryBankMCP] Metadata tools are disabled. Re-enable when metadata system is production ready.",
+		);
+		// TODO: Implement metadata tool registration when system is ready
+		// const metadataRegistrar = new MetadataToolRegistrar(...);
+		// metadataRegistrar.registerQueryMemoryIndexTool(this.server);
+		// metadataRegistrar.registerValidateMemoryFileTool(this.server);
+		// metadataRegistrar.registerRebuildMetadataIndexTool(this.server);
+		// metadataRegistrar.registerGetMetadataForFileTool(this.server);
+		// metadataRegistrar.registerGetMetadataIndexStatsTool(this.server);
 	}
 
 	/**
@@ -675,11 +680,16 @@ export class MetadataMemoryBankMCP extends BaseMCPServer {
 
 	/**
 	 * Register metadata-specific MCP tools
+	 * TODO: Re-enable when metadata system is production ready
 	 */
 	protected override registerCustomTools(): void {
-		// this.metadataToolRegistrar and this.server are inherited from BaseMCPServer
-		this.metadataToolRegistrar.registerQueryMemoryIndexTool(this.server);
-		this.metadataToolRegistrar.registerValidateMemoryFileTool(this.server);
-		this.metadataToolRegistrar.registerRebuildMetadataIndexTool(this.server);
+		this.logger.warn(
+			"[MetadataMemoryBankMCP] Metadata tools are disabled. Re-enable when metadata system is production ready.",
+		);
+		// TODO: Implement metadata tool registration when system is ready
+		// const metadataRegistrar = new MetadataToolRegistrar(...);
+		// metadataRegistrar.registerQueryMemoryIndexTool(this.server);
+		// metadataRegistrar.registerValidateMemoryFileTool(this.server);
+		// metadataRegistrar.registerRebuildMetadataIndexTool(this.server);
 	}
 }

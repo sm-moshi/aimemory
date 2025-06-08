@@ -21,7 +21,7 @@ import type {
 } from "../lib/types/core";
 import { MemoryBankError, MemoryBankFileType, isError, tryCatchAsync } from "../lib/types/core";
 import { getSchemaForType } from "../lib/types/operations";
-import { formatZodError } from "../lib/utils";
+import { formatMarkdownContent, formatZodError } from "../lib/utils";
 import {
 	validateAllMemoryBankFiles,
 	validateAndConstructArbitraryFilePath,
@@ -232,7 +232,10 @@ export class MemoryBankManager implements MemoryBank {
 				);
 			}
 
-			const writeResult = await this.fileOperationManager.writeFileWithRetry(fullPath, content);
+			// Apply markdown formatting for .md files to prevent linting errors
+			const finalContent = relativePath.endsWith(".md") ? formatMarkdownContent(content) : content;
+
+			const writeResult = await this.fileOperationManager.writeFileWithRetry(fullPath, finalContent);
 			if (!writeResult.success) {
 				throw new MemoryBankError(
 					`Failed to write file to ${relativePath}: ${writeResult.error.message}`,
@@ -246,7 +249,7 @@ export class MemoryBankManager implements MemoryBank {
 				this.logger.warn(`Failed to stat file ${fullPath} after writing: ${statResult.error.message}`);
 			} else {
 				this.legacyCacheAdapter.set(fullPath, {
-					content,
+					content: finalContent,
 					mtimeMs: statResult.data.mtimeMs,
 				});
 			}
@@ -538,7 +541,10 @@ export class MemoryBankManager implements MemoryBank {
 	): Promise<void> {
 		const filePath = validateAndConstructKnownFilePath(context.memoryBankFolder, fileType);
 
-		const writeResult = await context.fileOperationManager.writeFileWithRetry(filePath, content);
+		// Apply markdown formatting to prevent linting errors (all memory bank files are .md)
+		const formattedContent = formatMarkdownContent(content);
+
+		const writeResult = await context.fileOperationManager.writeFileWithRetry(filePath, formattedContent);
 		if (!writeResult.success) throw writeResult.error;
 
 		const statResult = await context.fileOperationManager.statWithRetry(filePath);
@@ -546,12 +552,12 @@ export class MemoryBankManager implements MemoryBank {
 		const stats = statResult.data;
 
 		// Re-parse and update the in-memory representation
-		const parsedData = this.parseAndValidateMetadata(content, fileType, context);
+		const parsedData = this.parseAndValidateMetadata(formattedContent, fileType, context);
 		const memoryBankFile = this.createMemoryBankFileEntry(fileType, stats, filePath, parsedData);
 		this.files.set(fileType, memoryBankFile);
 
 		// Update cache
-		context.fileCache.set(filePath, { content, mtimeMs: stats.mtimeMs });
+		context.fileCache.set(filePath, { content: formattedContent, mtimeMs: stats.mtimeMs });
 
 		context.logger.info(`Updated file: ${fileType}`);
 	}

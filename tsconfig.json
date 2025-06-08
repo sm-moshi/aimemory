@@ -6,9 +6,11 @@
 		"paths": {
 			"vscode": ["src/test/__mocks__/vscode.ts"],
 			"@/*": ["src/*"],
-			"@utils/*": ["src/utils/*"],
 			"@test-utils/*": ["src/test/test-utils/*"],
-			"@types/*": ["src/types/*"],
+			"@/lib/*": ["src/lib/*"],
+			"@/vscode/*": ["src/vscode/*"],
+			"@/templates/*": ["src/templates/*"],
+			"@types/*": ["src/lib/types/*"],
 			"@core/*": ["src/core/*"],
 			"@mcp/*": ["src/mcp/*"]
 		},

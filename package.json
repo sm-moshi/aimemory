@@ -13,7 +13,7 @@
 		"pnpm": ">=10.11.1",
 		"node": ">=20.19.0"
 	},
-	"packageManager": "pnpm@10.11.1",
+	"packageManager": "pnpm@10.12.1",
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"@biomejs/biome",
@@ -76,7 +76,7 @@
 		"test:coverage": "vitest run --coverage",
 		"lint": "biome check --write .",
 		"format": "biome format --write .",
-		"check": "tsgo -p tsconfig.json --noEmit && pnpm lint",
+		"check": "tsgo -p tsconfig.json --noEmit && pnpm lint && pnpm format",
 		"package": "pnpm check && pnpm build && pnpm vsce package --no-dependencies",
 		"watch:extension": "rollup -c -w",
 		"webview:dev": "cd src/webview && pnpm run dev",

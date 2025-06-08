@@ -70,12 +70,14 @@ const getPlugins = () =>
 			entries: [
 				// Match TypeScript paths exactly
 				{ find: /^@\/(.+)/, replacement: path.resolve(process.cwd(), "src/$1") },
-				{ find: /^@utils\/(.+)/, replacement: path.resolve(process.cwd(), "src/utils/$1") },
 				{
 					find: /^@test-utils\/(.+)/,
 					replacement: path.resolve(process.cwd(), "src/test/test-utils/$1"),
 				},
-				{ find: /^@types\/(.+)/, replacement: path.resolve(process.cwd(), "src/types/$1") },
+				{ find: /^@\/lib\/(.+)/, replacement: path.resolve(process.cwd(), "src/lib/$1") },
+				{ find: /^@\/vscode\/(.+)/, replacement: path.resolve(process.cwd(), "src/vscode/$1") },
+				{ find: /^@\/templates\/(.+)/, replacement: path.resolve(process.cwd(), "src/templates/$1") },
+				{ find: /^@types\/(.+)/, replacement: path.resolve(process.cwd(), "src/lib/types/$1") },
 				{ find: /^@core\/(.+)/, replacement: path.resolve(process.cwd(), "src/core/$1") },
 				{ find: /^@mcp\/(.+)/, replacement: path.resolve(process.cwd(), "src/mcp/$1") },
 			],
@@ -101,7 +103,7 @@ const getPlugins = () =>
 		copyPlugin({
 			targets: [
 				{ src: "src/assets/*", dest: "dist/assets" },
-				{ src: "src/lib/rules/*.md", dest: "dist/rules" },
+				{ src: "src/templates/*.md", dest: "dist/templates" },
 			],
 			verbose: isDevelopment, // Only log in development
 			hook: "buildStart",
@@ -157,7 +159,7 @@ export default [
 	},
 
 	{
-		input: "src/mcp/mcpServerCliEntry.ts",
+		input: "src/mcp/transport.ts",
 		output: {
 			file: path.join(outDir, "index.cjs"),
 			format: "cjs",

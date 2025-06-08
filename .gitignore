@@ -19,6 +19,7 @@ src/webview/node_modules/
 .secrets
 
 # Cursor
+.cursor/*
 memory-bank/*.md
 **/.log
 docs/devs/
@@ -31,7 +32,9 @@ out/
 archive/
 test-file.txt
 test-results.json
-
 docs/phase-4-restructuring-plan.md
-
 docs/maybe/
+
+docs/project-structure.md
+
+docs/guides/path-aliases.md

@@ -11,10 +11,11 @@
  * MCP server interactions, and Zod validation schemas.
  */
 
-// biome-ignore lint/correctness/noUnusedImports: <explanation>
+// Core types needed throughout this file
+import type { Logger, MemoryBankError, MemoryBankFileType, Result } from "./core";
+
+// Import for MCP server interface types
 import type { MemoryBankManager } from "../../core/memory-bank";
-// biome-ignore lint/correctness/noUnusedImports: <explanation>
-import type { AsyncResult, Logger, MemoryBankError, MemoryBankFileType, Result } from "./core";
 
 // =================================================================
 // Section: File & Streaming Operations (from src/types/fileOperations.ts)
@@ -291,7 +292,7 @@ export interface MCPServerInterface {
 	/**
 	 * Get the memory bank service instance
 	 */
-	getMemoryBank(): MemoryBankServiceCore;
+	getMemoryBank(): MemoryBankManager;
 
 	/**
 	 * Update a memory bank file
@@ -352,7 +353,7 @@ export interface MCPServerConfig {
 	logLevel?: string;
 
 	/** Pre-configured memory bank instance (mainly for testing/DI) */
-	memoryBank?: MemoryBankServiceCore;
+	memoryBank?: MemoryBankManager;
 }
 
 // Type aliases for specific use cases (for clarity and backward compatibility)
@@ -369,7 +370,7 @@ export type CLIServerConfig = MCPServerConfig;
 export interface MCPServerInstanceConfig {
 	name: string;
 	version: string;
-	memoryBank: MemoryBankServiceCore;
+	memoryBank: MemoryBankManager;
 	logger?: Logger;
 }
 
