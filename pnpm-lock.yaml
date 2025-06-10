@@ -51,8 +51,8 @@ importers:
         specifier: ^20.19.0
         version: 20.19.0
       '@types/vscode':
-        specifier: 1.96.0
-        version: 1.96.0
+        specifier: 1.100.0
+        version: 1.100.0
       '@typescript/native-preview':
         specifier: ^7.0.0-dev.20250606.1
         version: 7.0.0-dev.20250606.1
@@ -846,8 +846,8 @@ packages:
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
-  '@types/vscode@1.96.0':
-    resolution: {integrity: sha512-qvZbSZo+K4ZYmmDuaodMbAa67Pl6VDQzLKFka6rq+3WUTY4Kro7Bwoi0CuZLO/wema0ygcmpwow7zZfPJTs5jg==}
+  '@types/vscode@1.100.0':
+    resolution: {integrity: sha512-4uNyvzHoraXEeCamR3+fzcBlh7Afs4Ifjs4epINyUX/jvdk0uzLnwiDY35UKDKnkCHP5Nu3dljl2H8lR6s+rQw==}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250606.1':
     resolution: {integrity: sha512-/EsG3bhU9QFci/LQkyb8k+aym64Ul13GdDF2V5AaR/aeYG/p0kD9nvEJNjRVlw0CWvsr297nG119gy+keOeHXQ==}
@@ -3954,7 +3954,7 @@ snapshots:
 
   '@types/tough-cookie@4.0.5': {}
 
-  '@types/vscode@1.96.0': {}
+  '@types/vscode@1.100.0': {}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250606.1':
     optional: true
