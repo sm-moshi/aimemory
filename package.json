@@ -139,6 +139,6 @@
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.1",
 		"gray-matter": "^4.0.3",
-		"zod": "^3.25.55"
+		"zod": "^3.25.56"
 	}
 }
