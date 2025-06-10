@@ -1,7 +1,7 @@
 ---
-description: Cursor Ruleset: AI Memory Extension (VSIX + Webview)
+description:
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
 # Cursor Ruleset: AI Memory Extension (VSIX + Webview)
 

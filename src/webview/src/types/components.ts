@@ -42,7 +42,7 @@ export interface LoadingState {
 /**
  * Generic component state for forms and interactive elements
  */
-export interface ComponentState<T = any> {
+export interface ComponentState<T = unknown> {
 	data: T | null;
 	loading: boolean;
 	error: string | null;

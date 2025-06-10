@@ -64,7 +64,10 @@ async function convertFile(filePath: string): Promise<boolean> {
 		let hasChanges = false;
 
 		for (const rule of ALIAS_RULES) {
-			const newContent = convertedContent.replace(rule.pattern, rule.replacement);
+			const newContent = convertedContent.replace(
+				rule.pattern,
+				rule.replacement,
+			);
 			if (newContent !== convertedContent) {
 				console.log(`  ✅ ${rule.description}`);
 				convertedContent = newContent;

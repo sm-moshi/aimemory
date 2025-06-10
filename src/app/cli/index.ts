@@ -2,21 +2,40 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { program } from "commander";
-import { createLogger } from "../../lib/utils";
-import { CoreMemoryBankMCP } from "../../mcp/tools";
+import { createLogger } from "../../lib/logging";
+import { MCPServerCLI } from "../../mcp/server";
+import { LogLevel } from "../../types/logging";
 
 program
 	.version("0.8.0-dev.5")
 	.option("--port <port>", "Port to run the server on", "7331")
-	.option("--stdio", "Use STDIO for transport", true)
+	.option("--stdio", "Use STDIO for transport", false)
 	.option("--workspace <path>", "Workspace path", process.cwd())
 	.option("--debug", "Enable debug mode", false)
 	.parse(process.argv);
 
 async function main() {
 	try {
-		const logger = createLogger();
-		const mcp = new CoreMemoryBankMCP({ memoryBankPath: process.cwd(), logger });
+		// Parse LOG_LEVEL from environment with proper fallback
+		const logLevelString = process.env.LOG_LEVEL?.toLowerCase();
+		const logLevel =
+			logLevelString === "trace"
+				? LogLevel.Trace
+				: logLevelString === "debug"
+					? LogLevel.Debug
+					: logLevelString === "info"
+						? LogLevel.Info
+						: logLevelString === "warn"
+							? LogLevel.Warn
+							: logLevelString === "error"
+								? LogLevel.Error
+								: LogLevel.Info; // Default fallback
+
+		const _logger = createLogger({
+			component: "MCPServerCLI",
+			level: logLevel,
+		});
+		const mcp = MCPServerCLI.fromCommandLineArgs([process.argv[0] ?? "node", process.argv[1] ?? "", process.cwd()]);
 		const server = mcp.getServer();
 		const stdioTransport = new StdioServerTransport();
 		await server.connect(stdioTransport);

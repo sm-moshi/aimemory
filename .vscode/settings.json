@@ -5,6 +5,7 @@
 	"[jsonc]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
+	"biome.configurationPath": "biome.json",
 	"aimemory.logLevel": "debug",
 	"chat.editor.wordWrap": "on",
 	"cursor.composer.collapsePaneInputBoxPills": true,
@@ -21,11 +22,11 @@
 	"dependi.vulnerability.ghsa.enabled": true,
 	"diffEditor.experimental.showMoves": true,
 	"diffEditor.experimental.useTrueInlineView": true,
+	"editor.experimental.asyncTokenization": true,
 	"editor.experimentalEditContextEnabled": true,
 	"editor.foldingImportsByDefault": true,
 	"editor.guides.bracketPairs": true,
 	"editor.inlineSuggest.syntaxHighlightingEnabled": true,
-	"editor.linkedEditing": true,
 	"editor.semanticHighlighting.enabled": true,
 	"editor.wordWrapColumn": 120,
 	"errorLens.codeLensEnabled": true,
@@ -33,21 +34,9 @@
 		"*.cjs": "javascript",
 		"*.css": "tailwindcss"
 	},
-	"files.autoSaveWhenNoErrors": true,
-	"files.exclude": {
-		"**/.repomix/**": true,
-		"**/.vscode-test/**": true,
-		"**/archive/**": true,
-		"**/coverage/**": true,
-		"**/node_modules/**": true
-	},
-	"files.watcherExclude": {
-		"**/.repomix/**": true,
-		"**/.vscode-test/**": true,
-		"**/coverage/**": true,
-		"**/dist/**": true,
-		"**/node_modules/**": true
-	},
+	"gitlens.ai.experimental.generateCommits.enabled": true,
+	"gitlens.ai.experimental.generateRebase.enabled": true,
+	"gitlens.gitkraken.cli.integration.enabled": true,
 	"js/ts.implicitProjectConfig.checkJs": true,
 	"js/ts.implicitProjectConfig.experimentalDecorators": true,
 	"json.schemaDownload.enable": true,
@@ -77,16 +66,11 @@
 	"typescript.suggest.includeAutomaticOptionalChainCompletions": true,
 	"typescript.suggest.paths": true,
 	"typescript.tsserver.experimental.enableProjectDiagnostics": true,
-	"typescript.updateImportsOnFileMove.enabled": "always",
 	"versionlens.suggestions.showOnStartup": true,
 	"versionlens.suggestions.showSuggestionsStats": true,
 	"vsicons.presets.jsonOfficial": true,
 	"workbench.commandPalette.experimental.suggestCommands": true,
 	"workbench.commandPalette.history": 100,
 	"workbench.commandPalette.preserveInput": true,
-	"yaml.format.printWidth": 120,
-	"gitlens.ai.experimental.generateRebase.enabled": true,
-	"gitlens.ai.experimental.generateCommits.enabled": true,
-	"editor.experimental.asyncTokenization": true,
-	"gitlens.gitkraken.cli.integration.enabled": true
+	"yaml.format.printWidth": 120
 }

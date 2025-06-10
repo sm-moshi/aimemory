@@ -20,7 +20,8 @@ src/webview/node_modules/
 
 # Cursor
 .cursor/*
-memory-bank/*.md
+memory-bank/
+!memory-bank/*.md
 **/.log
 docs/devs/
 docs/v1.0/
@@ -38,3 +39,4 @@ docs/maybe/
 docs/project-structure.md
 
 docs/guides/path-aliases.md
+aimemory_OG

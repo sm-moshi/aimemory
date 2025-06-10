@@ -12,7 +12,9 @@ export function RulesStatus(): ReactNode {
 
 	const requestRulesStatus = useCallback(() => {
 		setIsLoading(true);
-		sendLog("Requesting rules status", "info", { action: "requestRulesStatus" });
+		sendLog("Requesting rules status", "info", {
+			action: "requestRulesStatus",
+		});
 		window.vscodeApi?.postMessage({
 			command: "getRulesStatus",
 		});
@@ -58,7 +60,9 @@ export function RulesStatus(): ReactNode {
 	const resetRules = useCallback(() => {
 		setResetLoading(true);
 		setFeedback(null);
-		sendLog("User clicked Reset Rules button", "info", { action: "resetRules" });
+		sendLog("User clicked Reset Rules button", "info", {
+			action: "resetRules",
+		});
 		window.vscodeApi?.postMessage({
 			command: "resetRules",
 		});

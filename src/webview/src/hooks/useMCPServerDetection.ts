@@ -31,7 +31,11 @@ export function useMCPServerDetection(): UseMCPServerDetectionReturn {
 			sendLog(
 				`No server running on port ${checkPort} during initial detection: ${error instanceof Error ? error.message : String(error)}`,
 				"info",
-				{ action: "initialDetectServer", port: checkPort, area: "useMCPServerDetection" },
+				{
+					action: "initialDetectServer",
+					port: checkPort,
+					area: "useMCPServerDetection",
+				},
 			);
 		}
 		return false; // Server not found or error

@@ -36,7 +36,9 @@ export function MCPServerManager(): ReactNode {
 		setIsActionLoading(true);
 		// Optimistically set running, will be confirmed by message
 		// setIsMCPRunning(true);
-		sendLog("User clicked 'Start MCP Server' button", "info", { action: "startMCPServer" });
+		sendLog("User clicked 'Start MCP Server' button", "info", {
+			action: "startMCPServer",
+		});
 		window.vscodeApi?.postMessage({
 			command: "startMCPServer",
 		});
@@ -47,7 +49,9 @@ export function MCPServerManager(): ReactNode {
 		// Optimistically set stopped, will be confirmed by message
 		// setIsMCPRunning(false);
 		// setPort(null);
-		sendLog("User clicked 'Stop MCP Server' button", "info", { action: "stopMCPServer" });
+		sendLog("User clicked 'Stop MCP Server' button", "info", {
+			action: "stopMCPServer",
+		});
 		window.vscodeApi?.postMessage({
 			command: "stopMCPServer",
 		});

@@ -1,5 +1,5 @@
 ---
-description: Memory Bank Integration Rules
+description:
 globs:
 alwaysApply: false
 ---

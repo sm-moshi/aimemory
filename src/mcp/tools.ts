@@ -1,32 +1,29 @@
 /**
- * MCP Tools - Consolidated MCP Tool Implementation
+ * MCP Tools - Consolidated MCP Tool Implementations
  *
  * This module consolidates all MCP tool functionality including:
- * - Tool helpers and utilities
- * - Metadata tool registration
- * - Core memory bank MCP tools
- * - Metadata memory bank MCP tools
+ * - Core memory bank tools and operations
+ * - Tool helpers and response formatters
+ * - Server extension classes
  *
- * Consolidated from:
- * - src/mcp/shared/mcpToolHelpers.ts
- * - src/mcp/shared/metadataToolRegistrar.ts
- * - src/mcp/coreMemoryBankMCP.ts
- * - src/mcp/metadataMemoryBankMCP.ts
+ * Simplified approach - no complex metadata indexing, just direct file operations.
  */
-
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 
 // Core dependencies
 import type { MemoryBankManager } from "../core/memory-bank";
-import type { MetadataIndexManager } from "../core/metadata-index";
-import type { MetadataSearchEngine } from "../core/metadata-search";
+
+// NOTE: Metadata system removed - keeping it simple with direct file operations
 
 // Type alias for compatibility
 type MemoryBankServiceCore = MemoryBankManager;
 
-import { MemoryBankError, isError, tryCatch } from "../lib/types/core";
+// Cursor integration imports
+import { registerMemoryBankPrompts } from "../cursor/mcp-prompts-registry";
+// Utility imports
+import { createLogger } from "../lib/logging";
 import type { AsyncResult, MemoryBankFileType, Result } from "../lib/types/core";
+import { isError, MemoryBankError, tryCatch } from "../lib/types/core";
+// Response types - Import from types to maintain consistency
 import type {
 	BaseMCPServerConfig,
 	CoreMemoryBankConfig,
@@ -34,20 +31,11 @@ import type {
 	MCPResponse,
 	MCPSuccessResponse,
 } from "../lib/types/operations";
-// Type imports
-import { ReadMemoryBankFileSchema } from "../lib/types/system";
-import type { SearchOptions } from "../lib/types/system";
-
-// Utility imports
 import {
-	createLogger,
 	formatMarkdownContent,
 	getExtensionVersion,
 	isValidMemoryBankFileType as validateFileType,
 } from "../lib/utils";
-
-// Base server import
-import { BaseMCPServer } from "./server";
 
 // ============================================================================
 // TOOL HELPERS AND UTILITIES
@@ -57,25 +45,26 @@ import { BaseMCPServer } from "./server";
  * Ensures memory bank is ready, handling common readiness patterns
  */
 export async function ensureMemoryBankReady(memoryBank: MemoryBankServiceCore): AsyncResult<void, MemoryBankError> {
-	if (!memoryBank.isReady()) {
-		const loadResult: Result<MemoryBankFileType[], MemoryBankError> = await memoryBank.loadFiles();
-		if (isError(loadResult)) {
-			// If loading failed, return the error
-			return loadResult; // loadFiles already returns MemoryBankError in its AsyncResult
-		}
+	// Check if memory bank is initialized
+	const isInitializedResult = await memoryBank.getIsMemoryBankInitialized();
+	if (isError(isInitializedResult)) {
+		return isInitializedResult;
+	}
 
-		if (!memoryBank.isReady()) {
-			// If after loading, it's still not ready (unexpected), return an error
-			return {
-				success: false,
-				error: new MemoryBankError(
-					"Memory bank could not be initialized after loading. Please run init-memory-bank tool.",
-					"INIT_FAILED_AFTER_LOAD",
-				),
-			};
+	// If not initialized, initialize it
+	if (!isInitializedResult.data) {
+		const initResult = await memoryBank.initializeFolders();
+		if (isError(initResult)) {
+			return initResult;
 		}
 	}
-	// If already ready, or successfully loaded and is now ready, return success
+
+	// Load files to ensure they're available
+	const loadResult: Result<MemoryBankFileType[], MemoryBankError> = await memoryBank.loadFiles();
+	if (isError(loadResult)) {
+		return loadResult;
+	}
+
 	return { success: true, data: undefined };
 }
 
@@ -138,6 +127,10 @@ export function createSimpleMemoryBankTool(
 ) {
 	return createMemoryBankTool(memoryBank, handler, errorContext);
 }
+
+// ============================================================================
+// MEMORY BANK OPERATIONS
+// ============================================================================
 
 /**
  * Memory bank operation handlers - common operations extracted
@@ -258,17 +251,18 @@ export const MemoryBankOperations = {
 			return updateResult;
 		}
 
-		return { success: true, data: `File ${fileType} updated successfully.` };
+		return { success: true, data: `Successfully updated ${fileType}` };
 	},
 
 	/**
-	 * Builds review response payload for memory bank content
+	 * Build review response payload for review-and-update tool
 	 */
 	buildReviewResponsePayload(memoryBank: MemoryBankServiceCore): {
 		content: MCPResponse["content"];
 		nextAction?: MCPResponse["nextAction"];
 	} {
 		const files = memoryBank.getAllFiles();
+
 		const summaryData = {
 			totalFiles: files.length,
 			fileTypes: files.map(f => f.type),
@@ -282,283 +276,34 @@ export const MemoryBankOperations = {
 				})),
 		};
 
-		const reviewContent = [
-			{
-				type: "text" as const,
-				text: `📊 Memory Bank Summary:\n${JSON.stringify(summaryData, null, 2)}\n\n📝 Full Content:\n\n${memoryBank.getFilesWithFilenames()}`,
-			},
-		];
+		const summaryText = JSON.stringify(summaryData, null, 2);
 
 		return {
-			content: reviewContent,
-			nextAction:
-				"Based on this review, consider updating any files that need current information or corrections.",
+			content: [
+				{
+					type: "text",
+					text: `📁 Memory Bank Review:\n\n${summaryText}\n\n🔍 Review each file and suggest updates as needed. Use the update-memory-bank-file tool to apply changes.`,
+				},
+			],
+			nextAction: "Review files individually and apply updates using update-memory-bank-file tool",
 		};
 	},
 };
 
 // ============================================================================
-// METADATA TOOL REGISTRAR
-// ============================================================================
-
-export class MetadataToolRegistrar {
-	private metadataInitialized = false;
-
-	constructor(
-		private readonly memoryBank: MemoryBankServiceCore,
-		private readonly metadataIndexManager: MetadataIndexManager,
-		private readonly metadataSearchEngine: MetadataSearchEngine,
-		private readonly logger: Console, // Using Console for now, can be typed to Logger if preferred
-	) {}
-
-	private async ensureMetadataReady(): Promise<void> {
-		if (!this.metadataInitialized) {
-			await this.metadataIndexManager.initialize();
-			this.metadataInitialized = true;
-		}
-	}
-
-	public registerQueryMemoryIndexTool(server: McpServer): void {
-		const toolName = "query-memory-index";
-		const paramsSchema = z.object({
-			type: z.string().optional(),
-			tags: z.array(z.string()).optional(),
-			validationStatus: z.enum(["valid", "invalid", "unchecked", "schema_not_found"]).optional(),
-			limit: z.number().min(1).max(100).default(50).optional(),
-			offset: z.number().min(0).default(0).optional(),
-			query: z.string().optional().describe("Text search in title and file paths"),
-		});
-
-		server.tool(toolName, paramsSchema.shape, async (params: z.infer<typeof paramsSchema>) => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponse(readyCheck.error, toolName);
-			}
-
-			try {
-				await this.ensureMetadataReady();
-				const searchOptions: SearchOptions = {
-					limit: params.limit ?? 50,
-					offset: params.offset ?? 0,
-				};
-
-				if (params.type !== undefined) {
-					// Only add defined values to avoid type mismatches
-					searchOptions.type = params.type;
-				}
-				if (params.tags !== undefined) {
-					searchOptions.tags = params.tags;
-				}
-				if (params.validationStatus !== undefined) {
-					searchOptions.validationStatus = params.validationStatus;
-				}
-				if (params.query !== undefined) {
-					searchOptions.query = params.query;
-				}
-
-				const searchResults = await this.metadataSearchEngine.search(searchOptions);
-
-				const resultText = JSON.stringify(
-					{
-						results: searchResults.results,
-						total: searchResults.total,
-						hasMore: searchResults.hasMore,
-						limit: params.limit ?? 50,
-						offset: params.offset ?? 0,
-						query: params.query,
-						filters: searchResults.filters || {
-							type: params.type,
-							tags: params.tags,
-							validationStatus: params.validationStatus,
-						},
-					},
-					null,
-					2,
-				);
-				return createSuccessResponse(
-					`🔍 Found ${searchResults.results.length} files (${searchResults.total} total):\n\n${resultText}`,
-				);
-			} catch (error) {
-				this.logger.error(`Error in ${toolName}:`, error);
-				return createErrorResponse(
-					error instanceof Error ? error : new Error("Unknown error during metadata search"),
-					toolName,
-				);
-			}
-		});
-	}
-
-	public registerValidateMemoryFileTool(server: McpServer): void {
-		const toolName = "validate-memory-file";
-		const paramsSchema = z.object({
-			relativePath: z.string().describe("Relative path to the memory bank file to validate"),
-		});
-
-		server.tool(toolName, paramsSchema.shape, async (params: z.infer<typeof paramsSchema>) => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponse(readyCheck.error, toolName);
-			}
-			try {
-				await this.ensureMetadataReady();
-				let entry = this.metadataIndexManager.getEntry(params.relativePath);
-				if (!entry) {
-					await this.metadataIndexManager.updateEntry(params.relativePath);
-					entry = this.metadataIndexManager.getEntry(params.relativePath);
-				}
-				if (!entry) {
-					throw new Error(`File not found after attempting update: ${params.relativePath}`);
-				}
-				const resultText = JSON.stringify(
-					{
-						relativePath: params.relativePath,
-						validationStatus: entry.validationStatus ?? "unchecked",
-						errors: entry.validationErrors || [],
-						schema: entry.actualSchemaUsed ?? "default",
-						isValid: entry.validationStatus === "valid",
-						type: entry.type,
-						fileMetrics: entry.fileMetrics,
-						lastIndexed: entry.lastIndexed,
-					},
-					null,
-					2,
-				);
-				let statusIcon = "⚠️";
-				if (entry.validationStatus === "valid") statusIcon = "✅";
-				else if (entry.validationStatus === "invalid") statusIcon = "❌";
-				return createSuccessResponse(
-					`${statusIcon} Validation result for ${params.relativePath}:\n\n${resultText}`,
-				);
-			} catch (error) {
-				this.logger.error(`Error in ${toolName}:`, error);
-				return createErrorResponse(
-					error instanceof Error ? error : new Error("Unknown error during file validation"),
-					toolName,
-				);
-			}
-		});
-	}
-
-	public registerRebuildMetadataIndexTool(server: McpServer): void {
-		const toolName = "rebuild-metadata-index";
-		const paramsSchema = z.object({
-			force: z.boolean().default(false).optional().describe("Force rebuild even if index exists"),
-		});
-
-		server.tool(toolName, paramsSchema.shape, async (_params: z.infer<typeof paramsSchema>) => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponse(readyCheck.error, toolName);
-			}
-			try {
-				await this.ensureMetadataReady();
-				const startTime = Date.now();
-				// Assuming params.force might be used by buildIndex if it accepts options
-				const rebuildResult = await this.metadataIndexManager.buildIndex();
-				const duration = Date.now() - startTime;
-				const stats = await this.metadataIndexManager.getIndexStats();
-				const resultText = JSON.stringify(
-					{
-						filesProcessed: rebuildResult.filesProcessed,
-						filesIndexed: rebuildResult.filesIndexed,
-						filesErrored: rebuildResult.filesErrored,
-						rebuildTime: `${duration}ms`,
-						indexPath: ".index/metadata.json",
-						stats: {
-							totalFiles: stats.totalFiles,
-							validFiles: stats.validFiles,
-							invalidFiles: stats.invalidFiles,
-							uncheckedFiles: stats.uncheckedFiles,
-							lastBuildTime: stats.lastBuildTime,
-							totalSizeBytes: stats.totalSizeBytes,
-							totalLineCount: stats.totalLineCount,
-						},
-						errors: rebuildResult.errors,
-					},
-					null,
-					2,
-				);
-				return createSuccessResponse(`🔄 Metadata index rebuilt successfully:\n\n${resultText}`);
-			} catch (error) {
-				this.logger.error(`Error in ${toolName}:`, error);
-				return createErrorResponse(
-					error instanceof Error ? error : new Error("Unknown error during index rebuild"),
-					toolName,
-				);
-			}
-		});
-	}
-
-	public registerGetMetadataForFileTool(server: McpServer): void {
-		const toolName = "get-metadata-for-file";
-		const paramsSchema = z.object({
-			relativePath: z.string().describe("Relative path to the memory bank file to get metadata for"),
-		});
-
-		server.tool(toolName, paramsSchema.shape, async (params: z.infer<typeof paramsSchema>) => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponse(readyCheck.error, toolName);
-			}
-			try {
-				await this.ensureMetadataReady();
-				let entry = this.metadataIndexManager.getEntry(params.relativePath);
-				if (!entry) {
-					// Attempt to index the single file if not found
-					await this.metadataIndexManager.updateEntry(params.relativePath);
-					entry = this.metadataIndexManager.getEntry(params.relativePath);
-				}
-
-				if (!entry) {
-					return createErrorResponse(
-						new Error(`File not found in metadata index: ${params.relativePath}`),
-						toolName,
-					);
-				}
-
-				const resultText = JSON.stringify(entry, null, 2);
-				return createSuccessResponse(`📄 Metadata for ${params.relativePath}:\n\n${resultText}`);
-			} catch (error) {
-				this.logger.error(`Error in ${toolName}:`, error);
-				return createErrorResponse(
-					error instanceof Error ? error : new Error("Unknown error retrieving metadata for file"),
-					toolName,
-				);
-			}
-		});
-	}
-
-	public registerGetMetadataIndexStatsTool(server: McpServer): void {
-		const toolName = "get-metadata-index-stats";
-
-		server.tool(toolName, {}, async () => {
-			const readyCheck = await ensureMemoryBankReady(this.memoryBank);
-			if (isError(readyCheck)) {
-				return createErrorResponse(readyCheck.error, toolName);
-			}
-			try {
-				await this.ensureMetadataReady();
-				const stats = await this.metadataIndexManager.getIndexStats();
-				const resultText = JSON.stringify(stats, null, 2);
-				return createSuccessResponse(`📊 Metadata Index Stats:\n\n${resultText}`);
-			} catch (error) {
-				this.logger.error(`Error in ${toolName}:`, error);
-				return createErrorResponse(
-					error instanceof Error ? error : new Error("Unknown error retrieving index stats"),
-					toolName,
-				);
-			}
-		});
-	}
-}
-
-// ============================================================================
-// CORE MEMORY BANK MCP SERVER
+// SERVER EXTENSION CLASSES
 // ============================================================================
 
 /**
+ * Base MCP Server class imported from consolidated server.ts
+ * We re-export it here for convenience but it's defined in server.ts
+ */
+import { BaseMCPServer } from "./server";
+
+/**
  * Core MCP Server for Memory Bank operations.
- * Extends BaseMCPServer and registers tools specific to core memory bank functionalities.
+ * Extends BaseMCPServer and registers essential memory bank tools.
+ * No complex metadata - just direct file operations.
  */
 export class CoreMemoryBankMCP extends BaseMCPServer {
 	constructor(config: CoreMemoryBankConfig) {
@@ -584,51 +329,35 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 
 	/**
 	 * Registers custom tools specific to CoreMemoryBankMCP.
-	 * This method overrides the one in BaseMCPServer to add or specialize tool registrations.
+	 * This method overrides the one in BaseMCPServer to add core memory bank tools.
 	 */
 	protected override registerCustomTools(): void {
 		this.logger.info("[CoreMemoryBankMCP] Registering custom/overridden tools...");
 
-		// Register core tools not specific to metadata
+		// Register core tools for direct file operations
 		this._registerReadMemoryBankFileTool();
-
-		// Register metadata-specific tools via the registrar
-		// this._registerMetadataTools(); // Disabled: Metadata system not production ready
-		// TODO: Re-enable metadata tools when they are production ready
 
 		this.logger.info("[CoreMemoryBankMCP] Custom/overridden tool registration complete.");
 	}
 
 	/**
-	 * Registers all metadata-related tools using the MetadataToolRegistrar.
-	 * TODO: Re-enable when metadata system is production ready
-	 */
-	private _registerMetadataTools(): void {
-		this.logger.warn(
-			"[CoreMemoryBankMCP] Metadata tools are disabled. Re-enable when metadata system is production ready.",
-		);
-		// TODO: Implement metadata tool registration when system is ready
-		// const metadataRegistrar = new MetadataToolRegistrar(...);
-		// metadataRegistrar.registerQueryMemoryIndexTool(this.server);
-		// metadataRegistrar.registerValidateMemoryFileTool(this.server);
-		// metadataRegistrar.registerRebuildMetadataIndexTool(this.server);
-		// metadataRegistrar.registerGetMetadataForFileTool(this.server);
-		// metadataRegistrar.registerGetMetadataIndexStatsTool(this.server);
-	}
-
-	/**
 	 * Registers the 'read-memory-bank-file' tool with specific schema.
-	 * This might override a simpler version from BaseMCPServer if it exists,
-	 * or add it if it doesn't.
 	 */
 	private _registerReadMemoryBankFileTool(): void {
 		const toolName = "read-memory-bank-file";
 		this.server.tool(
 			toolName,
-			ReadMemoryBankFileSchema.shape, // Use .shape for direct Zod object definition
+			{
+				fileType: {
+					type: "string",
+					description: "Type of memory bank file to read",
+				},
+			},
 			createMemoryBankTool(
 				this.memoryBank,
-				async (params: z.infer<typeof ReadMemoryBankFileSchema>): AsyncResult<string, MemoryBankError> => {
+				// biome-ignore lint/suspicious/noExplicitAny: MCP SDK requires generic object parameters
+				async (args: { [key: string]: any }): AsyncResult<string, MemoryBankError> => {
+					const params = args as { fileType: string };
 					if (!validateFileType(params.fileType)) {
 						return {
 							success: false,
@@ -653,43 +382,14 @@ export class CoreMemoryBankMCP extends BaseMCPServer {
 }
 
 // ============================================================================
-// METADATA MEMORY BANK MCP SERVER
+// EXPORTS
 // ============================================================================
 
-/**
- * MCP Server providing metadata operations for memory bank files
- * Includes search, validation, and indexing capabilities
- */
-export class MetadataMemoryBankMCP extends BaseMCPServer {
-	constructor(config: CoreMemoryBankConfig) {
-		// Handle flexible path configuration - require at least one path
-		const memoryBankPath = config.memoryBankPath ?? config.workspacePath;
-
-		if (!memoryBankPath) {
-			throw new Error("MetadataMemoryBankMCP requires either memoryBankPath or workspacePath to be specified");
-		}
-
-		// Pass config to BaseMCPServer, which handles all initializations
-		super({
-			memoryBankPath,
-			logger: config.logger ?? createLogger({ component: "MetadataMemoryBankMCP" }),
-			name: config.name ?? "MetadataMemoryBankMCP", // Default name for this specific server
-			version: config.version ?? getExtensionVersion(), // Use suffix for this specific server
-		});
-	}
-
-	/**
-	 * Register metadata-specific MCP tools
-	 * TODO: Re-enable when metadata system is production ready
-	 */
-	protected override registerCustomTools(): void {
-		this.logger.warn(
-			"[MetadataMemoryBankMCP] Metadata tools are disabled. Re-enable when metadata system is production ready.",
-		);
-		// TODO: Implement metadata tool registration when system is ready
-		// const metadataRegistrar = new MetadataToolRegistrar(...);
-		// metadataRegistrar.registerQueryMemoryIndexTool(this.server);
-		// metadataRegistrar.registerValidateMemoryFileTool(this.server);
-		// metadataRegistrar.registerRebuildMetadataIndexTool(this.server);
-	}
-}
+// Export everything needed for MCP server implementations
+export {
+	type MemoryBankServiceCore,
+	type MCPResponse,
+	type MCPSuccessResponse,
+	type MCPErrorResponse,
+	registerMemoryBankPrompts,
+};

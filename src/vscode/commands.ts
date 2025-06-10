@@ -13,18 +13,13 @@
  */
 
 import * as vscode from "vscode";
-
+import { formatErrorMessage } from "../lib/helpers";
+// Utility imports - updated for consolidated structure
+import { createLogger } from "../lib/logging";
 // Core dependencies - updated for consolidated structure
 import type { Logger, MemoryBankError, MemoryBankFile, MemoryBankFileType, Result } from "../lib/types/core";
 import { isError, isSuccess } from "../lib/types/core";
 import type { CommandResult, MCPServerInterface } from "../lib/types/operations";
-
-import { formatErrorMessage } from "../lib/helpers";
-// Utility imports - updated for consolidated structure
-import { createLogger } from "../lib/utils";
-
-// DI Container for service resolution
-import type { DIContainer } from "../lib/di-container";
 
 // ============================================================================
 // COMMAND RESULT UTILITIES
@@ -33,7 +28,10 @@ import type { DIContainer } from "../lib/di-container";
 /**
  * Helper functions for creating consistent command results
  */
-const createSuccessResult = (message: string): CommandResult => ({ success: true, message });
+const createSuccessResult = (message: string): CommandResult => ({
+	success: true,
+	message,
+});
 
 const createErrorResult = (message: string, error?: MemoryBankError): CommandResult => {
 	const result: CommandResult = { success: false, message };
@@ -77,9 +75,7 @@ function categorizeFilesByType(files: MemoryBankFile[]): Record<string, string[]
 			categories[category].push(status);
 		} else {
 			// Ensure LEGACY_CATEGORY exists
-			if (!categories[LEGACY_CATEGORY]) {
-				categories[LEGACY_CATEGORY] = [];
-			}
+			categories[LEGACY_CATEGORY] ??= [];
 			categories[LEGACY_CATEGORY].push(status);
 		}
 	}
@@ -290,7 +286,10 @@ export class CommandHandler {
 	/**
 	 * Parse the memory command text and extract command and arguments
 	 */
-	private parseMemoryCommand(text: string): { command: string | null; args: string[] } {
+	private parseMemoryCommand(text: string): {
+		command: string | null;
+		args: string[];
+	} {
 		const parts = text.trim().split(" ");
 
 		if (parts.length < 2) {
@@ -358,13 +357,18 @@ export function registerExtensionCommands(
 		// Update Cursor MCP configuration
 		vscode.commands.registerCommand("aimemory.updateMCPConfig", async () => {
 			try {
-				logger.debug("Updating Cursor MCP config", { operation: "updateMCPConfig" });
+				logger.debug("Updating Cursor MCP config", {
+					operation: "updateMCPConfig",
+				});
 				vscode.window.showInformationMessage(
 					"Please use the 'Start MCP Server' command which includes MCP config update",
 				);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
-				logger.error("Failed to update Cursor MCP config", { error: message, operation: "updateMCPConfig" });
+				logger.error("Failed to update Cursor MCP config", {
+					error: message,
+					operation: "updateMCPConfig",
+				});
 				vscode.window.showErrorMessage(`Failed to update Cursor MCP config: ${message}`);
 			}
 		}),
@@ -377,7 +381,10 @@ export function registerExtensionCommands(
 				vscode.window.showInformationMessage("MCP server started successfully");
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
-				logger.error("Failed to start MCP server", { error: message, operation: "startMCPServer" });
+				logger.error("Failed to start MCP server", {
+					error: message,
+					operation: "startMCPServer",
+				});
 				vscode.window.showErrorMessage(`Failed to start MCP server: ${message}`);
 			}
 		}),
@@ -390,7 +397,10 @@ export function registerExtensionCommands(
 				vscode.window.showInformationMessage("MCP server stopped successfully");
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
-				logger.error("Failed to stop MCP server", { error: message, operation: "stopMCPServer" });
+				logger.error("Failed to stop MCP server", {
+					error: message,
+					operation: "stopMCPServer",
+				});
 				vscode.window.showErrorMessage(`Failed to stop MCP server: ${message}`);
 			}
 		}),
@@ -410,10 +420,25 @@ export function registerExtensionCommands(
 		}),
 
 		// Show output channel
-		vscode.commands.registerCommand("aimemory.showOutput", () => {
+		vscode.commands.registerCommand("aimemory.showOutput", async () => {
 			logger.debug("Showing output channel", { operation: "showOutput" });
-			// TODO: Implement output channel display
-			vscode.window.showInformationMessage("Output channel functionality not yet implemented");
+			try {
+				if ("showOutput" in logger && typeof logger.showOutput === "function") {
+					await logger.showOutput();
+					logger.info("Output channel displayed successfully");
+				} else {
+					const loggerType = logger.constructor.name || "Unknown";
+					logger.error(`Logger type ${loggerType} doesn't support showOutput method`);
+					vscode.window.showInformationMessage("AI Memory: Output channel functionality not available");
+				}
+			} catch (error) {
+				logger.error(
+					`Failed to show output channel: ${error instanceof Error ? error.message : String(error)}`,
+				);
+				vscode.window.showErrorMessage(
+					`AI Memory: Failed to show output channel - ${error instanceof Error ? error.message : String(error)}`,
+				);
+			}
 		}),
 	);
 }
@@ -427,25 +452,6 @@ export function registerExtensionCommands(
  */
 export function createCommandHandler(mcpServer: MCPServerInterface): CommandHandler {
 	return new CommandHandler(mcpServer);
-}
-
-/**
- * Helper function to setup configuration listeners
- * Moved from extension.ts for better organization
- */
-export function setupConfigurationListeners(context: vscode.ExtensionContext, container: DIContainer): void {
-	// Listen for configuration changes
-	vscode.workspace.onDidChangeConfiguration(
-		event => {
-			if (event.affectsConfiguration("aimemory")) {
-				// Handle configuration changes
-				const logger = container.resolve<Logger>("Logger");
-				logger.info("AI Memory configuration changed", { operation: "configurationChange" });
-			}
-		},
-		null,
-		context.subscriptions,
-	);
 }
 
 // Export types for convenience

@@ -82,7 +82,11 @@ export function createSTDIOServer(workspacePath?: string): MCPServerCLI {
 // ============================================================================
 
 // Only run if this is the main module (CLI execution)
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Handle both ESM and CommonJS builds
+const isMainModule =
+	typeof require !== "undefined" ? require.main === module : import.meta.url === `file://${process.argv[1]}`;
+
+if (isMainModule) {
 	main();
 }
 

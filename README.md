@@ -80,7 +80,7 @@ memory-bank/
 
 ## 📚 Documentation
 
-- [Phase 4 Restructuring Plan](docs/phase-4-restructuring-plan.md) - Current development progress
+- [Phase 4 Restructuring Plan](docs/devs/phase-4-restructuring-plan.md) - Current development progress
 - [Troubleshooting Guide](docs/guides/TROUBLESHOOTING.md) - Common issues and solutions
 - [Contributing Guidelines](CONTRIBUTING.md) - How to contribute
 

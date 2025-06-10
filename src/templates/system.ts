@@ -233,7 +233,6 @@ graph TD
 ### Efficient Scanning
 - **Chunked Processing**: [How large content is processed]
 - **Parallel Processing**: [How parallelism is used]
-- **Caching**: [How scan results are cached]
 
 ### Memory Management
 - **Buffer Management**: [How memory is managed during scans]

@@ -1,0 +1,15 @@
+# Build outputs
+dist/
+out/
+
+# Node modules
+node_modules/
+
+# Coverage reports
+coverage/
+
+# VS Code test runner
+.vscode-test/
+
+# Cursor files
+.cursor/

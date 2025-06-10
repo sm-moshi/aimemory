@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="react" />
+/// <reference types="@testing-library/jest-dom" />
 
 import type { VSCodeAPI } from "./types/vscode";
 

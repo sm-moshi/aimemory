@@ -11,11 +11,10 @@
  * MCP server interactions, and Zod validation schemas.
  */
 
-// Core types needed throughout this file
-import type { Logger, MemoryBankError, MemoryBankFileType, Result } from "./core";
-
 // Import for MCP server interface types
 import type { MemoryBankManager } from "../../core/memory-bank";
+// Core types needed throughout this file
+import type { Logger, MemoryBankError, MemoryBankFileType, Result } from "./core";
 
 // =================================================================
 // Section: File & Streaming Operations (from src/types/fileOperations.ts)

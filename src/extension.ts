@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
-import { CacheManager } from "./core/cache";
 import { FileOperationManager } from "./core/file-operations";
 import { MemoryBankManager } from "./core/memory-bank";
 import { StreamingManager } from "./core/streaming";
-import { CursorRulesService, updateCursorMCPConfig } from "./cursor-integration";
-import { DIContainer } from "./lib/di-container";
-import type { Logger as GenericLogger, LogContext, LogLevel, Logger } from "./lib/types/core";
-import { createLogger, showVSCodeError } from "./lib/utils";
-import { MemoryBankMCPAdapter } from "./mcp/server";
-import type { MCPServerInterface } from "./mcp/server";
+import { updateCursorMCPConfig } from "./cursor/config";
+import { createLogger } from "./lib/logging";
+import type { Logger } from "./lib/types/core";
+import type { MCPServerInterface } from "./lib/types/operations";
+import { showVSCodeError } from "./lib/utils";
 import { CommandHandler } from "./vscode/commands";
+import { CursorRulesService } from "./vscode/cursor-integration";
+import { MemoryBankMCPAdapter } from "./vscode/mcp-adapter";
 import { WebviewProvider } from "./vscode/webview-provider";
 import {
 	createMemoryBankRulesIfNotExists,
@@ -23,110 +23,15 @@ import {
 const DEFAULT_MCP_PORT = 7331;
 
 /**
- * Adapter to bridge VS Code Logger with generic Logger interface
- */
-class VSCodeLoggerAdapter implements GenericLogger {
-	constructor(private readonly vscodeLogger: Logger) {}
-
-	trace(message: string, context?: LogContext): void {
-		this.vscodeLogger.trace(message, context);
-	}
-
-	debug(message: string, context?: LogContext): void {
-		this.vscodeLogger.debug(message, context);
-	}
-
-	info(message: string, context?: LogContext): void {
-		this.vscodeLogger.info(message, context);
-	}
-
-	warn(message: string, context?: LogContext): void {
-		this.vscodeLogger.warn(message, context);
-	}
-
-	error(message: string, context?: LogContext): void {
-		this.vscodeLogger.error(message, context);
-	}
-
-	setLevel(level: LogLevel): void {
-		this.vscodeLogger.setLevel(level);
-	}
-}
-
-/**
- * Register all core services with the DI container
- */
-function registerCoreServices(container: DIContainer, logger: Logger, context: vscode.ExtensionContext): void {
-	const memoryBankPath = getMemoryBankPath();
-	const loggerAdapter = new VSCodeLoggerAdapter(logger);
-	const fileOperationManager = new FileOperationManager(loggerAdapter, memoryBankPath);
-
-	// Register singletons
-	container.register("Logger", () => logger, true);
-	container.register("CacheManager", c => new CacheManager(c.resolve("Logger")), true);
-
-	container.register(
-		"StreamingManager",
-		c => new StreamingManager(c.resolve("Logger"), fileOperationManager, memoryBankPath),
-		true,
-	);
-
-	container.register("FileOperationManager", () => fileOperationManager, true);
-
-	container.register(
-		"MemoryBankServiceCore",
-		c =>
-			new MemoryBankManager(
-				memoryBankPath,
-				c.resolve("Logger"),
-				c.resolve("CacheManager"),
-				c.resolve("StreamingManager"),
-				c.resolve("FileOperationManager"),
-			),
-		true,
-	);
-
-	container.register("CursorRulesService", () => new CursorRulesService(context), true);
-
-	container.register(
-		"MCPServerInterface",
-		c =>
-			new MemoryBankMCPAdapter(
-				context,
-				c.resolve<MemoryBankManager>("MemoryBankServiceCore"),
-				c.resolve<Logger>("Logger"),
-				DEFAULT_MCP_PORT,
-			),
-		true,
-	);
-
-	container.register(
-		"WebviewProvider",
-		c =>
-			new WebviewProvider(
-				context,
-				c.resolve("MCPServerInterface"),
-				c.resolve("MemoryBankServiceCore"),
-				c.resolve("CursorRulesService"),
-				c.resolve("MCPServerInterface"),
-				c.resolve("Logger"),
-			),
-		true,
-	);
-
-	container.register("CommandHandler", c => new CommandHandler(c.resolve("MCPServerInterface")), true);
-}
-
-/**
  * Register all VS Code commands
  */
 function registerCommands(
 	context: vscode.ExtensionContext,
-	container: DIContainer,
 	webviewProvider: WebviewProvider,
 	commandHandler: CommandHandler,
 	mcpServer: MCPServerInterface,
 	logger: Logger,
+	fileOperationManager: FileOperationManager, // Pass service directly
 ): void {
 	const commands = [
 		vscode.commands.registerCommand("aimemory.openWebview", () => {
@@ -136,8 +41,8 @@ function registerCommands(
 
 		vscode.commands.registerCommand("aimemory.updateMCPConfig", async () => {
 			try {
-				const fom = container.resolve<FileOperationManager>("FileOperationManager");
-				await updateCursorMCPConfig(context.extensionPath, fom);
+				// No longer need to resolve from container
+				await updateCursorMCPConfig(context.extensionPath, fileOperationManager);
 				vscode.window.showInformationMessage(
 					"Cursor MCP config (mcp.json) has been configured for AI Memory (STDIO).",
 				);
@@ -149,8 +54,7 @@ function registerCommands(
 		vscode.commands.registerCommand("aimemory.startMCP", async () => {
 			try {
 				await mcpServer.start();
-				const cursorRulesService = container.resolve<CursorRulesService>("CursorRulesService");
-				const fileOperationManager = container.resolve<FileOperationManager>("FileOperationManager");
+				const cursorRulesService = new CursorRulesService(context); // Create on demand or pass in
 				await createMemoryBankRulesIfNotExists(cursorRulesService, logger, fileOperationManager);
 				vscode.window.showInformationMessage(
 					"AI Memory MCP server started using STDIO transport. Ready for Cursor MCP integration.",
@@ -199,12 +103,24 @@ function registerCommands(
 				vscode.window.showInformationMessage(`AI Memory log level set to ${picked.label}`);
 			}
 		}),
-		vscode.commands.registerCommand("aimemory.showOutput", () => {
+		vscode.commands.registerCommand("aimemory.showOutput", async () => {
 			// Show output for VS Code logger
-			if ("showOutput" in logger && typeof logger.showOutput === "function") {
-				logger.showOutput();
-			} else {
-				vscode.window.showInformationMessage("AI Memory: Output channel functionality not available");
+			try {
+				if ("showOutput" in logger && typeof logger.showOutput === "function") {
+					logger.showOutput();
+					logger.info("Output channel displayed successfully");
+				} else {
+					const loggerType = logger.constructor.name || "Unknown";
+					logger.error(`Logger type ${loggerType} doesn't support showOutput method`);
+					vscode.window.showInformationMessage("AI Memory: Output channel functionality not available");
+				}
+			} catch (error) {
+				logger.error(
+					`Failed to show output channel: ${error instanceof Error ? error.message : String(error)}`,
+				);
+				vscode.window.showErrorMessage(
+					`AI Memory: Failed to show output channel - ${error instanceof Error ? error.message : String(error)}`,
+				);
 			}
 		}),
 	];
@@ -219,18 +135,25 @@ export function activate(context: vscode.ExtensionContext) {
 	const logger = createLogger();
 	logger.setLevel(logLevel);
 
-	// Create and setup DI Container
-	const container = new DIContainer();
-	registerCoreServices(container, logger, context);
+	// Manually create and wire up services, inspired by the simpler v0.7.1 approach
+	const memoryBankPath = getMemoryBankPath();
+	const fileOperationManager = new FileOperationManager(logger, memoryBankPath);
+	const streamingManager = new StreamingManager(logger, fileOperationManager, memoryBankPath);
 
-	// Resolve services from container
-	const webviewProvider = container.resolve<WebviewProvider>("WebviewProvider");
-	const commandHandler = container.resolve<CommandHandler>("CommandHandler");
-	const mcpServer = container.resolve<MCPServerInterface>("MCPServerInterface");
+	const memoryBankManager = new MemoryBankManager(memoryBankPath, logger, streamingManager, fileOperationManager);
+
+	const cursorRulesService = new CursorRulesService(context);
+
+	const mcpServer = new MemoryBankMCPAdapter(context, memoryBankManager, logger, DEFAULT_MCP_PORT);
+
+	const webviewProvider = new WebviewProvider(context, mcpServer, memoryBankManager, cursorRulesService, logger);
+
+	const commandHandler = new CommandHandler(mcpServer);
 
 	// Register commands and UI elements
-	registerCommands(context, container, webviewProvider, commandHandler, mcpServer, logger);
-	setupConfigurationListeners(context, container);
+	registerCommands(context, webviewProvider, commandHandler, mcpServer, logger, fileOperationManager);
+	// We no longer pass the container, but will need to refactor setupConfigurationListeners if it used it.
+	setupConfigurationListeners(context, logger);
 
 	logger.info("AI Memory extension activated.");
 }

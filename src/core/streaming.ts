@@ -8,25 +8,24 @@
  *   perform a normal read based on file size, while also collecting performance statistics.
  */
 
-import { createReadStream } from "node:fs";
 import type { ReadStream, Stats } from "node:fs";
+import { createReadStream } from "node:fs";
 import * as fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import type { Logger, Result } from "../lib/types/core";
 import type {
-	CachedFileStats,
 	FileError,
 	FileStreamerConfig,
 	StreamDataHandlerContext,
-	StreamSetupParameters,
-	StreamSetupState,
 	StreamingManagerConfig,
 	StreamingMetadata,
 	StreamingOptions,
 	StreamingResult,
 	StreamingStats,
+	StreamSetupParameters,
+	StreamSetupState,
 } from "../lib/types/operations";
 import { sanitizePath, validateMemoryBankPath } from "../lib/validation";
 import type { FileOperationManager } from "./file-operations";
@@ -361,7 +360,6 @@ export class StreamingManager {
 	private readonly timeout: number;
 	private readonly enableProgressCallbacks: boolean;
 	private readonly fileStreamer: FileStreamer;
-	private readonly statsCache = new Map<string, CachedFileStats>();
 
 	// Runtime statistics
 	private readonly stats: StreamingStats = {
@@ -429,7 +427,10 @@ export class StreamingManager {
 	}
 
 	getStats(): StreamingStats {
-		return { ...this.stats, lastReset: new Date(this.stats.lastReset.getTime()) };
+		return {
+			...this.stats,
+			lastReset: new Date(this.stats.lastReset.getTime()),
+		};
 	}
 
 	resetStats(): void {

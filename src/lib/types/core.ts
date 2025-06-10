@@ -17,7 +17,7 @@
 
 import type { FileOperationManager } from "../../core/file-operations";
 import type { StreamingManager } from "../../core/streaming";
-import type { FileCache, LegacyCacheStats, ValidationStatus } from "./system";
+import type { FileCache, LegacyCacheStats } from "./system";
 
 /**
  * Enumeration of all memory bank file types. Values should represent the full relative path from
@@ -84,10 +84,20 @@ export interface MemoryBankFile {
 	metadata?: FrontmatterMetadata; // Parsed YAML frontmatter
 	created?: Date; // From metadata.created if present
 
-	// Validation (Phase 2.2)
-	validationStatus?: ValidationStatus;
+	// Validation (Phase 2.2) - simplified without complex metadata system
+	validationStatus?: "valid" | "invalid" | "unchecked";
 	validationErrors?: import("zod").ZodIssue[];
 	actualSchemaUsed?: string;
+}
+
+/**
+ * Statistics for a memory bank file
+ */
+export interface MemoryBankFileStats {
+	fileType: MemoryBankFileType;
+	size: number;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 /**

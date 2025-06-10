@@ -6,7 +6,7 @@
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
 	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.8.0-dev.5",
+	"version": "0.8.0-alpha",
 	"type": "module",
 	"engines": {
 		"vscode": "^1.96.2",
@@ -26,7 +26,9 @@
 		]
 	},
 	"icon": "dist/assets/icon.png",
-	"categories": ["Other"],
+	"categories": [
+		"Other"
+	],
 	"main": "./dist/extension.cjs",
 	"extensionTestsPath": "./out/test/suite/index.cjs",
 	"contributes": {
@@ -60,7 +62,14 @@
 			"properties": {
 				"aimemory.logLevel": {
 					"type": "string",
-					"enum": ["trace", "debug", "info", "warning", "error", "off"],
+					"enum": [
+						"trace",
+						"debug",
+						"info",
+						"warning",
+						"error",
+						"off"
+					],
 					"default": "info",
 					"description": "Controls the verbosity of the AI Memory Output Channel."
 				}
@@ -71,7 +80,9 @@
 		"build": "pnpm build:extension && pnpm build:webview",
 		"build:extension": "rollup -c rollup.config.js",
 		"build:webview": "cd src/webview && pnpm run build",
-		"dev": "pnpm run --parallel watch:extension webview:dev",
+		"dev": "npm-run-all --parallel dev:*",
+		"dev:extension": "rollup -c rollup.config.js --watch",
+		"dev:webview": "cd src/webview && vite dev --host localhost --port 5173",
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
 		"lint": "biome check --write .",
@@ -79,40 +90,45 @@
 		"check": "tsgo -p tsconfig.json --noEmit && pnpm lint && pnpm format",
 		"package": "pnpm check && pnpm build && pnpm vsce package --no-dependencies",
 		"watch:extension": "rollup -c -w",
-		"webview:dev": "cd src/webview && pnpm run dev",
 		"vscode:prepublish": "pnpm run build"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
+		"@biomejs/biome": "2.0.0-beta.6",
 		"@rollup/plugin-alias": "^5.1.1",
 		"@rollup/plugin-commonjs": "^28.0.3",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@rollup/plugin-swc": "^0.4.0",
-		"@swc/core": "^1.11.31",
+		"@swc/core": "^1.12.0",
+		"@testing-library/jest-dom": "^6.6.3",
 		"@types/glob": "^8.1.0",
 		"@types/node": "^20.19.0",
+		"@types/react": "^19.1.7",
+		"@types/react-dom": "^19.1.6",
 		"@types/vscode": "1.96.0",
-		"@typescript/native-preview": "^7.0.0-dev.20250608.1",
-		"@vitejs/plugin-react": "^4.5.1",
-		"@vitest/coverage-v8": "^3.2.2",
+		"@typescript/native-preview": "7.0.0-dev.20250610.1",
+		"@vitejs/plugin-react": "^4.5.2",
+		"@vitest/coverage-v8": "^3.2.3",
 		"@vscode/test-cli": "^0.0.11",
 		"@vscode/vsce": "^3.5.0",
 		"glob": "^11.0.2",
 		"happy-dom": "^17.6.3",
+		"npm-run-all": "^4.1.5",
 		"rollup": "^4.42.0",
 		"rollup-plugin-analyzer": "^4.0.0",
 		"rollup-plugin-copy": "^3.5.0",
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3",
 		"vite-tsconfig-paths": "^5.1.4",
-		"vitest": "^3.2.2",
+		"vitest": "^3.2.3",
 		"vscode-uri": "^3.1.0"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.1",
 		"commander": "14.0.0",
 		"gray-matter": "^4.0.3",
-		"zod": "^3.25.56"
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"zod": "^3.25.57"
 	}
 }

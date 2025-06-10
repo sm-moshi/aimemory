@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
 import type { MemoryBankStatusProps } from "../../types/components";
 import { cn } from "../../utils/cn";
@@ -13,7 +13,9 @@ export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBank
 
 	const requestMemoryBankStatus = useCallback(() => {
 		setIsLoading(true);
-		sendLog("Requesting memory bank status", "info", { action: "requestMemoryBankStatus" });
+		sendLog("Requesting memory bank status", "info", {
+			action: "requestMemoryBankStatus",
+		});
 		window.vscodeApi?.postMessage({
 			command: "requestMemoryBankStatus",
 		});

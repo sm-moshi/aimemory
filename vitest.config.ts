@@ -8,44 +8,25 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": resolve(__dirname, "./src"),
-			"@test-utils": resolve(__dirname, "./src/test/test-utils"),
 			"@/lib": resolve(__dirname, "./src/lib"),
 			"@/vscode": resolve(__dirname, "./src/vscode"),
 			"@/templates": resolve(__dirname, "./src/templates"),
 			"@types": resolve(__dirname, "./src/lib/types"),
 			"@core": resolve(__dirname, "./src/core"),
 			"@mcp": resolve(__dirname, "./src/mcp"),
-			vscode: resolve(__dirname, "./src/test/__mocks__/vscode.ts"),
 		},
 	},
 	test: {
-		// Root coverage configuration for the whole workspace
+		environment: "happy-dom",
+		globals: true,
+		css: true,
+		include: ["src/**/*.{test,spec}.{ts,tsx}"],
+		exclude: ["node_modules", "dist", "out", "memory-bank", "**/node_modules/**"],
+		setupFiles: ["./vitest.setup.ts"],
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json", "html"],
-			reportsDirectory: "./coverage",
+			exclude: ["node_modules/", "dist/", "out/", "**/*.d.ts", "**/*.config.*", "**/coverage/**", "memory-bank/"],
 		},
-		projects: [
-			{
-				// Project 1: Extension Tests (Node environment)
-				test: {
-					name: "extension",
-					include: ["src/**/*.test.ts"],
-					exclude: ["src/webview/**/*.test.ts", "node_modules/**"],
-					environment: "node",
-					setupFiles: ["src/test/setup/extension-setup.ts"],
-				},
-			},
-			{
-				// Project 2: Webview Tests (DOM environment)
-				test: {
-					name: "webview",
-					include: ["src/webview/**/*.test.{ts,tsx}"],
-					environment: "happy-dom",
-					setupFiles: ["src/webview/vitest.setup.ts"],
-					globals: true,
-				},
-			},
-		],
 	},
 });

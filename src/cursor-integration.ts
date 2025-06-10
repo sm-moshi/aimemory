@@ -6,35 +6,19 @@
  * - Configuration management
  * - Rules service integration
  *
- * Consolidated from:
- * - src/cursor/mcp-prompts.ts
- * - src/cursor/mcp-prompts-registry.ts
- * - src/cursor/config.ts
- * - src/cursor/config-helpers.ts
- * - src/cursor/rules-service.ts
- * - src/cursor/rules.ts
  */
 
 import { homedir } from "node:os";
 import * as path from "node:path";
 import { join } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { type ExtensionContext, FileType, Uri, window, workspace } from "vscode";
 
 // Core imports - updated for consolidated structure
 import type { FileOperationManager } from "./core/file-operations";
+import { createLogger } from "./lib/logging";
 import type { Logger } from "./lib/types/core";
-
 // Type imports for configuration
 import type { ConfigComparisonResult, CursorMCPConfig, CursorMCPServerConfig } from "./lib/types/system";
-
-// Helper imports from consolidated structure
-import {
-	createLogger,
-	ensureDirectory as genericEnsureDirectory,
-	readJsonFile as genericReadJsonFile,
-	writeJsonFile as genericWriteJsonFile,
-} from "./lib/utils";
 
 // === Constants ===
 
@@ -50,25 +34,27 @@ export const CURSOR_MEMORY_BANK_FILENAME = "memory-bank.mdc";
  * the error is logged and rethrown.
  */
 export async function ensureCursorDirectory(
-	fileOperationManager: FileOperationManager,
+	_fileOperationManager: FileOperationManager,
 	loggerOverride?: Logger,
 ): Promise<string> {
 	const homeDir = homedir();
 	const cursorDir = join(homeDir, ".cursor");
 	const logger = loggerOverride ?? createLogger();
+
 	try {
-		const loggerAdapter: Logger = {
-			error: (message: string, context?: unknown) => logger.error(message, context ? { context } : undefined),
-			warn: (message: string, context?: unknown) => logger.warn(message, context ? { context } : undefined),
-			info: (message: string, context?: unknown) => logger.info(message, context ? { context } : undefined),
-			debug: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined),
-			trace: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
-			setLevel: () => {
-				/* no-op */
-			},
-		};
-		return await genericEnsureDirectory(cursorDir, fileOperationManager, loggerAdapter);
+		// Use direct filesystem operations for system directories like .cursor
+		// This bypasses memory bank path validation which is not appropriate for system paths
+		const fs = await import("node:fs/promises");
+		await fs.mkdir(cursorDir, { recursive: true });
+		logger.debug(`Ensured .cursor directory exists: ${cursorDir}`);
+		return cursorDir;
 	} catch (error) {
+		// Only throw if it's not an "already exists" error
+		if (error && typeof error === "object" && "code" in error && error.code === "EEXIST") {
+			logger.debug(`Cursor directory already exists: ${cursorDir}`);
+			return cursorDir;
+		}
+
 		logger.error("Unexpected error creating .cursor directory", {
 			operation: "ensureCursorDirectory",
 			error: error instanceof Error ? error.message : String(error),
@@ -80,36 +66,68 @@ export async function ensureCursorDirectory(
 
 /**
  * Reads and parses the Cursor MCP configuration file
+ * Uses direct filesystem operations to bypass memory bank path validation
  */
-export async function readCursorMCPConfig(fileOperationManager: FileOperationManager): Promise<CursorMCPConfig> {
+export async function readCursorMCPConfig(_fileOperationManager: FileOperationManager): Promise<CursorMCPConfig> {
 	const homeDir = homedir();
 	const mcpConfigPath = join(homeDir, ".cursor", "mcp.json");
 	const defaultConfig: CursorMCPConfig = { mcpServers: {} };
 	const logger = createLogger();
-	const loggerAdapter: Logger = {
-		error: (message: string, context?: unknown) => logger.error(message, context ? { context } : undefined),
-		warn: (message: string, context?: unknown) => logger.warn(message, context ? { context } : undefined),
-		info: (message: string, context?: unknown) => logger.info(message, context ? { context } : undefined),
-		debug: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined),
-		trace: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
-		setLevel: () => {
-			/* no-op */
-		},
-	};
-	return genericReadJsonFile<CursorMCPConfig>(mcpConfigPath, fileOperationManager, loggerAdapter, defaultConfig);
+
+	try {
+		// Use direct filesystem operations for system configuration files
+		// This bypasses memory bank path validation which is not appropriate for system files
+		const fs = await import("node:fs/promises");
+		const configContent = await fs.readFile(mcpConfigPath, "utf-8");
+		const config = JSON.parse(configContent) as CursorMCPConfig;
+		logger.debug(`Successfully read Cursor MCP config: ${mcpConfigPath}`);
+		return config;
+	} catch (error) {
+		// If file doesn't exist, return default config
+		if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+			logger.debug(`Cursor MCP config file not found, using default: ${mcpConfigPath}`);
+			return defaultConfig;
+		}
+
+		// For other errors, log and return default
+		logger.warn("Failed to read Cursor MCP config file, using default", {
+			operation: "readCursorMCPConfig",
+			path: mcpConfigPath,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		return defaultConfig;
+	}
 }
 
 /**
  * Writes the Cursor MCP configuration file
- * Standardizes config writing with proper formatting
+ * Uses direct filesystem operations to bypass memory bank path validation
  */
 export async function writeCursorMCPConfig(
 	config: CursorMCPConfig,
-	fileOperationManager: FileOperationManager,
+	_fileOperationManager: FileOperationManager,
 ): Promise<void> {
 	const homeDir = homedir();
 	const mcpConfigPath = join(homeDir, ".cursor", "mcp.json");
-	return genericWriteJsonFile(mcpConfigPath, config, fileOperationManager);
+	const logger = createLogger();
+
+	try {
+		// Use direct filesystem operations for system configuration files
+		// This bypasses memory bank path validation which is not appropriate for system files
+		const fs = await import("node:fs/promises");
+		const configJson = JSON.stringify(config, null, 2);
+		await fs.writeFile(mcpConfigPath, configJson, "utf-8");
+		logger.debug(`Successfully wrote Cursor MCP config: ${mcpConfigPath}`);
+	} catch (error) {
+		logger.error("Failed to write Cursor MCP config file", {
+			operation: "writeCursorMCPConfig",
+			path: mcpConfigPath,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		throw new Error(
+			`Failed to write config file ${mcpConfigPath}: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
 }
 
 /**
@@ -120,7 +138,7 @@ export function createAIMemoryServerConfig(workspacePath: string): CursorMCPServ
 	return {
 		name: "AI Memory",
 		command: "node",
-		args: [join(workspacePath, "dist", "mcp-server"), "--workspace", workspacePath],
+		args: [join(workspacePath, "dist", "index.cjs"), workspacePath],
 		cwd: workspacePath,
 	};
 }
@@ -159,249 +177,35 @@ export function compareServerConfigs(
 	};
 }
 
-/**
- * High-level orchestrator for updating Cursor MCP configuration
- */
-export async function updateCursorMCPServerConfig(fileOperationManager: FileOperationManager): Promise<void> {
-	const logger = createLogger();
-
-	try {
-		// Get workspace path from VS Code workspace
-		const workspaceFolders = workspace.workspaceFolders;
-		if (!workspaceFolders || workspaceFolders.length === 0) {
-			throw new Error("No workspace folder found");
-		}
-		const workspacePath = workspaceFolders[0]?.uri.fsPath;
-		if (!workspacePath) {
-			throw new Error("No workspace folder found");
-		}
-
-		// Ensure .cursor directory exists
-		await ensureCursorDirectory(fileOperationManager);
-
-		// Read existing configuration
-		const existingConfig = await readCursorMCPConfig(fileOperationManager);
-		existingConfig.mcpServers ??= {};
-
-		// Create our server configuration
-		const ourServerConfig = createAIMemoryServerConfig(workspacePath);
-
-		// Compare configurations
-		const existingServerConfig = existingConfig.mcpServers["AI Memory"];
-		const comparison = existingServerConfig
-			? compareServerConfigs(existingServerConfig, ourServerConfig)
-			: { matches: false, differences: ["Config does not exist"] };
-
-		// Update configuration if needed
-		if (!comparison.matches) {
-			existingConfig.mcpServers["AI Memory"] = ourServerConfig;
-			await writeCursorMCPConfig(existingConfig, fileOperationManager);
-			window.showInformationMessage("Cursor MCP config updated for AI Memory (STDIO).");
-
-			if (comparison.differences) {
-				logger.info(`Config updated with changes: ${comparison.differences.join(", ")}`);
-			}
-		} else {
-			logger.info("AI Memory server already configured in Cursor MCP config (STDIO).");
-		}
-	} catch (error) {
-		const errorMessage = `Failed to update Cursor MCP config: ${error instanceof Error ? error.message : String(error)}`;
-		logger.error(errorMessage);
-		window.showErrorMessage(errorMessage);
-		throw error;
-	}
-}
-
-/**
- * Updates the Cursor MCP config to point to our MCP server (STDIO mode)
- * Main entry point for configuration updates
- */
-export async function updateCursorMCPConfig(
-	_extensionPath: string,
-	fileOperationManager: FileOperationManager,
-): Promise<void> {
-	await updateCursorMCPServerConfig(fileOperationManager);
-}
-
-// === Rules Service ===
-
-export class CursorRulesService {
-	private readonly cursorRulesPath = ".cursor/rules/";
-	private readonly logger: Logger;
-
-	constructor(private readonly context: ExtensionContext) {
-		this.logger = createLogger({ component: "CursorRulesService" });
-	}
-
-	async createRulesFile(filename: string, ruleContent: string): Promise<void> {
-		const workspaceRoot = this.getWorkspaceRoot();
-		if (!workspaceRoot) return;
-
-		const rulesDir = join(workspaceRoot, this.cursorRulesPath);
-		await this.ensureDirectoryExists(rulesDir);
-
-		const ruleFileUri = Uri.file(join(rulesDir, filename));
-
-		const shouldProceed = await this.checkFileOverwrite(ruleFileUri, filename);
-		if (!shouldProceed) return;
-
-		await this.writeRuleFile(ruleFileUri, ruleContent);
-	}
-
-	async readRulesFile(
-		filename: string,
-	): Promise<{ success: true; data: string } | { success: false; error: string }> {
-		try {
-			const workspaceRoot = this.getWorkspaceRoot();
-			if (!workspaceRoot) {
-				return { success: false, error: "No workspace folder found" };
-			}
-
-			const ruleFileUri = Uri.file(join(workspaceRoot, this.cursorRulesPath, filename));
-			const fileContent = await workspace.fs.readFile(ruleFileUri);
-			const content = new TextDecoder().decode(fileContent);
-
-			return { success: true, data: content };
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			return { success: false, error: `Failed to read rules file: ${errorMessage}` };
-		}
-	}
-
-	async deleteRulesFile(filename: string): Promise<void> {
-		try {
-			const workspaceRoot = this.getWorkspaceRoot();
-			if (!workspaceRoot) return;
-
-			const ruleFileUri = Uri.file(join(workspaceRoot, this.cursorRulesPath, filename));
-			await workspace.fs.delete(ruleFileUri);
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			throw new Error(`Failed to delete rules file: ${errorMessage}`);
-		}
-	}
-
-	async listAllRulesFilesInfo(): Promise<Array<{ name: string; lastUpdated?: Date }>> {
-		try {
-			const workspaceRoot = this.getWorkspaceRoot();
-			if (!workspaceRoot) return [];
-
-			const rulesDir = Uri.file(join(workspaceRoot, this.cursorRulesPath));
-
-			try {
-				const files = await workspace.fs.readDirectory(rulesDir);
-				const mdcFiles = files
-					.filter(([name, type]) => type === FileType.File && name.endsWith(".mdc"))
-					.map(([name]) => ({ name })); // Could add stat info later if needed
-
-				return mdcFiles;
-			} catch {
-				// Directory doesn't exist
-				return [];
-			}
-		} catch (error) {
-			this.logger.error("Error listing rules files", {
-				error: error instanceof Error ? error.message : String(error),
-				operation: "listAllRulesFilesInfo",
-			});
-			return [];
-		}
-	}
-
-	private getWorkspaceRoot(): string | null {
-		const workspaceFolders = workspace.workspaceFolders;
-		if (!workspaceFolders || workspaceFolders.length === 0) {
-			window.showErrorMessage("No workspace folder found, please open a workspace first");
-			return null;
-		}
-		const firstFolder = workspaceFolders[0];
-		if (!firstFolder) {
-			window.showErrorMessage("No workspace folder found, please open a workspace first");
-			return null;
-		}
-		return firstFolder.uri.fsPath;
-	}
-
-	private async checkFileOverwrite(fileUri: Uri, filename: string): Promise<boolean> {
-		try {
-			await workspace.fs.stat(fileUri);
-			// File exists, ask for confirmation
-			const result = await window.showWarningMessage(
-				`The file ${filename} already exists in .cursor/rules/. Overwrite?`,
-				{ modal: true },
-				"Yes",
-				"No",
-			);
-
-			if (result !== "Yes") {
-				window.showInformationMessage(`Skipped creating ${filename}.`);
-				return false;
-			}
-			return true;
-		} catch {
-			// File doesn't exist, proceed without confirmation
-			return true;
-		}
-	}
-
-	private async writeRuleFile(fileUri: Uri, content: string): Promise<void> {
-		try {
-			this.logger.debug("Creating cursor rules file", {
-				filePath: fileUri.fsPath,
-				operation: "writeRuleFile",
-			});
-			const encodedContent = new TextEncoder().encode(content);
-			await workspace.fs.writeFile(fileUri, encodedContent);
-		} catch (error) {
-			this.logger.error("Error writing cursor rules file", {
-				filePath: fileUri.fsPath,
-				error: error instanceof Error ? error.message : String(error),
-				operation: "writeRuleFile",
-			});
-			throw new Error(`Failed to write rules file: ${error}`);
-		}
-	}
-
-	private async ensureDirectoryExists(dirPath: string): Promise<void> {
-		try {
-			await workspace.fs.createDirectory(Uri.file(dirPath));
-			this.logger.debug("Ensured directory exists", {
-				dirPath,
-				operation: "ensureDirectoryExists",
-			});
-		} catch (error) {
-			this.logger.error("Failed to create directory", {
-				dirPath,
-				error: error instanceof Error ? error.message : String(error),
-				operation: "ensureDirectoryExists",
-			});
-			throw new Error(`Failed to create rules directory: ${error}`);
-		}
-	}
-}
-
-// === Memory Bank Rules Management ===
-
 // Cache for the markdown file content
 let memoryBankRulesContent: string;
 
 async function loadMemoryBankRulesContent(fileOperationManager: FileOperationManager): Promise<string> {
 	if (!memoryBankRulesContent) {
-		// Try to load from the built templates directory first
-		let rulesPath = path.join(__dirname, "templates", "memory-bank-rules.md");
-		let readResult = await fileOperationManager.readFileWithRetry(rulesPath);
+		// Try multiple paths to find the template file
+		const possiblePaths = [
+			// 1. Try relative to current file (works in bundled scenarios)
+			path.join(path.dirname(new URL(import.meta.url).pathname), "..", "templates", "memory-bank-rules.md"),
+			// 2. Try in dist directory relative to process.cwd() (VS Code extension path)
+			path.join(process.cwd(), "dist", "templates", "memory-bank-rules.md"),
+			// 3. Try in src directory relative to process.cwd() (development)
+			path.join(process.cwd(), "src", "templates", "memory-bank-rules.md"),
+		];
 
-		// Fallback to development path if not found in dist
-		if (!readResult.success) {
-			rulesPath = path.join(process.cwd(), "src", "templates", "memory-bank-rules.md");
-			readResult = await fileOperationManager.readFileWithRetry(rulesPath);
+		let lastErrorMessage = "No paths attempted";
+
+		for (const rulesPath of possiblePaths) {
+			const readResult = await fileOperationManager.readFileWithRetry(rulesPath);
+			if (readResult.success) {
+				memoryBankRulesContent = readResult.data;
+				return memoryBankRulesContent;
+			}
+			lastErrorMessage = readResult.error.message;
 		}
 
-		if (!readResult.success) {
-			throw new Error(`Failed to load memory bank rules from ${rulesPath}: ${readResult.error.message}`);
-		}
-
-		memoryBankRulesContent = readResult.data;
+		throw new Error(
+			`Failed to load memory bank rules from any of the attempted paths: ${possiblePaths.join(", ")}. Last error: ${lastErrorMessage}`,
+		);
 	}
 	return memoryBankRulesContent;
 }
@@ -500,34 +304,4 @@ function registerSinglePrompt(server: McpServer, name: string, text: string): vo
 			},
 		],
 	}));
-}
-
-// === Factory Functions ===
-
-/**
- * Create cursor integration manager with all services
- */
-export function createCursorIntegration(context: ExtensionContext, fileOperationManager: FileOperationManager) {
-	const rulesService = new CursorRulesService(context);
-
-	return {
-		// Configuration functions
-		updateCursorMCPConfig: (extensionPath: string) => updateCursorMCPConfig(extensionPath, fileOperationManager),
-		ensureCursorDirectory: (logger?: Logger) => ensureCursorDirectory(fileOperationManager, logger),
-		readCursorMCPConfig: () => readCursorMCPConfig(fileOperationManager),
-		writeCursorMCPConfig: (config: CursorMCPConfig) => writeCursorMCPConfig(config, fileOperationManager),
-
-		// Rules service
-		rulesService,
-
-		// Rules utilities
-		getCursorMemoryBankRulesFile: () => getCursorMemoryBankRulesFile(fileOperationManager),
-
-		// MCP prompt registration
-		registerMemoryBankPrompts,
-
-		// Constants
-		CURSOR_RULES_PATH,
-		CURSOR_MEMORY_BANK_FILENAME,
-	};
 }

@@ -1,21 +1,23 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"root": true,
+	"$schema": "https://biomejs.dev/schemas/2.0.0-beta.6/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignore": [
-			"**/dist/**",
-			"**/node_modules/**",
-			"**/coverage/**",
-			".vscode-test/**",
-			".cursor/**",
-			"**/*.d.ts",
-			"**/build/**",
-			"**/.next/**",
-			"**/.cache/**"
+		"includes": [
+			"src/**/*",
+			"*.config.{js,ts}",
+			"*.json",
+			"!**/dist/**",
+			"!**/out/**",
+			"!**/node_modules/**",
+			"!**/coverage/**",
+			"!**/.vscode-test/**",
+			"!**/.cursor/**",
+			"!**/*.d.ts"
 		]
 	},
 	"formatter": {
@@ -78,19 +80,26 @@
 					}
 				},
 				"useConsistentArrayType": "error",
-				"useShorthandAssign": "error"
+				"useShorthandAssign": "error",
+				"noParameterAssign": "error",
+				"useAsConstAssertion": "error",
+				"useDefaultParameterLast": "error",
+				"useEnumInitializers": "error",
+				"useSelfClosingElements": "error",
+				"useSingleVarDeclarator": "error",
+				"noUnusedTemplateLiteral": "error",
+				"useNumberNamespace": "error",
+				"noInferrableTypes": "error",
+				"noUselessElse": "error"
 			},
 			"correctness": {
-				"noUnusedVariables": {
-					"level": "error"
-				},
 				"noUnusedImports": "error"
 			}
 		}
 	},
 	"overrides": [
 		{
-			"include": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/test/**/*.ts"],
+			"includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/test/**/*.ts"],
 			"linter": {
 				"rules": {
 					"style": {
@@ -106,7 +115,7 @@
 			}
 		},
 		{
-			"include": ["src/webview/**/*", "**/*.d.ts"],
+			"includes": ["**/src/webview/**/*", "**/*.d.ts"],
 			"linter": {
 				"rules": {
 					"suspicious": {
@@ -119,7 +128,7 @@
 			}
 		},
 		{
-			"include": [
+			"includes": [
 				"**/*.config.{js,ts}",
 				"**/vite.config.{js,ts}",
 				"**/rollup.config.{js,ts}",

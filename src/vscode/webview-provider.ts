@@ -8,8 +8,6 @@
  * - Cursor rules management integration
  * - Memory bank status and interaction
  *
- * Consolidated from:
- * - src/app/extension/webviewManager.ts
  */
 
 import * as crypto from "node:crypto";
@@ -21,12 +19,10 @@ import * as vscode from "vscode";
 // Core dependencies - updated for consolidated structure
 import type { MemoryBankManager } from "../core/memory-bank";
 import { getCursorMemoryBankRulesFile } from "../cursor-integration";
-import type { CursorRulesService } from "../cursor-integration";
+import type { Logger, MemoryBankFile } from "../lib/types/core";
 
 // MCP server integration - updated for consolidated structure
-import type { MCPServerInterface, MemoryBankMCPAdapter } from "../mcp/server";
-
-import type { Logger, MemoryBankFile } from "../lib/types/core";
+import type { MCPServerInterface } from "../lib/types/operations";
 // Type imports - updated for consolidated structure
 import type { CursorMCPConfig, CursorMCPServerConfig } from "../lib/types/system";
 import type {
@@ -34,6 +30,10 @@ import type {
 	WebviewLogMessage,
 	WebviewToExtensionMessage,
 } from "../webview/src/types/messages";
+import type { CursorRulesService } from "./cursor-integration";
+import type { MemoryBankMCPAdapter } from "./mcp-adapter";
+
+import { getWorkspaceRoot } from "./workspace";
 
 // Type alias for compatibility
 type MemoryBankServiceCore = MemoryBankManager;
@@ -115,28 +115,28 @@ async function getMcpPortsFromConfig(workspaceRoot: string): Promise<number[]> {
  * Manages VS Code webview panels for the AI Memory extension
  * Handles communication between the extension and React frontend
  */
-export class WebviewProvider {
+export class WebviewProvider implements vscode.WebviewViewProvider {
 	private panel: vscode.WebviewPanel | undefined;
+	private webviewView: vscode.WebviewView | undefined;
 	private readonly extensionUri: vscode.Uri;
 	private readonly memoryBankService: MemoryBankServiceCore;
 	private readonly cursorRulesService: CursorRulesService;
 	private readonly logger: Logger;
-	// private readonly webviewPanelManager?: WebviewPanelManager; // Commented out as type is not available
 	private readonly extensionContext: vscode.ExtensionContext;
-	private readonly mcpAdapter: MCPServerInterface;
+	private readonly mcpAdapter: MemoryBankMCPAdapter;
 	private readonly currentMemoryBankFiles: MemoryBankFile[] = [];
 	private readonly lastError: string | null = null;
 	private readonly mcpServerStatus: "running" | "stopped" | "starting" | "error" = "stopped";
 	private readonly isWebviewReady = false;
 	private readonly disposables: vscode.Disposable[] = [];
 	private static readonly viewType = "aiMemoryWebview";
+	private fileWatcher?: vscode.FileSystemWatcher;
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly mcpServer: MCPServerInterface,
 		memoryBankService: MemoryBankServiceCore,
 		cursorRulesService: CursorRulesService,
-		mcpAdapter: MCPServerInterface,
 		logger: Logger,
 	) {
 		this.extensionUri = context.extensionUri;
@@ -144,7 +144,7 @@ export class WebviewProvider {
 		this.cursorRulesService = cursorRulesService;
 		this.logger = logger;
 		this.extensionContext = context;
-		this.mcpAdapter = mcpAdapter;
+		this.mcpAdapter = mcpServer as MemoryBankMCPAdapter;
 		this.setupCommands();
 	}
 
@@ -235,7 +235,7 @@ export class WebviewProvider {
 	// Check standard ports for already running MCP servers
 	private async checkForRunningServers() {
 		// Try to get ports from .cursor/mcp.json, fallback to defaults
-		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
+		const workspaceRoot = getWorkspaceRoot() ?? process.cwd();
 		let portsToCheck = await getMcpPortsFromConfig(workspaceRoot);
 		if (!portsToCheck.length) {
 			// Fallback to default ports if config not found or empty
@@ -287,6 +287,8 @@ export class WebviewProvider {
 	// ============================================================================
 
 	public async openWebview() {
+		this.logger.debug("WebviewProvider.openWebview called");
+
 		// Check for running servers first
 		await this.checkForRunningServers();
 
@@ -544,9 +546,12 @@ export class WebviewProvider {
 	/**
 	 * Perform the actual rules file reset operation
 	 */
-	private async performRulesReset(): Promise<{ success: boolean; error?: string }> {
+	private async performRulesReset(): Promise<{
+		success: boolean;
+		error?: string;
+	}> {
 		// Access FileOperationManager from the memory bank service
-		const fileOperationManager = this.memoryBankService.getFileOperationManager();
+		const fileOperationManager = this.memoryBankService.fileOperationManager;
 		const rulesContent = await getCursorMemoryBankRulesFile(fileOperationManager);
 		await this.cursorRulesService.createRulesFile("memory-bank.mdc", rulesContent);
 		vscode.window.showInformationMessage("Memory bank rules have been reset.");
@@ -654,7 +659,7 @@ export class WebviewProvider {
 		const distPath = path.join(this.extensionUri.fsPath, "dist", "webview");
 
 		// Get paths to JS & CSS files
-		const scriptPathOnDisk = path.join(distPath, "assets", "index");
+		const scriptPathOnDisk = path.join(distPath, "assets", "index.js");
 		const stylePathOnDisk = path.join(distPath, "assets", "index.css");
 
 		// Convert paths to webview URIs
@@ -702,6 +707,65 @@ export class WebviewProvider {
 		}
 		this.disposables.length = 0;
 	}
+
+	resolveWebviewView(
+		webviewView: vscode.WebviewView,
+		_context: vscode.WebviewViewResolveContext<unknown>,
+		_token: vscode.CancellationToken,
+	): void | Thenable<void> {
+		this.webviewView = webviewView;
+
+		webviewView.webview.options = {
+			enableScripts: true,
+			localResourceRoots: [this.extensionUri],
+		};
+
+		// Set up development hot reload
+		this.setupDevelopmentReload();
+
+		// Set up the webview content
+		webviewView.webview.html = this.getWebviewContent(webviewView.webview);
+	}
+
+	private setupDevelopmentReload(): void {
+		// Only enable in development mode - use safer environment checks
+		try {
+			const nodeEnv = process.env.NODE_ENV;
+			const isDebugging = process.env.IS_EXTENSION_DEBUGGING;
+			const isDevelopment = nodeEnv !== "production" || isDebugging === "true";
+
+			if (!isDevelopment) {
+				return;
+			}
+
+			// Watch webview dist files for changes
+			this.fileWatcher = vscode.workspace.createFileSystemWatcher(
+				new vscode.RelativePattern(this.extensionUri, "src/webview/dist/*"),
+			);
+
+			// Reload webview on file changes
+			this.fileWatcher.onDidChange(() => {
+				this.logger.debug("Webview files changed, reloading...");
+				vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+			});
+
+			this.fileWatcher.onDidCreate(() => {
+				this.logger.debug("Webview files created, reloading...");
+				vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+			});
+
+			this.logger.info("🔥 Development hot reload enabled for webview");
+		} catch (error) {
+			// Silently fail if environment setup has issues
+			this.logger.debug("Development reload setup failed, continuing without hot reload", {
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
+
+	public dispose() {
+		this.panel?.dispose();
+	}
 }
 
 // ============================================================================
@@ -716,10 +780,9 @@ export function createWebviewProvider(
 	mcpServer: MCPServerInterface,
 	memoryBankService: MemoryBankServiceCore,
 	cursorRulesService: CursorRulesService,
-	mcpAdapter: MCPServerInterface,
 	logger: Logger,
 ): WebviewProvider {
-	return new WebviewProvider(context, mcpServer, memoryBankService, cursorRulesService, mcpAdapter, logger);
+	return new WebviewProvider(context, mcpServer, memoryBankService, cursorRulesService, logger);
 }
 
 // Re-export types for convenience

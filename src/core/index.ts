@@ -1,10 +1,12 @@
 /**
- * Cache system with legacy compatibility adapters
+ * @file src/core/index.ts
+ * @description Barrel file for core services.
  *
- * Exports the modern CacheManager and legacy adapters that enable smooth transition
- * without breaking existing code.
+ * This file re-exports the main classes for each core service,
+ * providing a single entry point for consumers of the core library.
  */
 
-export { CacheManager, LegacyCacheAdapter, LegacyStatsAdapter } from "./cache";
-export { MemoryBankManager } from "./memory-bank";
+export * from "./file-operations";
 export { FileOperationManager } from "./file-operations";
+export { MemoryBankManager } from "./memory-bank";
+export * from "./streaming";

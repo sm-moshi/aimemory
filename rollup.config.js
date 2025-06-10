@@ -69,17 +69,38 @@ const getPlugins = () =>
 		alias({
 			entries: [
 				// Match TypeScript paths exactly
-				{ find: /^@\/(.+)/, replacement: path.resolve(process.cwd(), "src/$1") },
+				{
+					find: /^@\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/$1"),
+				},
 				{
 					find: /^@test-utils\/(.+)/,
 					replacement: path.resolve(process.cwd(), "src/test/test-utils/$1"),
 				},
-				{ find: /^@\/lib\/(.+)/, replacement: path.resolve(process.cwd(), "src/lib/$1") },
-				{ find: /^@\/vscode\/(.+)/, replacement: path.resolve(process.cwd(), "src/vscode/$1") },
-				{ find: /^@\/templates\/(.+)/, replacement: path.resolve(process.cwd(), "src/templates/$1") },
-				{ find: /^@types\/(.+)/, replacement: path.resolve(process.cwd(), "src/lib/types/$1") },
-				{ find: /^@core\/(.+)/, replacement: path.resolve(process.cwd(), "src/core/$1") },
-				{ find: /^@mcp\/(.+)/, replacement: path.resolve(process.cwd(), "src/mcp/$1") },
+				{
+					find: /^@\/lib\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/lib/$1"),
+				},
+				{
+					find: /^@\/vscode\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/vscode/$1"),
+				},
+				{
+					find: /^@\/templates\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/templates/$1"),
+				},
+				{
+					find: /^@types\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/lib/types/$1"),
+				},
+				{
+					find: /^@core\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/core/$1"),
+				},
+				{
+					find: /^@mcp\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/mcp/$1"),
+				},
 			],
 		}),
 
@@ -133,7 +154,7 @@ export default [
 			compact: isProduction,
 			validate: isDevelopment,
 		},
-		external: ["vscode", "canvas", "node:test", "node:worker_threads", "gray-matter", /^node:*/],
+		external: ["vscode", "canvas", "node:test", "node:worker_threads", /^node:*/],
 
 		plugins: getPlugins(),
 
@@ -166,13 +187,31 @@ export default [
 			sourcemap: !isProduction,
 			exports: "auto",
 		},
-		external: ["vscode", "canvas", "node:test", "node:worker_threads", "gray-matter"],
+		external: [
+			// VS Code API exclusions
+			"vscode",
+			"canvas",
+			"node:test",
+			"node:worker_threads",
+			/^node:*/,
+			// Exclude any modules that import VS Code
+			"../vscode/workspace",
+			"../vscode/commands",
+			"../vscode/webview-provider",
+			// Pattern to exclude VS Code-related modules
+			/.*vscode.*/,
+			/.*\/vscode\/.*/,
+		],
 		plugins: getPlugins(),
 		onwarn(warning, warn) {
 			if (warning.code === "CIRCULAR_DEPENDENCY" && warning.message.includes("node_modules")) {
 				return;
 			}
 			if (warning.code === "THIS_IS_UNDEFINED" && warning.message.includes("node_modules")) {
+				return;
+			}
+			// Suppress warnings about unresolved VS Code imports (they're intentionally external)
+			if (warning.code === "UNRESOLVED_IMPORT" && warning.message.includes("vscode")) {
 				return;
 			}
 			warn(warning);
