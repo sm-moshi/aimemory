@@ -1,13 +1,20 @@
 /**
- * Core Memory Bank Types and Interfaces
- * Contains fundamental enums, interfaces, and types for the Memory Bank system
+ * @file src/types/core.ts
+ * @description Defines the core domain models for the AI Memory Extension. These interfaces and
+ *   enums represent the fundamental data structures of the memory bank, such as files, metadata,
+ *   and the main MemoryBank service contract.
  */
 
-import type { Logger } from "./logging.js";
+import type { FileOperationManager } from "../core/file-operations";
+import type { StreamingManager } from "../core/streaming";
+import type { AsyncResult, MemoryBankError } from "./error";
+import type { Logger } from "./logging";
+import type { FileCache, LegacyCacheStats } from "./system";
 
 /**
- * Enumeration of all memory bank file types.
- * Values should represent the full relative path from the memory-bank root, including extension.
+ * Enumeration of all memory bank file types. Values should represent the full relative path from
+ * the memory-bank root, including the extension. This provides a single source of truth for all
+ * known file types within the system.
  */
 export enum MemoryBankFileType {
 	// Core files
@@ -20,12 +27,13 @@ export enum MemoryBankFileType {
 	ProgressHistory = "progress/history.md",
 	ProgressIndex = "progress/index.md",
 
-	// Full path-based file types for hierarchical structure
+	// Hierarchical file types for system patterns
 	SystemPatternsIndex = "systemPatterns/index.md",
 	SystemPatternsArchitecture = "systemPatterns/architecture.md",
 	SystemPatternsPatterns = "systemPatterns/patterns.md",
 	SystemPatternsScanning = "systemPatterns/scanning.md",
 
+	// Hierarchical file types for technology context
 	TechContextIndex = "techContext/index.md",
 	TechContextStack = "techContext/stack.md",
 	TechContextDependencies = "techContext/dependencies.md",
@@ -33,16 +41,7 @@ export enum MemoryBankFileType {
 }
 
 /**
- * Basic metadata for a memory bank file
- */
-export interface MemoryBankFileMetadata {
-	lastUpdated: Date;
-	size: number;
-	exists: boolean;
-}
-
-/**
- * YAML frontmatter metadata structure
+ * Defines the structure for YAML frontmatter metadata embedded in Markdown files.
  */
 export interface FrontmatterMetadata {
 	id?: string;
@@ -53,31 +52,28 @@ export interface FrontmatterMetadata {
 	created?: string;
 	updated?: string;
 	version?: string;
-	[key: string]: unknown; // Allow additional properties
+	[key: string]: unknown; // Allows for additional, untyped properties.
 }
 
 /**
- * Represents a file within the memory bank
+ * Represents a file within the memory bank, including its content and metadata.
  */
 export interface MemoryBankFile {
-		type: MemoryBankFileType;
-		content: string; // Content WITHOUT frontmatter
-		lastUpdated: Date;
-
-		// Phase 2: Metadata System additions
-		filePath?: string; // Absolute path
-		relativePath?: string; // Path relative to memory-bank root
-		metadata?: FrontmatterMetadata; // Parsed YAML frontmatter
-		created?: Date; // From metadata.created if present
-
-		// Validation (Phase 2.2)
-		validationStatus?: import("./metadata.js").ValidationStatus;
-		validationErrors?: import("zod").ZodIssue[];
-		actualSchemaUsed?: string;
-	}
+	type: MemoryBankFileType;
+	content: string; // Content WITHOUT frontmatter
+	lastUpdated: Date;
+	filePath?: string; // Absolute path
+	relativePath?: string; // Path relative to memory-bank root
+	metadata?: FrontmatterMetadata; // Parsed YAML frontmatter
+	created?: Date; // From metadata.created if present
+	validationStatus?: "valid" | "invalid" | "pending" | undefined; // Temporary: Was ValidationStatus, will be imported from ./metadata later
+	validationErrors?: import("zod").ZodIssue[];
+	actualSchemaUsed?: string;
+}
 
 /**
- * Enhanced MemoryBank interface with Result pattern support
+ * Defines the main service contract for the MemoryBankManager. All interactions with the
+ * memory bank should go through this interface.
  */
 export interface MemoryBank {
 	files: Map<MemoryBankFileType, MemoryBankFile>;
@@ -92,60 +88,15 @@ export interface MemoryBank {
 }
 
 /**
- * Batch file data for bulk operations
+ * Represents a disposable resource that needs cleanup.
  */
-export interface BatchFileData {
-	filename: string;
-	content: string;
+export interface IDisposable {
+	dispose(): void | Promise<void>;
 }
 
 /**
- * Configuration for memory bank initialization
- */
-export interface MemoryBankConfig {
-	workspaceRoot: string;
-	enableLogging?: boolean;
-	cacheEnabled?: boolean;
-}
-
-/**
- * Result of health check operation
- */
-export interface HealthCheckResult {
-	isHealthy: boolean;
-	issues: string[];
-	summary: string;
-}
-
-/**
- * File operation statistics
- */
-export interface FileOperationStats {
-	reads: number;
-	writes: number;
-	errors: number;
-	averageReadTime: number;
-	averageWriteTime: number;
-}
-
-/**
- * Complete system health and performance metrics
- */
-export interface SystemMetrics {
-	cache: import("./cache.js").LegacyCacheStats;
-	fileOperations: FileOperationStats;
-	uptime: number;
-	memoryUsage: number;
-}
-
-import type { FileOperationManager } from "../core/FileOperationManager.js";
-import type { StreamingManager } from "../performance/StreamingManager.js";
-import type { FileCache, LegacyCacheStats } from "./cache.js";
-// Import dependencies
-import type { AsyncResult, MemoryBankError } from "./errorHandling.js";
-
-/**
- * Context for file operations in memory bank services
+ * A grouping of related objects passed to file operations to provide necessary context
+ * without relying on a DI container.
  */
 export interface FileOperationContext {
 	memoryBankFolder: string;
@@ -154,11 +105,4 @@ export interface FileOperationContext {
 	cacheStats: LegacyCacheStats;
 	streamingManager: StreamingManager;
 	fileOperationManager: FileOperationManager;
-}
-
-/**
- * Interface for disposable resources.
- */
-export interface IDisposable {
-	dispose(): void | Promise<void>;
 }

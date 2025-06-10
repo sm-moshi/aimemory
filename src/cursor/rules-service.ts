@@ -1,10 +1,15 @@
 import { join } from "node:path";
 import { type ExtensionContext, FileType, Uri, window, workspace } from "vscode";
+import { createLogger } from "../lib/logging";
+import type { Logger } from "../types/logging";
 
 export class CursorRulesService {
 	private readonly cursorRulesPath = ".cursor/rules/";
+	private readonly logger: Logger;
 
-	constructor(private readonly context: ExtensionContext) {}
+	constructor(private readonly context: ExtensionContext) {
+		this.logger = createLogger({ component: "CursorRulesService" });
+	}
 
 	async createRulesFile(filename: string, ruleContent: string): Promise<void> {
 		const workspaceRoot = this.getWorkspaceRoot();
@@ -37,7 +42,10 @@ export class CursorRulesService {
 			return { success: true, data: content };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			return { success: false, error: `Failed to read rules file: ${errorMessage}` };
+			return {
+				success: false,
+				error: `Failed to read rules file: ${errorMessage}`,
+			};
 		}
 	}
 
@@ -73,7 +81,10 @@ export class CursorRulesService {
 				return [];
 			}
 		} catch (error) {
-			console.error("Error listing rules files:", error);
+			this.logger.error("Error listing rules files", {
+				error: error instanceof Error ? error.message : String(error),
+				operation: "listAllRulesFilesInfo",
+			});
 			return [];
 		}
 	}
@@ -116,11 +127,18 @@ export class CursorRulesService {
 
 	private async writeRuleFile(fileUri: Uri, content: string): Promise<void> {
 		try {
-			console.log("Creating cursor rules file:", fileUri.fsPath);
+			this.logger.debug("Creating cursor rules file", {
+				filePath: fileUri.fsPath,
+				operation: "writeRuleFile",
+			});
 			const encodedContent = new TextEncoder().encode(content);
 			await workspace.fs.writeFile(fileUri, encodedContent);
 		} catch (error) {
-			console.error("Error writing cursor rules file:", error);
+			this.logger.error("Error writing cursor rules file", {
+				filePath: fileUri.fsPath,
+				error: error instanceof Error ? error.message : String(error),
+				operation: "writeRuleFile",
+			});
 			throw new Error(`Failed to write rules file: ${error}`);
 		}
 	}
@@ -128,9 +146,16 @@ export class CursorRulesService {
 	private async ensureDirectoryExists(dirPath: string): Promise<void> {
 		try {
 			await workspace.fs.createDirectory(Uri.file(dirPath));
-			console.log("Ensured directory exists:", dirPath);
+			this.logger.debug("Ensured directory exists", {
+				dirPath,
+				operation: "ensureDirectoryExists",
+			});
 		} catch (error) {
-			console.error(`Failed to create directory ${dirPath}:`, error);
+			this.logger.error("Failed to create directory", {
+				dirPath,
+				error: error instanceof Error ? error.message : String(error),
+				operation: "ensureDirectoryExists",
+			});
 			throw new Error(`Failed to create rules directory: ${error}`);
 		}
 	}

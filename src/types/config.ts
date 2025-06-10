@@ -1,38 +1,49 @@
 /**
- * Configuration Types and Interfaces
- * Contains types for Cursor configuration, process management, and system settings
+ * @file src/types/config.ts
+ * @description Defines types related to configuration, validation, and schemas. This includes
+ *   VS Code and Cursor-specific configurations, as well as general-purpose validation structures
+ *   and Zod schemas.
  */
 
+import { z } from "zod";
+import { MemoryBankFileType } from "./core";
+
+// --- Generic Validation ---
+
 /**
- * Configuration for MCP server in Cursor
+ * A generic, unified structure for returning the result of a validation operation.
  */
-export interface MCPServerConfig {
+export interface ValidationResult<TData = unknown, TContext = Record<string, unknown>> {
+	isValid: boolean;
+	errors: string[];
+	warnings?: string[];
+	data?: TData; // Optional processed data
+	context?: TContext; // Optional context
+}
+
+export type SchemaValidationResult = ValidationResult<unknown, { filePath: string; fileType?: MemoryBankFileType }>;
+export type FileProcessingResult = ValidationResult<string, { processedContent?: string }>;
+
+// --- Configuration Interfaces ---
+
+export interface CursorMCPServerConfig {
 	name?: string;
 	command: string;
 	args?: string[];
 	env?: Record<string, string>;
 	cwd?: string;
-	url?: string; // For URL-based servers
+	url?: string;
 }
 
-/**
- * Complete Cursor MCP configuration structure
- */
 export interface CursorMCPConfig {
-	mcpServers: Record<string, MCPServerConfig>;
+	mcpServers: Record<string, CursorMCPServerConfig>;
 }
 
-/**
- * Result of comparing two server configurations
- */
 export interface ConfigComparisonResult {
 	matches: boolean;
 	differences?: string[];
 }
 
-/**
- * Settings for Cursor rules generation and management
- */
 export interface CursorRulesSettings {
 	autoUpdate?: boolean;
 	templatePath?: string;
@@ -40,88 +51,88 @@ export interface CursorRulesSettings {
 	includeTimestamp?: boolean;
 }
 
-/**
- * Process environment configuration
- */
-export interface ProcessEnvironment {
-	NODE_ENV?: "development" | "production" | "test";
-	DEBUG?: string;
-	LOG_LEVEL?: "error" | "warn" | "info" | "debug" | "trace";
-	WORKSPACE_ROOT?: string;
-	[key: string]: string | undefined;
+// --- Zod Schemas & Validation Functions ---
+
+export const MemoryBankFileTypeSchema = z.enum(Object.values(MemoryBankFileType) as [string, ...string[]]);
+export const NonEmptyStringSchema = z.string().min(1, "String cannot be empty");
+export const SafePathSchema = z
+	.string()
+	.min(1, "Path cannot be empty")
+	.refine(
+		path => !path.includes("..") && !path.startsWith("/") && !path.includes("\0"),
+		"Path contains unsafe characters or sequences",
+	);
+
+export const ContentSchema = z.string().max(1024 * 1024, "Content exceeds 1MB limit");
+
+export const WebviewMessageTypeSchema = z.enum([
+	"getFiles",
+	"updateFile",
+	"getServerStatus",
+	"refreshStatus",
+	"openFile",
+	"error",
+	"success",
+]);
+
+export const WebviewMessageBaseSchema = z.object({
+	type: WebviewMessageTypeSchema,
+	id: z.string().optional(),
+});
+
+export const WebviewFileOperationSchema = WebviewMessageBaseSchema.extend({
+	payload: z
+		.object({
+			fileType: MemoryBankFileTypeSchema.optional(),
+			content: ContentSchema.optional(),
+			path: SafePathSchema.optional(),
+		})
+		.optional(),
+});
+
+export function validateWebviewMessage(message: unknown): z.infer<typeof WebviewFileOperationSchema> {
+	try {
+		return WebviewFileOperationSchema.parse(message);
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			const issues = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
+			throw new Error(`Invalid webview message: ${issues}`);
+		}
+		throw new Error(`Webview message validation failed: ${error}`);
+	}
 }
 
-/**
- * Process execution options
- */
-export interface ProcessOptions {
+// --- Security & Process Schemas ---
+
+export const PortNumberSchema = z
+	.number()
+	.int()
+	.min(1, "Port must be greater than 0")
+	.max(65535, "Port must be less than 65536");
+
+export const SafeCommandSchema = z
+	.string()
+	.min(1, "Command cannot be empty")
+	.refine(
+		cmd => !cmd.includes(";") && !cmd.includes("|") && !cmd.includes("&") && !cmd.includes("`"),
+		"Command contains potentially unsafe characters",
+	)
+	.refine(cmd => {
+		const dangerous = ["rm -rf", "del /", "format", "dd if="];
+		return !dangerous.some(danger => cmd.includes(danger));
+	}, "Command contains dangerous operations");
+
+export interface SafeProcessConfig {
+	command: string;
+	args: string[];
 	cwd?: string;
-	env?: ProcessEnvironment;
 	timeout?: number;
-	shell?: boolean;
-	stdio?: "pipe" | "inherit" | "ignore";
-}
-
-/**
- * Result of a process execution
- */
-export interface ProcessResult {
-	exitCode: number;
-	stdout: string;
-	stderr: string;
-	duration: number;
-	signal?: NodeJS.Signals;
-}
-
-/**
- * VS Code extension configuration settings
- */
-export interface ExtensionConfig {
-	memoryBank: {
-		enabled: boolean;
-		autoInitialize: boolean;
-		watchFiles: boolean;
-		cacheEnabled: boolean;
-	};
-	logging: {
-		level: "error" | "warn" | "info" | "debug";
-		outputToFile: boolean;
-		maxLogSize: number;
-	};
-	cursor: {
-		autoUpdateMCP: boolean;
-		rulesPath: string;
-		mcpConfigPath: string;
-	};
-}
-
-/**
- * Runtime configuration for the extension
- */
-export interface RuntimeConfig {
-	extensionPath: string;
-	workspacePath: string;
-	globalStoragePath: string;
-	version: string;
-	isDevelopment: boolean;
-}
-
-/**
- * Configuration for spawning MCP server process
- */
-export interface ProcessSpawnConfig {
-	serverPath: string;
-	workspacePath: string;
-	nodeExecutable: string;
-	cwd: string;
 	env?: Record<string, string>;
 }
 
-/**
- * Process event handlers configuration
- */
-export interface ProcessEventHandlers {
-	onError: (error: Error) => void;
-	onExit: (code: number | null, signal: NodeJS.Signals | null) => void;
-	onStderr?: (data: Buffer) => void;
+export interface SecurityAuditResult {
+	isSecure: boolean;
+	warnings: string[];
+	errors: string[];
+	sanitizedInput?: string;
 }

@@ -64,7 +64,10 @@ async function convertFile(filePath: string): Promise<boolean> {
 		let hasChanges = false;
 
 		for (const rule of ALIAS_RULES) {
-			const newContent = convertedContent.replace(rule.pattern, rule.replacement);
+			const newContent = convertedContent.replace(
+				rule.pattern,
+				rule.replacement,
+			);
 			if (newContent !== convertedContent) {
 				console.log(`  ✅ ${rule.description}`);
 				convertedContent = newContent;
@@ -85,7 +88,7 @@ async function convertFile(filePath: string): Promise<boolean> {
 }
 
 async function main() {
-	const pattern = process.argv[2] || "src/**/*.ts";
+	const pattern = process.argv[2] ?? "src/**/*.ts";
 	console.log(`🔍 Converting imports in files matching: ${pattern}`);
 	console.log("🎯 Target aliases: @types, @core, @utils, @mcp, @test-utils");
 	console.log();

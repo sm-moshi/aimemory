@@ -3,33 +3,31 @@
  * Centralized exports for all webview type definitions
  */
 
-// Message types
+// Component types
 export type {
-	WebviewLogLevel,
-	WebviewLogMessage,
-	MCPServerStatusMessage,
-	RulesStatusMessage,
-	MemoryBankStatusMessage,
-	ResetRulesResultMessage,
-	ReviewUpdateMemoryBankMessage,
-	ExtensionToWebviewMessage,
-	WebviewToExtensionMessage,
-} from "./messages";
+	ButtonProps,
+	ComponentState,
+	LoadingState,
+	MemoryBankStatusProps,
+	StatusProps,
+} from "./components";
 
 // Hook types
 export type { UseMCPServerDetectionReturn } from "./hooks";
-
+// Message types
+export type {
+	ExtensionToWebviewMessage,
+	MCPServerStatusMessage,
+	MemoryBankStatusMessage,
+	ResetRulesResultMessage,
+	ReviewUpdateMemoryBankMessage,
+	RulesStatusMessage,
+	WebviewLogLevel,
+	WebviewLogMessage,
+	WebviewToExtensionMessage,
+} from "./messages";
 // VSCode API types
 export type {
 	VSCodeAPI,
 	WebviewMessageEvent,
 } from "./vscode";
-
-// Component types
-export type {
-	StatusProps,
-	MemoryBankStatusProps,
-	ButtonProps,
-	LoadingState,
-	ComponentState,
-} from "./components";

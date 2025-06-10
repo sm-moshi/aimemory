@@ -8,18 +8,11 @@
 		// Testing and Coverage
 		"vitest.explorer",
 		"ryanluker.vscode-coverage-gutters",
-		"hbenl.vscode-test-explorer",
-		"ms-vscode.extension-test-runner",
 		// TypeScript and JavaScript Modern Stack
 		"ms-typescript.vscode-typescript-next",
 		"usernamehw.errorlens",
 		"ms-vscode.vscode-json",
 		// React 19 and Modern Frontend
-		"ms-vscode.vscode-react-refactor",
-		"dsznajder.es7-react-js-snippets",
-		"bradlc.vscode-tailwindcss",
-		// Build Tools and Performance
-		"ms-vscode.vscode-typescript-next",
 		"ambar.bundle-size",
 		"kisstkondoros.vscode-codemetrics",
 		"pflannery.vscode-versionlens",
@@ -34,28 +27,20 @@
 		// Development Experience
 		"ms-vscode.test-adapter-converter",
 		"anysphere.remote-ssh",
-		// Modern Build System Support
-		"bradlc.vscode-tailwindcss",
-		"ms-vscode.vscode-json",
 		// Markdown and Documentation
 		"yzhang.markdown-all-in-one",
-		"bierner.markdown-mermaid",
-		// Theme (Optional)
-		"eliverlara.andromeda",
-		"nrwl.angular-console"
+		"eliverlara.andromeda"
 	],
 	"unwantedRecommendations": [
 		// Legacy linting/formatting tools (replaced by Biome)
 		"dbaeumer.vscode-eslint",
 		"esbenp.prettier-vscode",
-		// Legacy build tools
+		// Legacy build tools (replaced by typescript-next for tsgo)
 		"ms-vscode.vscode-typescript",
 		"hookyqr.beautify",
 		// Outdated Node.js tools
 		"ms-vscode.node-debug",
 		// Legacy bundlers (using Rollup + SWC now)
-		"ms-vscode.vscode-webpack-analyzer",
-		// Replaced by modern testing
-		"ms-vscode.vscode-jest"
+		"ms-vscode.vscode-webpack-analyzer"
 	]
 }

@@ -19,7 +19,6 @@ const markdownPlugin = () => ({
 	},
 });
 
-// ENHANCED: Environment detection
 const isProduction = process.env.NODE_ENV === "production";
 const isAnalyze = process.env.ANALYZE === "true";
 const isDevelopment = !isProduction;
@@ -27,7 +26,6 @@ const isDevelopment = !isProduction;
 // Shared output directory
 const outDir = path.resolve(process.cwd(), "dist");
 
-// IMPROVED: Enhanced SWC configuration
 const getSWCConfig = () => ({
 	include: /\.(ts|tsx)$/,
 	exclude: /node_modules/,
@@ -35,90 +33,104 @@ const getSWCConfig = () => ({
 		parser: {
 			syntax: "typescript",
 			decorators: true,
-			dynamicImport: true, // NEW: Support dynamic imports
+			dynamicImport: true,
 		},
 		target: "es2022",
 
-		// ENHANCED: Better optimization
 		transform: {
-			useDefineForClassFields: true, // Modern class field behavior
-			legacyDecorator: false, // Use modern decorators
+			useDefineForClassFields: true,
+			legacyDecorator: false,
 			react: {
-				runtime: "automatic", // Modern React JSX
+				runtime: "automatic",
 			},
 		},
 
-		// IMPROVED: Production optimizations
 		minify: isProduction
 			? {
 					compress: {
-						dropConsole: true, // Remove console.* in production
-						dropDebugger: true, // Remove debugger statements
+						dropConsole: true,
+						dropDebugger: true,
 						pureFuncs: ["console.log", "console.debug"],
 					},
 					mangle: {
-						toplevel: true, // More aggressive name mangling
-						keepFnames: false, // Don't preserve function names
+						toplevel: true,
+						keepFnames: false,
 					},
 				}
 			: false,
 	},
 
-	// PERFORMANCE: Conditional source maps
 	sourceMaps: isDevelopment,
 	inlineSourcesContent: isDevelopment,
 });
 
-// ENHANCED: Plugin configuration
 const getPlugins = () =>
 	[
 		alias({
 			entries: [
 				// Match TypeScript paths exactly
-				{ find: /^@\/(.+)/, replacement: path.resolve(process.cwd(), "src/$1") },
-				{ find: /^@utils\/(.+)/, replacement: path.resolve(process.cwd(), "src/utils/$1") },
+				{
+					find: /^@\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/$1"),
+				},
 				{
 					find: /^@test-utils\/(.+)/,
 					replacement: path.resolve(process.cwd(), "src/test/test-utils/$1"),
 				},
-				{ find: /^@types\/(.+)/, replacement: path.resolve(process.cwd(), "src/types/$1") },
-				{ find: /^@core\/(.+)/, replacement: path.resolve(process.cwd(), "src/core/$1") },
-				{ find: /^@mcp\/(.+)/, replacement: path.resolve(process.cwd(), "src/mcp/$1") },
+				{
+					find: /^@\/lib\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/lib/$1"),
+				},
+				{
+					find: /^@\/vscode\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/vscode/$1"),
+				},
+				{
+					find: /^@\/templates\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/templates/$1"),
+				},
+				{
+					find: /^@types\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/lib/types/$1"),
+				},
+				{
+					find: /^@core\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/core/$1"),
+				},
+				{
+					find: /^@mcp\/(.+)/,
+					replacement: path.resolve(process.cwd(), "src/mcp/$1"),
+				},
 			],
 		}),
 
 		markdownPlugin(),
 		jsonPlugin(),
 
-		// IMPROVED: Better module resolution
 		nodeResolve({
 			extensions: [".ts", ".js", ".json"],
 			preferBuiltins: true,
 			exportConditions: ["node", "import", "require"],
-			// NEW: Better tree-shaking
-			modulesOnly: true, // Only resolve ES modules when possible
 		}),
 
 		swcPlugin(getSWCConfig()),
 
-		// ENHANCED: Better CommonJS handling
 		commonjsPlugin({
 			extensions: [".js"],
-			ignoreDynamicRequires: true, // Better for VS Code environment
-			transformMixedEsModules: true, // Handle mixed module types
+			ignoreDynamicRequires: true,
+			transformMixedEsModules: true,
 		}),
 
 		copyPlugin({
 			targets: [
 				{ src: "src/assets/*", dest: "dist/assets" },
-				{ src: "src/lib/rules/*.md", dest: "dist/rules" },
+				{ src: "src/templates/*.md", dest: "dist/templates" },
 			],
 			verbose: isDevelopment, // Only log in development
 			hook: "buildStart",
 			copyOnce: true,
 		}),
 
-		// NEW: Bundle analysis
 		isAnalyze &&
 			bundleAnalyzer({
 				summaryOnly: true,
@@ -139,37 +151,20 @@ export default [
 			format: "cjs",
 			sourcemap: isDevelopment,
 			exports: "auto",
-
-			// NEW: Better output optimization
-			compact: isProduction, // Minimize whitespace in production
-			validate: isDevelopment, // Validate output in development
+			compact: isProduction,
+			validate: isDevelopment,
 		},
-
-		// ENHANCED: Better externals
-		external: [
-			"vscode",
-			"canvas",
-			"node:test",
-			"node:worker_threads",
-			"gray-matter",
-			/^node:*/, // All Node.js built-ins
-		],
+		external: ["vscode", "canvas", "node:test", "node:worker_threads", /^node:*/],
 
 		plugins: getPlugins(),
 
-		// IMPROVED: Better warning handling
 		onwarn(warning, warn) {
-			// Suppress known safe warnings
 			const suppressedCodes = ["CIRCULAR_DEPENDENCY", "THIS_IS_UNDEFINED", "EVAL"];
 
-			if (
-				suppressedCodes.includes(warning.code) &&
-				warning.message.includes("node_modules")
-			) {
+			if (suppressedCodes.includes(warning.code) && warning.message.includes("node_modules")) {
 				return;
 			}
 
-			// Enhanced warning for development
 			if (isDevelopment) {
 				console.warn(`⚠️  ${warning.code}: ${warning.message}`);
 			}
@@ -177,38 +172,48 @@ export default [
 			warn(warning);
 		},
 
-		// NEW: Watch mode optimization
 		watch: {
 			include: "src/**",
 			exclude: ["node_modules/**", "dist/**"],
-			clearScreen: false, // Preserve terminal output
+			clearScreen: false,
 		},
 	},
 
-	// MCP CLI Build
 	{
-		input: "src/mcp/mcpServerCliEntry.ts",
+		input: "src/mcp/transport.ts",
 		output: {
 			file: path.join(outDir, "index.cjs"),
 			format: "cjs",
 			sourcemap: !isProduction,
 			exports: "auto",
 		},
-		external: ["vscode", "canvas", "node:test", "node:worker_threads", "gray-matter"],
+		external: [
+			// VS Code API exclusions
+			"vscode",
+			"canvas",
+			"node:test",
+			"node:worker_threads",
+			/^node:*/,
+			// Exclude any modules that import VS Code
+			"../vscode/workspace",
+			"../vscode/commands",
+			"../vscode/webview-provider",
+			// Pattern to exclude VS Code-related modules
+			/.*vscode.*/,
+			/.*\/vscode\/.*/,
+		],
 		plugins: getPlugins(),
 		onwarn(warning, warn) {
-			// Suppress circular dependency warnings from third-party libraries
-			if (
-				warning.code === "CIRCULAR_DEPENDENCY" &&
-				warning.message.includes("node_modules")
-			) {
+			if (warning.code === "CIRCULAR_DEPENDENCY" && warning.message.includes("node_modules")) {
 				return;
 			}
-			// Suppress "this" rewrite warnings from third-party libraries
 			if (warning.code === "THIS_IS_UNDEFINED" && warning.message.includes("node_modules")) {
 				return;
 			}
-			// Show all other warnings
+			// Suppress warnings about unresolved VS Code imports (they're intentionally external)
+			if (warning.code === "UNRESOLVED_IMPORT" && warning.message.includes("vscode")) {
+				return;
+			}
 			warn(warning);
 		},
 	},

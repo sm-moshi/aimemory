@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import "@vscode-elements/elements";
 import { HowDoesItWork } from "./components/how-does-it-work/index";
@@ -5,7 +6,7 @@ import { MCPServerManager } from "./components/mcp-server-manager/index";
 import { Status } from "./components/status/index";
 import { sendLog } from "./utils/message";
 
-function App() {
+function App(): ReactNode {
 	const [apiAvailable, setApiAvailable] = useState(!!window.vscodeApi);
 	const [reviewLoading, setReviewLoading] = useState(false);
 
@@ -81,16 +82,11 @@ function App() {
 		<div className="flex flex-col w-full gap-6">
 			<header className="flex flex-col gap-1 border-b border-[var(--vscode-panel-border)]">
 				<h1 className="text-2xl font-bold">AI Memory</h1>
-				<p className="mt-0 text-[var(--vscode-descriptionForeground)]">
-					Add memory superpowers to LLMs
-				</p>
+				<p className="mt-0 text-[var(--vscode-descriptionForeground)]">Get your Cursor LLMs some brain!</p>
 			</header>
 			<main className="flex flex-col gap-8">
 				<MCPServerManager />
-				<Status
-					onReviewAllFiles={handleReviewAndUpdateMemoryBank}
-					reviewLoading={reviewLoading}
-				/>
+				<Status onReviewAllFiles={handleReviewAndUpdateMemoryBank} reviewLoading={reviewLoading} />
 				<HowDoesItWork />
 			</main>
 		</div>

@@ -1,0 +1,330 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Memory Bank Integration Rules
+
+## MCP Server Development
+
+### Protocol Implementation ✅
+- **MCP SDK Version**: @modelcontextprotocol/sdk ^1.12.1 (validated in production)
+- **Transport**: stdio transport for Cursor 0.50+ compatibility (proven stable)
+- **JSON-RPC**: Proper error codes and structured responses implemented
+- **Server Architecture**: Single consolidated MCP implementation with shared utilities
+
+### Core Service Architecture ✅
+```typescript
+// Proven pattern in use:
+export class MemoryBankServiceCore implements MemoryBank {
+  constructor(
+    memoryBankPath: string,
+    logger: Logger,
+    cacheManager: CacheManager,
+    streamingManager: StreamingManager,
+    fileOperationManager: FileOperationManager,
+  ) // Dependency injection pattern works well
+}
+```
+
+**Service Layer Separation**:
+- `MemoryBankServiceCore` → Core business logic (validated)
+- `MemoryBankMCPAdapter` → MCP protocol adapter (stable)
+- `BaseMCPServer` → Common MCP server functionality (reusable)
+
+### Error Boundary Patterns ✅
+```typescript
+// Standard pattern across codebase:
+const result = await ensureMemoryBankReady(this.memoryBank);
+if (isError(result)) {
+  return createErrorResponse(result.error, toolName);
+}
+```
+
+**Mandatory Error Handling**:
+- Use `AsyncResult<T, MemoryBankError>` for all async operations
+- Implement `ensureMemoryBankReady()` check in all MCP tools
+- Use structured error responses with `createErrorResponse()` helper
+
+## Memory Bank File Organization
+
+### Validated File Structure ✅
+```mermaid
+memory-bank/
+├── core/
+│   ├── projectBrief.md      # Hot file - load immediately
+│   ├── productContext.md    # Hot file - load immediately
+│   └── activeContext.md     # Hot file - load immediately
+├── progress/
+│   ├── current.md           # Hot file - load immediately
+│   ├── history.md           # Warm file - load on demand
+│   └── index.md             # Warm file - load on demand
+├── systemPatterns/
+│   ├── index.md             # Warm file - load on demand
+│   ├── architecture.md      # Warm file - load on demand
+│   ├── patterns.md          # Cold file - chunk if >30KB
+│   └── scanning.md          # Cold file - chunk if >30KB
+└── techContext/
+    ├── index.md             # Warm file - load on demand
+    ├── stack.md             # Cold file - reference @002-build-system-tooling.mdc
+    ├── dependencies.md      # Cold file - chunk if >30KB
+    └── environment.md       # Cold file - chunk if >30KB
+```
+
+### File Access Patterns 🔄 (Roadmap Item)
+**Current State**: All files loaded equally via `loadFiles()`
+**Target Implementation**:
+```typescript
+// Tiered loading strategy (planned):
+const HOT_FILES = [
+  MemoryBankFileType.ProjectBrief,
+  MemoryBankFileType.ActiveContext,
+  MemoryBankFileType.ProgressCurrent
+];
+
+async loadFilesByPriority() {
+  // Phase 1: Load hot files immediately
+  await this.loadFilesSubset(HOT_FILES);
+
+  // Phase 2: Load warm files on-demand
+  await this.loadOnDemand(WARM_FILES);
+
+  // Phase 3: Stream cold files when accessed
+  await this.streamLargeFiles(COLD_FILES);
+}
+```
+
+### File Size Management ⚠️
+- **Monitoring**: Files >15KB should trigger size warnings
+- **Streaming**: Files >30KB should use StreamingManager (infrastructure ready)
+- **Chunking**: Memory bank files rarely exceed these limits in practice
+
+## MCP Tool Implementation Patterns ✅
+
+### Standardized Tool Creation
+```typescript
+// Proven pattern for all tools:
+export const memoryBankTool = createMemoryBankTool(
+  memoryBank,
+  async (params: ValidatedParams) => {
+    // Tool implementation
+    return { success: true, data: result };
+  },
+  "Error context for debugging"
+);
+```
+
+### Zod Parameter Validation ✅
+```typescript
+// Comprehensive validation implemented:
+const paramsSchema = z.object({
+  fileType: MemoryBankFileTypeSchema,
+  content: z.string().min(1),
+  relativePath: SafePathSchema.optional()
+});
+
+// Usage in tools:
+const validatedParams = validateMCPToolParams(toolName, params, paramsSchema);
+```
+
+**Validation Requirements**:
+- All MCP tools MUST use Zod schemas
+- Use `ValidatedMCPParams` type definitions
+- Implement proper error transformation via `validateMCPToolParams()`
+
+### Response Standardization ✅
+```typescript
+// Consistent response patterns:
+return createSuccessResponse(`Operation completed: ${details}`);
+return createErrorResponse(error, "Tool operation context");
+```
+
+## Memory Bank Service Integration
+
+### Core Service Dependencies ✅
+```typescript
+// Validated dependency pattern:
+class MemoryBankServiceCore {
+  constructor(
+    private readonly memoryBankPath: string,
+    private readonly logger: Logger,
+    private readonly cacheManager: CacheManager,        // Performance layer
+    private readonly streamingManager: StreamingManager, // Large file handling
+    private readonly fileOperationManager: FileOperationManager // Safe I/O
+  ) {}
+}
+```
+
+### Health Checking Implementation ✅
+```typescript
+// Structured health reports working well:
+async checkHealth(): AsyncResult<string, MemoryBankError> {
+  const context = this.createContext();
+  const { isHealthy, issues, summary } = await this.performHealthCheck(context);
+  return { success: true, data: summary };
+}
+```
+
+### Configuration Management ✅
+```typescript
+// FileOperationContext pattern proven effective:
+interface FileOperationContext {
+  memoryBankFolder: string;
+  logger: Logger;
+  fileCache: Map<string, FileCache>;
+  cacheStats: LegacyCacheStats;
+  streamingManager: StreamingManager;
+  fileOperationManager: FileOperationManager;
+}
+```
+
+## Metadata System Integration
+
+### Implementation Status 🧪
+**Current State**: Fully implemented but NOT production-ready
+- ❌ **Tests**: Many mock tests failing, needs debugging
+- ❌ **Integration**: Not tested in real VSIX builds
+- ❌ **Validation**: No real-world validation completed
+
+**Available Tools** (when stabilized):
+```typescript
+// Implemented in MetadataToolRegistrar:
+- query-memory-index        // Search with filters, pagination
+- validate-memory-file      // Zod schema validation
+- rebuild-metadata-index    // Full index rebuilding
+- get-metadata-for-file     // Individual file metadata
+- get-metadata-index-stats  // Index health monitoring
+```
+
+### Metadata Tool Integration Pattern
+```typescript
+// Enable only when production-ready:
+if (config.enableMetadataTools && isProduction) {
+  this.metadataToolRegistrar.registerQueryMemoryIndexTool(server);
+  // ... other metadata tools
+}
+```
+
+## Integration Best Practices
+
+### Cross-Module Communication ✅
+```typescript
+// Proven message passing patterns:
+interface WebviewToExtensionMessage {
+  command: string;
+  [key: string]: unknown;
+}
+
+// Extension ↔ Webview communication via postMessage
+this.panel.webview.postMessage({
+  type: "memoryBankStatus",
+  initialized: isInitialized
+});
+```
+
+### Error Recovery Patterns ✅
+```typescript
+// Self-healing implemented and tested:
+async loadFileWithTemplate(fileType: MemoryBankFileType) {
+  const { content, stats, wasCreated } = await this.createFileFromTemplate(fileType);
+  if (wasCreated) {
+    this.logger.info(`Self-healing: Created missing file ${fileType}`);
+  }
+  return { content, stats };
+}
+```
+
+### Security Integration ✅
+```typescript
+// Path validation proven effective:
+function validateAndConstructFilePath(memoryBankFolder: string, fileType: string): string {
+  const fullPath = path.join(memoryBankFolder, fileType);
+  if (!fullPath.startsWith(path.resolve(memoryBankFolder))) {
+    throw new MemoryBankError("Path traversal detected", "SECURITY_ERROR");
+  }
+  return fullPath;
+}
+```
+
+## Performance Integration
+
+### Streaming Manager Integration ✅
+```typescript
+// Size-based strategy selection working well:
+class StreamingManager {
+  private readonly sizeThreshold = 1024 * 1024; // 1MB
+
+  async readFile(filePath: string): Promise<Result<StreamingResult, FileError>> {
+    const stats = await this.getFileStats(filePath);
+    const strategy = stats.size >= this.sizeThreshold ? "streaming" : "normal";
+    return this.executeStrategy(strategy, filePath, stats);
+  }
+}
+```
+
+### Cache Integration ✅
+```typescript
+// Cache management patterns proven stable:
+class CacheManager {
+  getCachedContent(filePath: string, stats: Stats): string | null {
+    const entry = this.cache.get(filePath);
+    return entry && !this.isExpired(entry, stats) ? entry.content : null;
+  }
+}
+```
+
+## Testing Integration Patterns
+
+### Mock Patterns ✅
+```typescript
+// Effective patterns for complex scenarios:
+vi.hoisted(() => {
+  // Module-level mocking for MCP SDK components
+  return { mockServer, mockTransport };
+});
+
+// Filesystem mocking with path validation:
+const mockFileManager = createMockFileOperationManager();
+mockFileManager.readFileWithRetry = vi.fn().mockResolvedValue({
+  success: true,
+  data: "test content"
+});
+```
+
+### Integration Testing Requirements
+- ✅ **MCP Server**: Startup, shutdown, tool registration
+- ⚠️ **End-to-End**: Memory bank operations through full stack (needs work)
+- ❌ **VSIX**: Extension packaging and installation testing (not done)
+- ❌ **Real Debugging**: Production debugging workflows (needed)
+- **Unified Testing**: Single vitest config with projects pattern eliminates testing fragmentation
+
+## Development Workflow
+
+### Build Integration ✅
+```bash
+# Validated build commands:
+pnpm build           # Extension + MCP server compilation
+pnpm test           # Parallel testing across workspaces
+pnpm package        # VSIX packaging (not production-tested)
+```
+
+### Error Boundary Testing
+```typescript
+// Test all error conditions:
+- Memory bank initialization failures
+- File operation errors with retry logic
+- MCP tool parameter validation failures
+- Network transport error recovery
+```
+
+## Cross-References
+
+- **@001-vsix-extension.mdc**: Webview integration, security patterns, VS Code lifecycle
+- **@002-build-system-tooling.mdc**: TypeScript compilation, testing frameworks, build optimization
+- **techContext/stack.md**: Technology choices, dependency rationale, performance decisions
+
+---
+
+*Reflects actual implementation state as of 2025-06-07. Rules validated against production codebase.*
+*Phase 4 Updates: Prepared for unified testing approach and simplified file organization.*
+*Last updated: 2025-06-07*

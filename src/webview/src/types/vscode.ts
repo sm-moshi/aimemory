@@ -10,8 +10,8 @@ import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "./mes
  */
 export interface VSCodeAPI {
 	postMessage: (message: WebviewToExtensionMessage) => void;
-	getState: () => any;
-	setState: (state: any) => void;
+	getState: () => unknown;
+	setState: (state: unknown) => void;
 }
 
 /**

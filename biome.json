@@ -1,29 +1,29 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"root": true,
+	"$schema": "https://biomejs.dev/schemas/2.0.0-beta.6/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignore": [
-			"**/dist/**",
-			"**/node_modules/**",
-			"**/coverage/**",
-			".vscode-test/**",
-			".cursor/**",
-			".repomix/**",
-			"**/*.d.ts",
-			"**/build/**",
-			"**/.next/**",
-			"**/.cache/**",
-			"**/tsconfig*.json"
+		"includes": [
+			"src/**/*",
+			"*.config.{js,ts}",
+			"*.json",
+			"!**/dist/**",
+			"!**/out/**",
+			"!**/node_modules/**",
+			"!**/coverage/**",
+			"!**/.vscode-test/**",
+			"!**/.cursor/**",
+			"!**/*.d.ts"
 		]
 	},
 	"formatter": {
+		"enabled": true,
 		"indentWidth": 4,
-		"lineWidth": 100,
-		"lineEnding": "lf"
+		"lineWidth": 120
 	},
 	"javascript": {
 		"formatter": {
@@ -34,6 +34,7 @@
 		}
 	},
 	"linter": {
+		"enabled": true,
 		"rules": {
 			"performance": {
 				"noAccumulatingSpread": "warn",
@@ -51,7 +52,6 @@
 				"useNamingConvention": {
 					"level": "error",
 					"options": {
-						"requireAscii": false,
 						"strictCase": false,
 						"conventions": [
 							{
@@ -73,79 +73,49 @@
 								"formats": ["PascalCase"]
 							},
 							{
-								"selector": {
-									"kind": "objectLiteralProperty"
-								},
-								"formats": ["camelCase", "CONSTANT_CASE", "PascalCase"]
-							},
-							{
-								"selector": {
-									"kind": "classProperty"
-								},
-								"formats": ["camelCase", "PascalCase"]
+								"selector": { "kind": "classProperty" },
+								"formats": ["camelCase", "PascalCase", "CONSTANT_CASE"]
 							}
 						]
 					}
 				},
 				"useConsistentArrayType": "error",
-				"useShorthandAssign": "error"
+				"useShorthandAssign": "error",
+				"noParameterAssign": "error",
+				"useAsConstAssertion": "error",
+				"useDefaultParameterLast": "error",
+				"useEnumInitializers": "error",
+				"useSelfClosingElements": "error",
+				"useSingleVarDeclarator": "error",
+				"noUnusedTemplateLiteral": "error",
+				"useNumberNamespace": "error",
+				"noInferrableTypes": "error",
+				"noUselessElse": "error"
 			},
 			"correctness": {
-				"noUnusedVariables": {
-					"level": "error"
-				},
 				"noUnusedImports": "error"
 			}
 		}
 	},
 	"overrides": [
 		{
-			"include": [
-				"**/*.test.ts",
-				"**/*.test.tsx",
-				"**/*.spec.ts",
-				"**/*.spec.tsx",
-				"**/test/**/*.ts",
-				"**/tests/**/*.ts"
-			],
+			"includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/test/**/*.ts"],
 			"linter": {
 				"rules": {
-					"suspicious": {
-						"noExplicitAny": "off"
-					}
-				}
-			}
-		},
-		{
-			"include": ["src/webview/**/*", "**/*.d.ts"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noExplicitAny": "off"
-					},
 					"style": {
-						"useNamingConvention": "off",
-						"useFilenamingConvention": "off"
+						"useNamingConvention": "off"
 					},
-					"a11y": {
-						"noBlankTarget": {
-							"level": "error",
-							"options": {
-								"allowDomains": ["localhost"]
-							}
-						}
+					"suspicious": {
+						"noExplicitAny": "off"
+					},
+					"correctness": {
+						"noUnusedVariables": "off"
 					}
 				}
 			}
 		},
 		{
-			"include": [
-				"**/*.config.{js,ts}",
-				"**/vite.config.{js,ts}",
-				"**/rollup.config.{js,ts}",
-				"**/vitest.config.{js,ts}",
-				"**/tsconfig*.json"
-			],
+			"includes": ["**/src/webview/**/*", "**/*.d.ts"],
 			"linter": {
 				"rules": {
 					"suspicious": {
@@ -158,9 +128,17 @@
 			}
 		},
 		{
-			"include": ["src/types/config.ts"],
+			"includes": [
+				"**/*.config.{js,ts}",
+				"**/vite.config.{js,ts}",
+				"**/rollup.config.{js,ts}",
+				"**/vitest.config.{js,ts}"
+			],
 			"linter": {
 				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off"
+					},
 					"style": {
 						"useNamingConvention": "off"
 					}

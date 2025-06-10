@@ -31,7 +31,11 @@ export function useMCPServerDetection(): UseMCPServerDetectionReturn {
 			sendLog(
 				`No server running on port ${checkPort} during initial detection: ${error instanceof Error ? error.message : String(error)}`,
 				"info",
-				{ action: "initialDetectServer", port: checkPort, area: "useMCPServerDetection" },
+				{
+					action: "initialDetectServer",
+					port: checkPort,
+					area: "useMCPServerDetection",
+				},
 			);
 		}
 		return false; // Server not found or error
@@ -55,15 +59,11 @@ export function useMCPServerDetection(): UseMCPServerDetectionReturn {
 							command: "serverAlreadyRunning",
 							port: portToCheck,
 						});
-						sendLog(
-							`Detected running MCP server on port ${portToCheck} during initial scan`,
-							"info",
-							{
-								action: "initialDetectServerSuccess",
-								port: portToCheck,
-								area: "useMCPServerDetection",
-							},
-						);
+						sendLog(`Detected running MCP server on port ${portToCheck} during initial scan`, "info", {
+							action: "initialDetectServerSuccess",
+							port: portToCheck,
+							area: "useMCPServerDetection",
+						});
 					}
 					break; // Stop checking if server is found
 				}
@@ -77,8 +77,9 @@ export function useMCPServerDetection(): UseMCPServerDetectionReturn {
 
 		return () => {
 			didCancel = true;
-			// Optional: If there were ongoing fetch requests that need explicit cancellation beyond AbortSignal.timeout,
-			// they could be handled here, but AbortSignal.timeout should suffice for fetch.
+			// Optional: If there were ongoing fetch requests that need explicit cancellation beyond
+			// AbortSignal.timeout, they could be handled here, but AbortSignal.timeout should
+			// suffice for fetch.
 		};
 	}, [checkServerRunning]); // checkServerRunning is stable due to useCallback
 

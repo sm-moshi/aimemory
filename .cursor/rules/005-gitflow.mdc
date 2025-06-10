@@ -1,0 +1,71 @@
+---
+description: Cursor Git & Git Flow Rules
+globs:
+alwaysApply: false
+---
+# Cursor Ruleset: Git Flow
+
+## Project Branching Model
+
+This project uses git flow (also with GitKraken):
+
+- `main`: Stable releases
+- `develop`: Integration branch for all feature work
+- `release/x.y.z`: Pre-release prep branches
+- `feature/*`: Isolated feature development
+- `hotfix/*`: Critical production fixes
+
+## Cursor AI Behavior
+
+- Never commit directly to `main` or `develop`
+- New features must go in `feature/*` branches
+- Use `release/*` for version prep and changelog updates
+- Suggest merges or PRs only from `feature/*` or `release/*` → `develop`
+- Tag final versions only on `main`
+
+## Branch Naming Examples
+
+- `feature/init-scaffolder`
+- `release/0.2.0`
+- `hotfix/broken-path-resolution`
+
+## Commit Style
+
+Use **Conventional Commits**:
+- `feat: add scaffolding logic`
+- `fix: resolve panic on empty dir`
+- `chore: upgrade deps`
+- `docs: add CLI usage example`
+
+## Rebase & Merge Policy
+
+- Rebase is allowed only in `feature/*`
+- No squashing into `main`
+- Preserve full history between `develop → main` merges
+
+## Versioning
+
+- Uses [SemVer](mdc:https:/semver.org)
+- `0.x.y` for pre-stable
+- `1.0.0` once CLI and templates are stable
+- All versions tagged as `v0.2.1`, `v1.0.0`, etc.
+
+## Release Flow
+
+- `feature/*` merges into `develop`
+- `release/*` branches from `develop`, updates docs + version
+- Merge `release/*` into `main` + tag release
+- Also merge `release/*` back into `develop`
+
+## Cursor Tasks Allowed
+
+- Suggest PRs from `feature → develop`
+- Generate changelog on `release/*` branches
+- Tag release commits after `main` merges
+- Resolve rebase conflicts in feature work
+
+## Cursor Tasks Forbidden
+
+- Never merge directly into `main`
+- Never squash history when merging releases
+- Never skip changelog or version bumps in `release/*`

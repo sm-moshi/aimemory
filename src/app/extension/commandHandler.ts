@@ -1,10 +1,15 @@
-import type { MemoryBankError, MemoryBankFile, MemoryBankFileType, Result } from "@/types/index";
-import { isError, isSuccess } from "@/types/index";
-import type { CommandResult, MCPServerInterface } from "@/types/mcpTypes";
-import { formatErrorMessage } from "@/utils/common/error-helpers";
+import { formatErrorMessage } from "../../lib/helpers";
+import { createLogger } from "../../lib/logging";
+import type { MemoryBankError, MemoryBankFile, MemoryBankFileType, Result } from "../../lib/types/core";
+import { isError, isSuccess } from "../../lib/types/core";
+import type { CommandResult, MCPServerInterface } from "../../lib/types/operations";
+import type { Logger } from "../../types/logging";
 
 // Helper functions for common patterns
-const createSuccessResult = (message: string): CommandResult => ({ success: true, message });
+const createSuccessResult = (message: string): CommandResult => ({
+	success: true,
+	message,
+});
 const createErrorResult = (message: string, error?: MemoryBankError): CommandResult => {
 	const result: CommandResult = { success: false, message };
 	if (error !== undefined) {
@@ -41,9 +46,7 @@ function categorizeFilesByType(files: MemoryBankFile[]): Record<string, string[]
 			categories[category].push(status);
 		} else {
 			// Ensure LEGACY_CATEGORY exists
-			if (!categories[LEGACY_CATEGORY]) {
-				categories[LEGACY_CATEGORY] = [];
-			}
+			categories[LEGACY_CATEGORY] ??= [];
 			categories[LEGACY_CATEGORY].push(status);
 		}
 	}
@@ -73,9 +76,7 @@ async function handleHealthCommand(mcpServer: MCPServerInterface): Promise<Comma
 	const healthResult = await mcpServer.getMemoryBank().checkHealth();
 
 	if (isError(healthResult)) {
-		return createErrorResult(
-			formatErrorMessage("Error checking memory bank health", healthResult.error),
-		);
+		return createErrorResult(formatErrorMessage("Error checking memory bank health", healthResult.error));
 	}
 
 	return createSuccessResult(healthResult.data);
@@ -91,10 +92,7 @@ async function handleInitializeCommand(mcpServer: MCPServerInterface): Promise<C
 	}
 }
 
-async function handleUpdateCommand(
-	mcpServer: MCPServerInterface,
-	args: string[],
-): Promise<CommandResult> {
+async function handleUpdateCommand(mcpServer: MCPServerInterface, args: string[]): Promise<CommandResult> {
 	if (!args.length) {
 		return createErrorResult(
 			"Error: /memory update requires a file type argument\nUsage: /memory update <fileType> <content>",
@@ -111,9 +109,7 @@ async function handleUpdateCommand(
 	}
 
 	if (!content) {
-		return createErrorResult(
-			"Error: /memory update requires content\nUsage: /memory update <fileType> <content>",
-		);
+		return createErrorResult("Error: /memory update requires content\nUsage: /memory update <fileType> <content>");
 	}
 
 	try {
@@ -124,10 +120,7 @@ async function handleUpdateCommand(
 	}
 }
 
-async function handleWriteCommand(
-	mcpServer: MCPServerInterface,
-	args: string[],
-): Promise<CommandResult> {
+async function handleWriteCommand(mcpServer: MCPServerInterface, args: string[]): Promise<CommandResult> {
 	if (args.length < 2) {
 		return createErrorResult(
 			"Error: /memory write requires a relative path and content.\nUsage: /memory write <relativePath> <content>",
@@ -153,15 +146,11 @@ async function handleWriteCommand(
 
 async function handleStatusCommand(mcpServer: MCPServerInterface): Promise<CommandResult> {
 	const memoryBank = mcpServer.getMemoryBank();
-	const isInitializedResult: Result<boolean, MemoryBankError> =
-		await memoryBank.getIsMemoryBankInitialized();
+	const isInitializedResult: Result<boolean, MemoryBankError> = await memoryBank.getIsMemoryBankInitialized();
 
 	if (isError(isInitializedResult)) {
 		return createErrorResult(
-			formatErrorMessage(
-				"Error checking memory bank initialization status",
-				isInitializedResult.error,
-			),
+			formatErrorMessage("Error checking memory bank initialization status", isInitializedResult.error),
 		);
 	}
 
@@ -173,8 +162,7 @@ async function handleStatusCommand(mcpServer: MCPServerInterface): Promise<Comma
 		);
 	}
 
-	const loadFilesResult: Result<MemoryBankFileType[], MemoryBankError> =
-		await memoryBank.loadFiles();
+	const loadFilesResult: Result<MemoryBankFileType[], MemoryBankError> = await memoryBank.loadFiles();
 	let selfHealingMsg = "";
 	if (isSuccess(loadFilesResult)) {
 		const successfulResult = loadFilesResult as {
@@ -198,7 +186,11 @@ async function handleStatusCommand(mcpServer: MCPServerInterface): Promise<Comma
 }
 
 export class CommandHandler {
-	constructor(private readonly mcpServer: MCPServerInterface) {}
+	private readonly logger: Logger;
+
+	constructor(private readonly mcpServer: MCPServerInterface) {
+		this.logger = createLogger({ component: "CommandHandler" });
+	}
 
 	/**
 	 * Process a /memory command sent in the Cursor AI input
@@ -218,7 +210,12 @@ export class CommandHandler {
 			const result = await this.executeCommand(command, args);
 			return result.message;
 		} catch (error) {
-			console.error("Error processing command:", error);
+			this.logger.error("Error processing command", {
+				command,
+				args: args.join(" "),
+				error: error instanceof Error ? error.message : String(error),
+				operation: "processMemoryCommand",
+			});
 			return formatErrorMessage("Error processing command", error);
 		}
 	}
@@ -242,16 +239,17 @@ export class CommandHandler {
 			case "write":
 				return await handleWriteCommand(this.mcpServer, args);
 			default:
-				return createErrorResult(
-					`Command "${command}" is not supported.\n\n${this.getHelpText()}`,
-				);
+				return createErrorResult(`Command "${command}" is not supported.\n\n${this.getHelpText()}`);
 		}
 	}
 
 	/**
 	 * Parse the memory command text and extract command and arguments
 	 */
-	private parseMemoryCommand(text: string): { command: string | null; args: string[] } {
+	private parseMemoryCommand(text: string): {
+		command: string | null;
+		args: string[];
+	} {
 		const parts = text.trim().split(" ");
 
 		if (parts.length < 2) {
@@ -264,7 +262,7 @@ export class CommandHandler {
 		const command = parts[0];
 		const args = parts.slice(1);
 
-		return { command: command || null, args };
+		return { command: command ?? null, args };
 	}
 
 	/**

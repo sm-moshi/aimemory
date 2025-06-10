@@ -7,16 +7,17 @@
 
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { FileOperationManager } from "@/core/FileOperationManager.js";
-import type { ConfigComparisonResult, CursorMCPConfig, MCPServerConfig } from "@/types/config.js";
+import { window } from "vscode";
+import type { FileOperationManager } from "../core/file-operations";
+import { createLogger } from "../lib/logging";
+import type { ConfigComparisonResult, CursorMCPConfig, CursorMCPServerConfig } from "../types";
+import type { LogContext, Logger } from "../types/logging";
 import {
 	ensureDirectory as genericEnsureDirectory,
 	readJsonFile as genericReadJsonFile,
 	writeJsonFile as genericWriteJsonFile,
-} from "@utils/config-io-helpers.js";
-import { validateWorkspace } from "@utils/system/process-helpers.js";
-import { Logger } from "@utils/vscode/vscode-logger.js";
-import { window } from "vscode";
+} from "../utils/helpers";
+import { validateWorkspace } from "../utils/process-helpers";
 
 /**
  * Ensures the .cursor directory exists in the user's home directory.
@@ -26,49 +27,53 @@ import { window } from "vscode";
  */
 export async function ensureCursorDirectory(
 	fileOperationManager: FileOperationManager,
+	loggerOverride?: Logger,
 ): Promise<string> {
 	const homeDir = homedir();
 	const cursorDir = join(homeDir, ".cursor");
-	const logger = Logger.getInstance();
-	const basicLoggerAdapter: BasicLogger = {
-		error: (message: string, ...optionalParams: unknown[]) =>
-			logger.error(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-		warn: (message: string, ...optionalParams: unknown[]) =>
-			logger.warn(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-		info: (message: string, ...optionalParams: unknown[]) =>
-			logger.info(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-		debug: (message: string, ...optionalParams: unknown[]) =>
-			logger.debug(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-	};
-	return genericEnsureDirectory(cursorDir, fileOperationManager, basicLoggerAdapter);
+	const logger = loggerOverride ?? createLogger();
+	try {
+		const loggerAdapter: Logger = {
+			error: (message: string, context?: unknown) => logger.error(message, context ? { context } : undefined),
+			warn: (message: string, context?: unknown) => logger.warn(message, context ? { context } : undefined),
+			info: (message: string, context?: unknown) => logger.info(message, context ? { context } : undefined),
+			debug: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined),
+			trace: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
+			setLevel: () => {
+				/* no-op */
+			},
+		};
+		return await genericEnsureDirectory(cursorDir, fileOperationManager, loggerAdapter);
+	} catch (error) {
+		const context: LogContext = {
+			operation: "ensureCursorDirectory",
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+		};
+		logger.error("Unexpected error creating .cursor directory", context);
+		throw error;
+	}
 }
 
 /**
  * Reads and parses the Cursor MCP configuration file
  */
-export async function readCursorMCPConfig(
-	fileOperationManager: FileOperationManager,
-): Promise<CursorMCPConfig> {
+export async function readCursorMCPConfig(fileOperationManager: FileOperationManager): Promise<CursorMCPConfig> {
 	const homeDir = homedir();
 	const mcpConfigPath = join(homeDir, ".cursor", "mcp.json");
 	const defaultConfig: CursorMCPConfig = { mcpServers: {} };
-	const logger = Logger.getInstance();
-	const basicLoggerAdapter: BasicLogger = {
-		error: (message: string, ...optionalParams: unknown[]) =>
-			logger.error(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-		warn: (message: string, ...optionalParams: unknown[]) =>
-			logger.warn(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-		info: (message: string, ...optionalParams: unknown[]) =>
-			logger.info(message, optionalParams.length > 0 ? { optionalParams } : undefined),
-		debug: (message: string, ...optionalParams: unknown[]) =>
-			logger.debug(message, optionalParams.length > 0 ? { optionalParams } : undefined),
+	const logger = createLogger();
+	const loggerAdapter: Logger = {
+		error: (message: string, context?: unknown) => logger.error(message, context ? { context } : undefined),
+		warn: (message: string, context?: unknown) => logger.warn(message, context ? { context } : undefined),
+		info: (message: string, context?: unknown) => logger.info(message, context ? { context } : undefined),
+		debug: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined),
+		trace: (message: string, context?: unknown) => logger.debug(message, context ? { context } : undefined), // VS Code logger doesn't have trace, map to debug
+		setLevel: () => {
+			/* no-op */
+		},
 	};
-	return genericReadJsonFile<CursorMCPConfig>(
-		mcpConfigPath,
-		fileOperationManager,
-		basicLoggerAdapter,
-		defaultConfig,
-	);
+	return genericReadJsonFile<CursorMCPConfig>(mcpConfigPath, fileOperationManager, loggerAdapter, defaultConfig);
 }
 
 /**
@@ -88,11 +93,11 @@ export async function writeCursorMCPConfig(
  * Creates the AI Memory server configuration for Cursor MCP.
  * This configuration tells Cursor how to run the AI Memory MCP server.
  */
-export function createAIMemoryServerConfig(workspacePath: string): MCPServerConfig {
+export function createAIMemoryServerConfig(workspacePath: string): CursorMCPServerConfig {
 	return {
 		name: "AI Memory",
 		command: "node",
-		args: [join(workspacePath, "dist", "mcp-server.js"), "--workspace", workspacePath],
+		args: [join(workspacePath, "dist", "index.cjs"), "--workspace", workspacePath],
 		cwd: workspacePath,
 	};
 }
@@ -101,8 +106,8 @@ export function createAIMemoryServerConfig(workspacePath: string): MCPServerConf
  * Compares two server configurations for equivalence
  */
 export function compareServerConfigs(
-	config1: MCPServerConfig,
-	config2: MCPServerConfig,
+	config1: CursorMCPServerConfig,
+	config2: CursorMCPServerConfig,
 ): ConfigComparisonResult {
 	const differences: string[] = [];
 
@@ -134,10 +139,8 @@ export function compareServerConfigs(
 /**
  * High-level orchestrator for updating Cursor MCP configuration
  */
-export async function updateCursorMCPServerConfig(
-	fileOperationManager: FileOperationManager,
-): Promise<void> {
-	const logger = Logger.getInstance();
+export async function updateCursorMCPServerConfig(fileOperationManager: FileOperationManager): Promise<void> {
+	const logger = createLogger();
 
 	try {
 		// Validate workspace and get path

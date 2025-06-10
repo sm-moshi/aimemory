@@ -1,12 +1,12 @@
 /**
- * Unified Logging System for AI Memory Extension
- *
- * Single interface that replaces MemoryBankLogger, BasicLogger, and custom logger interfaces.
- * Supports structured logging with optional context for better debugging.
+ * @file src/types/logging.ts
+ * @description Defines the unified logging interfaces and types used throughout the AI Memory
+ *   Extension. This ensures consistent, structured logging across all components, from the
+ *   VS Code extension host to the MCP server.
  */
 
 /**
- * Log levels for filtering and categorization
+ * Log levels for filtering and categorization.
  */
 export enum LogLevel {
 	Trace = 0,
@@ -18,7 +18,7 @@ export enum LogLevel {
 }
 
 /**
- * Optional context for structured logging
+ * Optional context for structured logging, allowing for detailed, queryable logs.
  */
 export interface LogContext {
 	component?: string;
@@ -29,47 +29,49 @@ export interface LogContext {
 }
 
 /**
- * Unified logger interface for all AI Memory Extension components
- *
- * This single interface replaces:
- * - MemoryBankLogger
- * - BasicLogger
- * - Custom VS Code Logger interface
+ * Unified logger interface for all AI Memory Extension components.
+ * This single interface is implemented by different logger classes (e.g., VSCodeLogger,
+ * ConsoleLogger) to provide consistent logging behavior in different environments.
  */
 export interface Logger {
 	/**
-	 * Log trace-level messages (most verbose)
+	 * Log trace-level messages (most verbose).
 	 */
 	trace(message: string, context?: LogContext): void;
 
 	/**
-	 * Log debug-level messages for development
+	 * Log debug-level messages for development.
 	 */
 	debug(message: string, context?: LogContext): void;
 
 	/**
-	 * Log informational messages
+	 * Log informational messages.
 	 */
 	info(message: string, context?: LogContext): void;
 
 	/**
-	 * Log warning messages
+	 * Log warning messages.
 	 */
 	warn(message: string, context?: LogContext): void;
 
 	/**
-	 * Log error messages
+	 * Log error messages.
 	 */
 	error(message: string, context?: LogContext): void;
 
 	/**
-	 * Set the minimum log level (optional - implementations may ignore)
+	 * Set the minimum log level for the logger instance.
 	 */
-	setLevel?(level: LogLevel): void;
+	setLevel(level: LogLevel): void;
+
+	/**
+	 * Show the output channel if available (VS Code specific).
+	 */
+	showOutput?(): void;
 }
 
 /**
- * Configuration for logger implementations
+ * Configuration for creating logger instances.
  */
 export interface LoggerConfig {
 	level?: LogLevel;

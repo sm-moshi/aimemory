@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
 import type { MemoryBankStatusProps } from "../../types/components";
 import { cn } from "../../utils/cn";
 import { sendLog } from "../../utils/message";
 
-export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBankStatusProps) {
+export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBankStatusProps): ReactNode {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isMemoryBankInitialized, setIsMemoryBankInitialized] = useState(false);
 	const [updateLoading, setUpdateLoading] = useState(false);
@@ -12,7 +13,9 @@ export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBank
 
 	const requestMemoryBankStatus = useCallback(() => {
 		setIsLoading(true);
-		sendLog("Requesting memory bank status", "info", { action: "requestMemoryBankStatus" });
+		sendLog("Requesting memory bank status", "info", {
+			action: "requestMemoryBankStatus",
+		});
 		window.vscodeApi?.postMessage({
 			command: "requestMemoryBankStatus",
 		});
@@ -83,9 +86,7 @@ export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBank
 				{!isLoading && (
 					<span
 						className={cn(
-							isMemoryBankInitialized
-								? "bg-green-200 text-green-800"
-								: "bg-red-200 text-red-800",
+							isMemoryBankInitialized ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
 							"px-2 py-0.5 rounded-full text-xs font-semibold",
 						)}
 					>

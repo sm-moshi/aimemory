@@ -3,16 +3,15 @@
 	"compilerOptions": {
 		"lib": ["ES2022", "DOM", "DOM.Iterable"],
 		"jsx": "react-jsx",
-		"jsxImportSource": "react",
-		"allowJs": true,
-		"types": ["vite/client", "@testing-library/jest-dom"],
+		"types": ["vite/client", "node"],
 		"noEmit": true,
-		"composite": false,
-		"skipLibCheck": true
+		"composite": true,
+		"isolatedModules": true
 	},
-	"include": [
-		"src/**/*",
-		"*.config.*",
-		"vitest.setup.ts"
+	"include": ["src", "vitest.config.ts"],
+	"references": [
+		{
+			"path": "./tsconfig.node.json"
+		}
 	]
 }

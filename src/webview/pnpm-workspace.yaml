@@ -1,8 +1,0 @@
-ignoredBuiltDependencies:
-  - esbuild
-onlyBuiltDependencies:
-  - '@biomejs/biome'
-  - '@tailwindcss/oxide'
-  - esbuild
-  - happy-dom
-  - msw

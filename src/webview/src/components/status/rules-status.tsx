@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { RiLoader5Fill } from "react-icons/ri";
 import { cn } from "../../utils/cn";
 import { sendLog } from "../../utils/message";
 
-export function RulesStatus() {
+export function RulesStatus(): ReactNode {
 	const [isLoading, setIsLoading] = useState(true);
 	const [rulesInitialized, setRulesInitialized] = useState(false);
 	const [resetLoading, setResetLoading] = useState(false);
@@ -11,7 +12,9 @@ export function RulesStatus() {
 
 	const requestRulesStatus = useCallback(() => {
 		setIsLoading(true);
-		sendLog("Requesting rules status", "info", { action: "requestRulesStatus" });
+		sendLog("Requesting rules status", "info", {
+			action: "requestRulesStatus",
+		});
 		window.vscodeApi?.postMessage({
 			command: "getRulesStatus",
 		});
@@ -37,9 +40,7 @@ export function RulesStatus() {
 						requestRulesStatus();
 					} else {
 						setFeedback(
-							message.error
-								? `Failed to reset rules: ${message.error}`
-								: "Failed to reset rules.",
+							message.error ? `Failed to reset rules: ${message.error}` : "Failed to reset rules.",
 						);
 					}
 					break;
@@ -59,7 +60,9 @@ export function RulesStatus() {
 	const resetRules = useCallback(() => {
 		setResetLoading(true);
 		setFeedback(null);
-		sendLog("User clicked Reset Rules button", "info", { action: "resetRules" });
+		sendLog("User clicked Reset Rules button", "info", {
+			action: "resetRules",
+		});
 		window.vscodeApi?.postMessage({
 			command: "resetRules",
 		});
@@ -77,9 +80,7 @@ export function RulesStatus() {
 				{!isLoading && (
 					<span
 						className={cn(
-							rulesInitialized
-								? "bg-green-200 text-green-800"
-								: "bg-red-200 text-red-800",
+							rulesInitialized ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800",
 							"px-2 py-0.5 rounded-full text-xs font-semibold",
 						)}
 					>

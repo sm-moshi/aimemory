@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { RiPlayFill, RiStopFill } from "react-icons/ri";
 import { useMCPServerDetection } from "../../hooks/useMCPServerDetection";
@@ -5,7 +6,7 @@ import { cn } from "../../utils/cn";
 import { sendLog } from "../../utils/message";
 import { RulesStatus } from "../status/rules-status";
 
-export function MCPServerManager() {
+export function MCPServerManager(): ReactNode {
 	// State from the detection hook (for HTTP server detection only)
 	const {
 		isLoading: isDetectingServer,
@@ -35,7 +36,9 @@ export function MCPServerManager() {
 		setIsActionLoading(true);
 		// Optimistically set running, will be confirmed by message
 		// setIsMCPRunning(true);
-		sendLog("User clicked 'Start MCP Server' button", "info", { action: "startMCPServer" });
+		sendLog("User clicked 'Start MCP Server' button", "info", {
+			action: "startMCPServer",
+		});
 		window.vscodeApi?.postMessage({
 			command: "startMCPServer",
 		});
@@ -46,7 +49,9 @@ export function MCPServerManager() {
 		// Optimistically set stopped, will be confirmed by message
 		// setIsMCPRunning(false);
 		// setPort(null);
-		sendLog("User clicked 'Stop MCP Server' button", "info", { action: "stopMCPServer" });
+		sendLog("User clicked 'Stop MCP Server' button", "info", {
+			action: "stopMCPServer",
+		});
 		window.vscodeApi?.postMessage({
 			command: "stopMCPServer",
 		});
@@ -141,9 +146,7 @@ export function MCPServerManager() {
 					{port ? (
 						<>
 							Server running on{" "}
-							<span className="font-mono text-blue-300">
-								http://localhost:{port}/sse
-							</span>
+							<span className="font-mono text-blue-300">http://localhost:{port}/sse</span>
 							<br />
 							Your Cursor MCP config has been automatically updated.
 							<br />
@@ -151,13 +154,11 @@ export function MCPServerManager() {
 						</>
 					) : (
 						<>
-							Server running in{" "}
-							<span className="font-mono text-green-300">STDIO</span> mode
+							Server running in <span className="font-mono text-green-300">STDIO</span> mode
 							<br />
 							Ready for Cursor MCP integration via stdio transport.
 							<br />
-							Check your <span className="font-mono">.cursor/mcp.json</span>{" "}
-							configuration.
+							Check your <span className="font-mono">.cursor/mcp.json</span> configuration.
 						</>
 					)}
 				</p>

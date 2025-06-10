@@ -1,19 +1,10 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		// Build tools configuration (for vite.config.mts, etc.)
 		"composite": true,
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"types": [
-			"node"
-		],
-		"noEmit": false, // Build tools need to emit
-		"outDir": "dist" // Where build artifacts go
+		"module": "ES2022",
+		"moduleResolution": "bundler",
+		"types": ["node", "vite/client"]
 	},
-	"include": [
-		"vite.config.mts",
-		"vitest.config.ts",
-		"*.config.*"
-	]
+	"include": ["vite.config.mts", "vitest.config.ts", "*.config.*"]
 }

@@ -9,22 +9,26 @@ import type { VSCodeAPI, WebviewMessageEvent } from "./types/vscode";
 
 // Create a better mock implementation for development
 class MockVsCodeApi implements VSCodeAPI {
-	private state: any = { rulesInitialized: false };
+	private state: unknown = { rulesInitialized: false };
 
 	postMessage(message: WebviewToExtensionMessage): void {
 		console.log("🔄 Mock VSCode - Message sent:", message);
 
 		// Simulate VSCode API responses for development
 		setTimeout(() => {
-			switch ((message as any).command ?? (message as any).type) {
+			const msg = message as { command?: string; type?: string };
+			switch (msg.command ?? msg.type) {
 				case "getRulesStatus":
 					this.mockResponse({
 						type: "rulesStatus",
-						initialized: this.state.rulesInitialized,
+						initialized: (this.state as { rulesInitialized: boolean }).rulesInitialized,
 					} as ExtensionToWebviewMessage);
 					break;
 				case "resetRules":
-					this.state.rulesInitialized = true;
+					this.state = {
+						...(this.state as Record<string, unknown>),
+						rulesInitialized: true,
+					};
 					this.mockResponse({
 						type: "resetRulesResult",
 						success: true,
@@ -34,12 +38,15 @@ class MockVsCodeApi implements VSCodeAPI {
 		}, 500); // Add delay to simulate network
 	}
 
-	getState(): any {
+	getState(): unknown {
 		return this.state;
 	}
 
-	setState(newState: any): void {
-		this.state = { ...this.state, ...newState };
+	setState(newState: unknown): void {
+		this.state = {
+			...(this.state as Record<string, unknown>),
+			...(newState as Record<string, unknown>),
+		};
 	}
 
 	private mockResponse(data: ExtensionToWebviewMessage) {

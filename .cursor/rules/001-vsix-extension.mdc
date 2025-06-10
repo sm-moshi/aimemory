@@ -1,0 +1,202 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Cursor Ruleset: AI Memory Extension (VSIX + Webview)
+
+## Purpose
+
+Defines rules and guidelines for developing the AI Memory VSIX extension and its webview UI for Cursor/VS Code.
+**Audience:** AI codegen, maintainers, and contributors.
+
+---
+
+## VS Code Extension Architecture
+
+### Extension Structure
+- **Activation:** Use specific activation events, not `*`
+- **Commands:** Namespace with extension ID (e.g., `aimemory.startMCP`)
+- **Configuration:** Define settings in package.json `contributes.configuration`
+- **Error Handling:** Use proper error boundaries and user feedback
+
+### Performance Guidelines
+- **Lazy Loading:** Dynamic imports for heavy dependencies and optional features
+- **Memory Management:** Proper cleanup of event listeners, disposables, and watchers
+- **Async Operations:** Use proper async/await patterns with error boundaries
+- **Caching:** Implement intelligent caching for memory bank operations
+- **Background Processing:** Use VS Code's background tasks for heavy operations
+- **Extension Lifecycle:** Minimize activation time and resource usage
+- **Webview Performance:** Efficient postMessage communication and state management
+
+---
+
+## Security Requirements
+
+### Webview Security (CRITICAL)
+- **CSP:** Implement strict Content Security Policy
+- **nonce:** Use nonces for inline scripts and styles
+- **Message Passing:** Use structured postMessage for extension ↔ webview communication
+- **Sanitization:** Sanitize all user input and external data
+
+### Input Validation
+- **Zod Schemas:** Use for runtime type validation
+- **Path Validation:** Sanitize all user inputs and file paths
+- **MCP Parameters:** Validate all MCP tool parameters
+- **Error Boundaries:** Implement proper error boundaries
+
+### Command Injection Prevention
+- **child_process.spawn:** Use with explicit arguments
+- **No shell: true:** Never use shell option
+- **Path Validation:** Validate all file paths and commands
+- **Allowlists:** Use allowlists for permitted operations
+
+---
+
+## Allowed
+
+- Add/modify extension activation logic, commands, MCP tools/resources
+- Enhance webview UI (React 19, Tailwind 4, Vite)
+- Add new components under `src/webview/components/`
+- Add new memory bank files/content
+- Extension testing with @vscode/test-cli and MCP Inspector
+
+---
+
+## Forbidden
+
+- No Express/HTTP in extension/server path (use stdio transport only)
+- No inline `<script>` or unsafe styles in webview (CSP must be respected)
+- No unapproved NPM packages
+- Strategic memory bank organisation (file consolidation, content optimisation) should be planned and documented
+- No hardcoded ports (always use fallback strategies)
+- Do not register unapproved commands in `package.json`
+- **No over-engineering**: Avoid complex DI containers, excessive abstraction, or deep folder nesting (KISS principle)
+- **No scattered patterns**: Use single, consistent approaches for common tasks
+- Do not use US-American English in functions, variables, classes, logics, comments, documentation or git commit messages.
+- Do use British English.
+
+---
+
+## UI/UX (Webview)
+
+### Frontend Technology Stack
+- **React 19.1+:** Latest with concurrent features, automatic batching, and React Compiler
+- **Tailwind CSS 4.1.8+:** Native CSS engine with container queries
+- **Vite 6.3.5+:** Development server and bundling
+- **React Icons 5.5+:** Comprehensive icon library with tree-shaking support
+- **VS Code Elements:** Native webview components for consistent theming
+
+### React 19 Component Standards
+- Use Suspense + ErrorBoundary pattern for all async components
+- Leverage useOptimistic for instant UI updates
+- Use useTransition for non-blocking state updates
+- Prefer useReducer for complex state logic
+- Use @vscode-elements/react-elements for consistency
+
+### Tailwind 4.1.8 Patterns
+- Use container queries for responsive design: `@container (min-width: 768px)`
+- Integrate VS Code theme variables: `bg-[var(--vscode-badge-background)]`
+- Use performance-optimized animations with `animation-composition: replace`
+
+### State Management
+- **React 19 Hooks:** Use `useOptimistic` for instant UI updates
+- **Concurrent Features:** Leverage `useTransition` for non-blocking state updates
+- **Local State:** Prefer `useReducer` for complex state logic
+- **Message Passing:** Structured communication with extension via postMessage
+- **Error Boundaries:** Implement granular error handling with React 19 improvements
+- **Performance:** Use `useMemo` and `useCallback` judiciously with React Compiler
+
+### VS Code Integration Standards
+- **Native Components:** Use `@vscode-elements/react-elements` for consistency
+- **Theme Compliance:** Respect VS Code theme variables and color schemes
+- **Keyboard Navigation:** Implement proper focus management and shortcuts
+- **Loading States:** Show appropriate feedback for all asynchronous operations
+- **Error Handling:** Display user-friendly error messages with recovery options
+
+### Webview Development Patterns
+- **Component Architecture:** Functional components with React 19 hooks
+- **Performance Optimization:** Lazy loading and code splitting
+- **Error Boundaries:** Comprehensive error handling for webview components
+- **VS Code Theme Integration:** Seamless integration with editor themes
+
+---
+
+## Testing & Extension Validation
+
+### Extension-Specific Testing Requirements
+- **VS Code API Mocking:** Mock vscode module properly in extension tests using @vscode/test-cli
+- **Webview Communication Testing:** Test postMessage patterns between extension and webview
+- **Extension Lifecycle:** Test activation, deactivation, and command execution
+- **VSIX Packaging:** Validate extension packaging and installation
+- **MCP Integration Testing:** Use MCP Inspector for visual validation of server tools
+- **Security Testing:** Validate CSP compliance and input sanitization
+
+---
+
+## Code Quality
+
+### Extension-Specific Quality Standards
+- **TypeScript:** Strict mode for main codebase enabled except in test files for easier testing
+- **VS Code APIs:** Use proper typing for all VS Code API interactions (VS Code 1.96.2)
+- **Extension Lifecycle:** Implement proper disposal patterns for all resources
+- **WebView Security:** Enforce strict CSP compliance and input validation
+- **Performance Standards:** Monitor memory usage and activation time
+
+### File Organization
+- Use kebab-case for filenames (e.g., `memory-bank-service.ts`)
+- **Flat utils structure**: `src/utils/` organized as 4 focused files (logging.ts, validation.ts, security.ts, helpers.ts)
+- **No deep nesting**: Avoid complex folder hierarchies; prefer function-based organization
+- Keep webview code isolated in `src/webview/`
+- **Simple imports**: Direct imports over complex DI container patterns
+- Use index files sparingly for clean exports
+
+---
+
+## Integration Points
+
+### MCP Server Integration
+- Use stdio transport for Cursor compatibility
+- Implement proper error boundaries
+- Handle server lifecycle properly
+
+### Memory Bank Structure
+Memory bank organised as focused files with clear separation of concerns:
+
+- **techContext/index.md** → Quick reference hub for technology stack
+- **techContext/stack.md** → Technology choices and implementation decisions
+- **techContext/environment.md** → Development environment setup guide
+- **techContext/dependencies.md** → Dependency analysis and management
+- **systemPatterns/** → Architecture, patterns, and implementation guidance
+- **core/** → Project brief, context, and active development focus
+- **progress/** → Current progress tracking and development history
+
+### Build System Integration
+- Extension build targets (CommonJS for main process)
+- Webview build targets (ES modules for browser)
+- Development server integration with VS Code debugging
+
+---
+
+## Documentation
+
+- All build/test/dev commands must be in `README.md`
+- Update `TROUBLESHOOTING.md` and `IMPLEMENTATION.md` for major changes
+- Add onboarding notes for new contributors
+- Use `update-docs-date` script to maintain documentation timestamps
+
+---
+
+## References
+
+**@002-build-system-tooling.mdc:** #build-config #testing-framework #ci-cd #rollup #vite #biome #vitest #performance #bundle-optimization
+
+**@003-memory-bank-integration.mdc:** #mcp-patterns #memory-bank-structure #mcp-tools #file-operations
+
+---
+
+**Summary:**
+Focus on VS Code extension architecture, webview UI patterns, and extension-specific requirements.
+Build system details are managed in `@002-build-system-tooling.mdc` for clean separation of concerns.
+Updated for Phase 4 restructuring: KISS compliance, flattened utils structure, simplified patterns.
+Last updated: 2025-06-07

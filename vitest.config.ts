@@ -1,53 +1,32 @@
+/// <reference types="vitest/config" />
 import { resolve } from "node:path";
-import tsconfigPaths from "vite-tsconfig-paths";
-/// <reference types="vitest" />
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-	plugins: [tsconfigPaths()],
+	plugins: [react()],
 	resolve: {
 		alias: {
 			"@": resolve(__dirname, "./src"),
-			"@utils": resolve(__dirname, "./src/utils"),
-			"@test-utils": resolve(__dirname, "./src/test/test-utils"),
-			"@types": resolve(__dirname, "./src/types"),
+			"@/lib": resolve(__dirname, "./src/lib"),
+			"@/vscode": resolve(__dirname, "./src/vscode"),
+			"@/templates": resolve(__dirname, "./src/templates"),
+			"@types": resolve(__dirname, "./src/lib/types"),
 			"@core": resolve(__dirname, "./src/core"),
 			"@mcp": resolve(__dirname, "./src/mcp"),
 		},
 	},
 	test: {
-		environment: "node",
+		environment: "happy-dom",
 		globals: true,
-		include: ["src/**/*.test.ts"],
-		setupFiles: ["src/test/setup/vitest.setup.ts"],
-		// Configure mocks properly using Vitest's preferred pattern
-		alias: {
-			// Mock VS Code package completely
-			vscode: resolve(__dirname, "./src/test/__mocks__/vscode.ts"),
-			// Mock Node.js built-in modules
-			"node:fs": resolve(__dirname, "./src/test/__mocks__/node:fs.ts"),
-			"node:fs/promises": resolve(__dirname, "./src/test/__mocks__/node:fs/promises.ts"),
-			"node:os": resolve(__dirname, "./src/test/__mocks__/node:os.ts"),
-			"node:path": resolve(__dirname, "./src/test/__mocks__/node:path.ts"),
-		},
-		// Configure deps for better mock resolution
-		deps: {
-			// Tell Vitest where to find __mocks__ folders for dependencies and local modules
-			moduleDirectories: ["node_modules", "src/test"],
-		},
+		css: true,
+		include: ["src/**/*.{test,spec}.{ts,tsx}"],
+		exclude: ["node_modules", "dist", "out", "memory-bank", "**/node_modules/**"],
+		setupFiles: ["./vitest.setup.ts"],
 		coverage: {
 			provider: "v8",
-			reporter: ["text", "html", "lcov"],
-			reportsDirectory: "./coverage",
-			include: ["src/**/*.ts"],
-			exclude: [
-				"src/**/*.test.ts",
-				"src/**/*.d.ts",
-				"src/test/extension/**", // Only exclude VS Code extension tests
-				"src/webview/**",
-				"dist/**",
-				"node_modules/**",
-			],
+			reporter: ["text", "json", "html"],
+			exclude: ["node_modules/", "dist/", "out/", "**/*.d.ts", "**/*.config.*", "**/coverage/**", "memory-bank/"],
 		},
 	},
 });

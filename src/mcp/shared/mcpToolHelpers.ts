@@ -5,37 +5,35 @@
  * MCP server implementations (mcpServerCli, CoreMemoryBankMCP, MemoryBankMCPAdapter)
  */
 
-import { MemoryBankError, isError, tryCatch } from "@/types/index.js";
-import type { AsyncResult, MemoryBankFileType, Result } from "@/types/index.js";
-import type { MCPErrorResponse, MCPResponse, MCPSuccessResponse } from "@/types/mcpTypes.js";
-import type { MemoryBankServiceCore } from "@core/memoryBankServiceCore.js";
+import type { MemoryBankManager } from "../../core/memory-bank";
+import type { AsyncResult, MemoryBankFileType, Result } from "../../lib/types/core";
+import { isError, MemoryBankError, tryCatch } from "../../lib/types/core";
+import type { MCPErrorResponse, MCPResponse, MCPSuccessResponse } from "../../lib/types/operations";
 
 /**
  * Ensures memory bank is ready, handling common readiness patterns
  */
-export async function ensureMemoryBankReady(
-	memoryBank: MemoryBankServiceCore,
-): AsyncResult<void, MemoryBankError> {
-	if (!memoryBank.isReady()) {
-		const loadResult: Result<MemoryBankFileType[], MemoryBankError> =
-			await memoryBank.loadFiles();
-		if (isError(loadResult)) {
-			// If loading failed, return the error
-			return loadResult; // loadFiles already returns MemoryBankError in its AsyncResult
-		}
+export async function ensureMemoryBankReady(memoryBank: MemoryBankManager): AsyncResult<void, MemoryBankError> {
+	// Check if memory bank is initialized
+	const isInitializedResult = await memoryBank.getIsMemoryBankInitialized();
+	if (isError(isInitializedResult)) {
+		return isInitializedResult;
+	}
 
-		if (!memoryBank.isReady()) {
-			// If after loading, it's still not ready (unexpected), return an error
-			return {
-				success: false,
-				error: new MemoryBankError(
-					"Memory bank could not be initialized after loading. Please run init-memory-bank tool.",
-					"INIT_FAILED_AFTER_LOAD",
-				),
-			};
+	// If not initialized, initialize it
+	if (!isInitializedResult.data) {
+		const initResult = await memoryBank.initializeFolders();
+		if (isError(initResult)) {
+			return initResult;
 		}
 	}
-	// If already ready, or successfully loaded and is now ready, return success
+
+	// Load files to ensure they're available
+	const loadResult: Result<MemoryBankFileType[], MemoryBankError> = await memoryBank.loadFiles();
+	if (isError(loadResult)) {
+		return loadResult;
+	}
+
 	return { success: true, data: undefined };
 }
 
@@ -68,7 +66,7 @@ export function createErrorResponse(error: unknown, context?: string): MCPErrorR
  * 3. Return standardized response
  */
 export function createMemoryBankTool<T = unknown>(
-	memoryBank: MemoryBankServiceCore,
+	memoryBank: MemoryBankManager,
 	handler: (args: T) => AsyncResult<string, MemoryBankError>,
 	errorContext?: string,
 ) {
@@ -92,7 +90,7 @@ export function createMemoryBankTool<T = unknown>(
  * Tool creator for tools that don't need arguments
  */
 export function createSimpleMemoryBankTool(
-	memoryBank: MemoryBankServiceCore,
+	memoryBank: MemoryBankManager,
 	handler: () => AsyncResult<string, MemoryBankError>,
 	errorContext?: string,
 ) {
@@ -106,7 +104,7 @@ export const MemoryBankOperations = {
 	/**
 	 * Initialize memory bank operation
 	 */
-	async initialize(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+	async initialize(memoryBank: MemoryBankManager): AsyncResult<string, MemoryBankError> {
 		const isInitializedResult = await memoryBank.getIsMemoryBankInitialized();
 		if (isError(isInitializedResult)) {
 			return isInitializedResult;
@@ -139,7 +137,7 @@ export const MemoryBankOperations = {
 	/**
 	 * Read all files operation
 	 */
-	async readAllFiles(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+	async readAllFiles(memoryBank: MemoryBankManager): AsyncResult<string, MemoryBankError> {
 		const result = tryCatch(() => {
 			const files = memoryBank.getFilesWithFilenames();
 			return files
@@ -162,7 +160,7 @@ export const MemoryBankOperations = {
 	/**
 	 * List files with metadata operation
 	 */
-	async listFiles(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+	async listFiles(memoryBank: MemoryBankManager): AsyncResult<string, MemoryBankError> {
 		const result = tryCatch(() => {
 			const files = memoryBank.getAllFiles();
 			const fileListText = files
@@ -191,7 +189,7 @@ export const MemoryBankOperations = {
 	/**
 	 * Health check operation
 	 */
-	async checkHealth(memoryBank: MemoryBankServiceCore): AsyncResult<string, MemoryBankError> {
+	async checkHealth(memoryBank: MemoryBankManager): AsyncResult<string, MemoryBankError> {
 		return memoryBank.checkHealth();
 	},
 
@@ -199,7 +197,7 @@ export const MemoryBankOperations = {
 	 * Update file operation
 	 */
 	async updateFile(
-		memoryBank: MemoryBankServiceCore,
+		memoryBank: MemoryBankManager,
 		fileType: string,
 		content: string,
 	): AsyncResult<string, MemoryBankError> {
@@ -219,7 +217,7 @@ export const MemoryBankOperations = {
 	 * Core logic for reviewing and updating memory bank files.
 	 * Returns the structure for the MCPResponse's content and nextAction fields.
 	 */
-	buildReviewResponsePayload(memoryBank: MemoryBankServiceCore): {
+	buildReviewResponsePayload(memoryBank: MemoryBankManager): {
 		content: MCPResponse["content"];
 		nextAction?: MCPResponse["nextAction"];
 	} {
