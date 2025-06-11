@@ -85,8 +85,8 @@ importers:
         specifier: ^11.0.2
         version: 11.0.2
       happy-dom:
-        specifier: ^17.6.3
-        version: 17.6.3
+        specifier: ^18.0.1
+        version: 18.0.1
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
@@ -110,7 +110,7 @@ importers:
         version: 5.1.4(typescript@5.8.3)(vite@6.3.5(@types/node@20.19.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4))
       vitest:
         specifier: ^3.2.3
-        version: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@17.6.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
+        version: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@18.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
       vscode-uri:
         specifier: ^3.1.0
         version: 3.1.0
@@ -180,7 +180,7 @@ importers:
         version: 5.1.4(typescript@5.8.3)(vite@6.3.5(@types/node@20.19.0)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4))
       vitest:
         specifier: ^3.2.3
-        version: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@17.6.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
+        version: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@18.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
 
 packages:
 
@@ -1078,6 +1078,9 @@ packages:
 
   '@types/vscode@1.96.0':
     resolution: {integrity: sha512-qvZbSZo+K4ZYmmDuaodMbAa67Pl6VDQzLKFka6rq+3WUTY4Kro7Bwoi0CuZLO/wema0ygcmpwow7zZfPJTs5jg==}
+
+  '@types/whatwg-mimetype@3.0.2':
+    resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250610.1':
     resolution: {integrity: sha512-75yXY7eOkFP+bjva3O08sDnJucyJNJfP9iPXf6GnXJ/IBDK5Cqv8il+3eVkwPPPL0XqCSKi/+2yHjk4Btgt0QQ==}
@@ -1989,8 +1992,8 @@ packages:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
 
-  happy-dom@17.6.3:
-    resolution: {integrity: sha512-UVIHeVhxmxedbWPCfgS55Jg2rDfwf2BCKeylcPSqazLz5w3Kri7Q4xdBJubsr/+VUzFLh0VjIvh13RaDA2/Xug==}
+  happy-dom@18.0.1:
+    resolution: {integrity: sha512-qn+rKOW7KWpVTtgIUi6RVmTBZJSe2k0Db0vh1f7CWrWclkkc7/Q+FrOfkZIb2eiErLyqu5AXEzE7XthO9JVxRA==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.1.0:
@@ -3520,10 +3523,6 @@ packages:
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
 
-  webidl-conversions@7.0.0:
-    resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
-    engines: {node: '>=12'}
-
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
@@ -4475,6 +4474,8 @@ snapshots:
 
   '@types/vscode@1.96.0': {}
 
+  '@types/whatwg-mimetype@3.0.2': {}
+
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250610.1':
     optional: true
 
@@ -4541,7 +4542,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@17.6.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
+      vitest: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@18.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -4590,7 +4591,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@17.6.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
+      vitest: 3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@18.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4)
 
   '@vitest/utils@3.2.3':
     dependencies:
@@ -5600,9 +5601,10 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  happy-dom@17.6.3:
+  happy-dom@18.0.1:
     dependencies:
-      webidl-conversions: 7.0.0
+      '@types/node': 20.19.0
+      '@types/whatwg-mimetype': 3.0.2
       whatwg-mimetype: 3.0.0
 
   has-bigints@1.1.0: {}
@@ -7161,7 +7163,7 @@ snapshots:
       lightningcss: 1.30.1
       tsx: 4.19.4
 
-  vitest@3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@17.6.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4):
+  vitest@3.2.3(@types/node@20.19.0)(@vitest/ui@3.2.3)(happy-dom@18.0.1)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.19.4):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.3
@@ -7189,7 +7191,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 20.19.0
       '@vitest/ui': 3.2.3(vitest@3.2.3)
-      happy-dom: 17.6.3
+      happy-dom: 18.0.1
     transitivePeerDependencies:
       - jiti
       - less
@@ -7205,8 +7207,6 @@ snapshots:
       - yaml
 
   vscode-uri@3.1.0: {}
-
-  webidl-conversions@7.0.0: {}
 
   whatwg-encoding@3.1.1:
     dependencies:
