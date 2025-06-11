@@ -64,8 +64,8 @@ importers:
         specifier: ^19.1.6
         version: 19.1.6(@types/react@19.1.7)
       '@types/vscode':
-        specifier: 1.96.0
-        version: 1.96.0
+        specifier: 1.100.0
+        version: 1.100.0
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20250610.1
         version: 7.0.0-dev.20250610.1
@@ -1076,8 +1076,8 @@ packages:
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
-  '@types/vscode@1.96.0':
-    resolution: {integrity: sha512-qvZbSZo+K4ZYmmDuaodMbAa67Pl6VDQzLKFka6rq+3WUTY4Kro7Bwoi0CuZLO/wema0ygcmpwow7zZfPJTs5jg==}
+  '@types/vscode@1.100.0':
+    resolution: {integrity: sha512-4uNyvzHoraXEeCamR3+fzcBlh7Afs4Ifjs4epINyUX/jvdk0uzLnwiDY35UKDKnkCHP5Nu3dljl2H8lR6s+rQw==}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250610.1':
     resolution: {integrity: sha512-75yXY7eOkFP+bjva3O08sDnJucyJNJfP9iPXf6GnXJ/IBDK5Cqv8il+3eVkwPPPL0XqCSKi/+2yHjk4Btgt0QQ==}
@@ -4473,7 +4473,7 @@ snapshots:
 
   '@types/trusted-types@2.0.7': {}
 
-  '@types/vscode@1.96.0': {}
+  '@types/vscode@1.100.0': {}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250610.1':
     optional: true
