@@ -9,8 +9,8 @@ alwaysApply: false
 
 ### Technology Stack
 - **Primary Build**: Rollup 4.42+ with SWC plugin for TypeScript compilation
-- **Webview Build**: Vite 6.3.5+ with React 19 support
-- **Code Quality**: Biome for unified linting and formatting
+- **Webview Build**: Vite 7+ (see `001-vsix-extension.mdc` for React/webview UX specifics)
+- **Code Quality**: Biome 2.0+ for unified linting and formatting
 - **Testing**: Vitest 3.2+ with MSW 2.10+ for API mocking
 - **Package Manager**: pnpm with workspace configuration
 
@@ -37,8 +37,7 @@ alwaysApply: false
 - Multi-config structure with project references
 
 ### Code Quality
-- Biome: tabs (4 spaces), 120 char lines, double quotes
-- No bypassing formatting/linting rules without justification
+- Biome: tabs (4 spaces), 120-char lines, double quotes
 - Automated fixes: `biome check --write .`
 
 ### Testing
@@ -73,7 +72,7 @@ alwaysApply: false
 - **No over-engineered folder structures**: Follow function-based organization, not arbitrary depth limits
 
 ### Dependencies
-- Pin critical build tools (Rollup, SWC, Biome) to exact versions
+- Pin critical build tools (Rollup, SWC, Biome) to exact versions; see `package.json` engines block.
 - Use overrides for security patches in pnpm
 - Commit pnpm-lock.yaml for reproducible builds
 
@@ -82,6 +81,6 @@ alwaysApply: false
 **Cross-References:**
 #rollup #swc #vite #biome #vitest #tsgo #performance #bundle-optimization #testing-framework #ci-cd #unified-testing #kiss-compliance
 
-**See Also:** @/techContext/stack.md for detailed technology rationale
-**Phase 4 Updates:** Unified vitest projects pattern, simplified folder organization, KISS principle enforcement.
-Last updated: 2025-06-07
+**See Also:** `001-vsix-extension.mdc` (extension UX/security), `techContext/stack.md` for dependency rationale
+
+Last updated: 2025-06-11

@@ -14,6 +14,7 @@ import type { ExtensionContext } from "vscode";
 // Core dependencies
 import type { MemoryBankManager } from "../core/memory-bank";
 import { createLogger } from "../lib/logging";
+import { StdioClient } from "../lib/stdio-client";
 import type { MemoryBankFileType } from "../lib/types/core";
 import type { MCPServerInterface } from "../lib/types/operations";
 import { launchMCPServerProcess } from "../lib/utils";
@@ -35,6 +36,7 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	private childProcess: ChildProcess | null = null;
 	private isRunning = false;
 	private readonly defaultPort: number; // For compatibility with existing interface
+	private stdioClient: StdioClient | null = null;
 
 	constructor(
 		context: ExtensionContext,
@@ -52,9 +54,14 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 * Start the STDIO MCP server as a child process
 	 */
 	async start(): Promise<void> {
-		if (this.isRunning || this.childProcess) {
+		if (this.isRunning) {
 			this.logger.info("MCP adapter already running");
 			return;
+		}
+		if (this.childProcess && !this.childProcess.killed) {
+			// Defensive: existing child process should be cleaned first
+			this.logger.warn("Stale child process detected – cleaning up before restart");
+			this.cleanup();
 		}
 
 		try {
@@ -74,6 +81,11 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 					this.logger.debug(`MCP server stderr: ${data}`);
 				},
 			});
+
+			// Create STDIO client once the process is live
+			this.stdioClient = new StdioClient(this.childProcess);
+
+			this.logger.info("StdioClient initialised – ready to send MCP tool calls");
 
 			this.isRunning = true;
 		} catch (error) {
@@ -97,6 +109,10 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 			this.childProcess = null;
 		}
 		this.isRunning = false;
+		if (this.stdioClient) {
+			this.stdioClient.dispose();
+			this.stdioClient = null;
+		}
 	}
 
 	/**
@@ -130,18 +146,17 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 * TODO: Do the full implementation.
 	 */
 	async updateMemoryBankFile(fileType: string, content: string): Promise<void> {
+		if (this.stdioClient?.isConnected()) {
+			this.logger.debug("Routing update-memory-bank-file to child MCP server via STDIO client");
+			await this.stdioClient.callTool("update-memory-bank-file", { fileType, content });
+			return;
+		}
+
+		// Fallback to in-process implementation
 		try {
-			if (this.isServerRunning()) {
-				this.logger.info(
-					`MCP Adapter WARNING: Child MCP server is running. 'updateMemoryBankFile' for '${fileType}' is being handled directly by the adapter. This is a temporary implementation. Ideally, this should be an MCP tool call to the child server.`,
-				);
-			} else {
-				this.logger.info(
-					`MCP Adapter: Child MCP server is not running. Handling 'updateMemoryBankFile' for '${fileType}' directly.`,
-				);
-			}
+			this.logger.info(`Child MCP server not available – falling back to direct update for '${fileType}'.`);
 			await this.memoryBank.updateFile(fileType as MemoryBankFileType, content);
-			this.logger.info(`Updated memory bank file: ${fileType}`);
+			this.logger.info(`Updated memory bank file locally: ${fileType}`);
 		} catch (error) {
 			this.logger.error(
 				`Failed to update memory bank file ${fileType}: ${error instanceof Error ? error.message : String(error)}`,
@@ -169,7 +184,40 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 			);
 		}
 
-		// For now, delegate to memory bank service
+		if (this.stdioClient?.isConnected()) {
+			// Map simple commands to tool names
+			let toolName: string | null = null;
+			let toolArgs: Record<string, unknown> = {};
+			if (command === "init") {
+				toolName = "init-memory-bank";
+				// Workspace path optional – rely on server default
+			} else if (command === "status") {
+				toolName = "health-check-memory-bank";
+			} else if (command === "read") {
+				if (!args.length) {
+					return "Usage: read <fileType>";
+				}
+				toolName = "read-memory-bank-file";
+				toolArgs = { fileType: args[0] };
+			} else if (command === "list" || command === "list-files") {
+				toolName = "list-memory-bank-files";
+			} else if (command === "review") {
+				toolName = "review-and-update-memory-bank";
+			}
+
+			if (toolName) {
+				try {
+					const result = await this.stdioClient.callTool(toolName, toolArgs);
+					return typeof result === "string" ? result : JSON.stringify(result);
+				} catch (err) {
+					const msg = err instanceof Error ? err.message : String(err);
+					this.logger.error(`Child MCP server error for '${toolName}': ${msg}`);
+					return `Error from MCP server: ${msg}`;
+				}
+			}
+		}
+
+		// Fallback to in-process implementation
 		try {
 			switch (command) {
 				case "init":
@@ -199,6 +247,9 @@ export class MemoryBankMCPAdapter implements MCPServerInterface {
 	 * Check if the adapter is running
 	 */
 	isServerRunning(): boolean {
+		if (this.stdioClient) {
+			return this.stdioClient.isConnected();
+		}
 		return this.isRunning && this.childProcess !== null && !this.childProcess.killed;
 	}
 }

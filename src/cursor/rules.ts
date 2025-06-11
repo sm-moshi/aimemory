@@ -6,7 +6,7 @@ let memoryBankRulesContent: string;
 
 async function loadMemoryBankRulesContent(fileOperationManager: FileOperationManager): Promise<string> {
 	if (!memoryBankRulesContent) {
-		const rulesPath = path.join(__dirname, "memory-bank-rules.md");
+		const rulesPath = path.resolve(__dirname, "../templates/memory-bank-rules.md");
 		const readResult = await fileOperationManager.readFileWithRetry(rulesPath);
 
 		if (!readResult.success) {

@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path"; // "join" is not used
 import { fileURLToPath } from "node:url";
-import type { z } from "zod";
+import type { z } from "zod/v4";
 import type { FileOperationManager } from "../core/file-operations";
 import { createLogger } from "../lib/logging";
 import type { IDisposable, Logger } from "../lib/types/core";
@@ -57,7 +57,7 @@ export function formatErrorMessage(context: string, error: unknown): string {
  * Formats Zod validation issues into a human-readable string.
  * @param issues An array of ZodIssue objects.
  */
-export function formatZodError(issues: z.ZodIssue[]): string {
+export function formatZodError(issues: z.core.$ZodIssueBase[]): string {
 	if (!issues || issues.length === 0) {
 		return "No validation errors.";
 	}

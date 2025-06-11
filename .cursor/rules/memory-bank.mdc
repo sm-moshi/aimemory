@@ -3,7 +3,6 @@ description:
 globs:
 alwaysApply: false
 ---
-
 ---
 description: Cursor Memory Bank Rules for the AI Memory Extension
 alwaysApply: true
@@ -11,7 +10,7 @@ globs:
     - "memory-bank/**/*.md"
 ---
 
-# Cursor Memory Bank Rules (AI Memory v0.6.0+)
+# Cursor Memory Bank Rules (AI Memory v0.8.0+)
 
 Welcome to the AI Memory system. This file acts as the blueprint for how Cursor understands and works with your Memory Bank. It will be transformed automatically into `.cursor/rules/memory-bank.mdc` by the AI Memory extension on first initialization.
 
@@ -22,8 +21,8 @@ Welcome to the AI Memory system. This file acts as the blueprint for how Cursor 
   - `core/*.md`
   - `progress/current.md`, `progress/history.md`
   - `systemPatterns/index.md`
-  - `techContext/index.md`
-- Other files are loaded lazily when contextually required.
+  - `techContext/index.md`  # Only this tech file is created on init
+- Other files are loaded lazily or created on demand when contextually required.
 - Failover and retry logic should be applied if a file is missing or corrupted.
 
 ## 🔥 Memory Tiering
@@ -66,9 +65,10 @@ flowchart TD
       SP_IDX --> SP_SCAN[scanning.md]
 
       TC_IDX[techContext/index.md]
-      TC_IDX --> TC_STACK[stack.md]
-      TC_IDX --> TC_DEPS[dependencies.md]
-      TC_IDX --> TC_ENV[environment.md]
+      TC_IDX -.-> TC_STACK[stack.md]
+      TC_IDX -.-> TC_DEPS[dependencies.md]
+      TC_IDX -.-> TC_ENV[environment.md]
+      %% Dashed lines: created on demand
 
       PR_IDX[progress/index.md]
       PR_IDX --> PR_CUR[current.md]
@@ -76,25 +76,41 @@ flowchart TD
     end
 ```
 
+- Only `techContext/index.md` is created on initialization.
+- The other tech files are generated if/when the user or AI requests more detailed separation.
+
 ## 🧭 Plan Mode
 
 - `plannerMode: true`
 - Use `getPlanSummary()` to scan `activeContext.md` and `current.md`
 - ALWAYS ask 4–6 clarifying questions before proposing a new plan
 - Validate all assumptions against `productContext.md`
-- Present plan clearly and apply using `update-current-plan()`
+- Present plan clearly and apply using `update-memory-bank-file()`
 - NEVER edit or overwrite without explicit user confirmation
 
-## 🛠 Required MCP Tools
+## 🛠 Core MCP Tools
 
-| Tool                       | Purpose and Invocation         |
-| -------------------------- | ------------------------------ |
-| `read-memory-bank-files()`   | Full memory scan on session reset |
-| `get-memory-bank-file()`     | Targeted file read by path or id |
-| `update-memory-bank-file()`  | Append or replace file contents safely |
-| `get-memory-bank-metadata()` | Scan file list, size, timestamps |
-| `initialize-memory-bank()`   | Generate starter structure and files |
-| `update-current-plan()`      | Controlled update of current roadmap |
+| Tool                              | Purpose and Invocation                   |
+| --------------------------------- | ---------------------------------------- |
+| `init-memory-bank()`              | Initialize memory bank folders and files |
+| `read-memory-bank-files()`        | Full memory scan on session reset        |
+| `update-memory-bank-file()`       | Update file contents safely              |
+| `list-memory-bank-files()`        | List files with metadata                 |
+| `health-check-memory-bank()`      | Check memory bank health status          |
+| `read-memory-bank-file()`         | Read single file by type (CLI mode)      |
+| `review-and-update-memory-bank()` | Interactive file review workflow         |
+
+## 🔍 Advanced MCP Tools (Phase 2)
+
+// TODO: Finish these tools
+
+| Tool                         | Purpose and Invocation               |
+| ---------------------------- | ------------------------------------ |
+| `query-memory-index()`       | Search files by metadata and content |
+| `validate-memory-file()`     | Validate file against schema         |
+| `rebuild-metadata-index()`   | Force rebuild search index           |
+| `get-metadata-for-file()`    | Get detailed file metadata           |
+| `get-metadata-index-stats()` | Get search index statistics          |
 
 ## 📜 Documentation Flow
 
@@ -117,7 +133,7 @@ flowchart TD
 
 To ensure robust, up-to-date, and best-practice solutions when working with the memory bank or extension, the AI agent should thoughtfully use all available MCP tools in this environment, including but not limited to:
 
-- **sequentialthinking**: For step-by-step, chain-of-thought reasoning, planning, and hypothesis validation. Use this tool to break down complex problems, validate plans, and check for missed edge cases.
+- **clear-thought**: For step-by-step, chain-of-thought reasoning, planning, and hypothesis validation. Use this tool to break down complex problems, validate plans, and check for missed edge cases.
 - **context7**, **codex-keeper** and/or **docshunter**: For accessing official documentation, best practices, code examples, and checking for deprecations or usage patterns in libraries and frameworks.
 
 ### Guidelines
@@ -138,4 +154,4 @@ This file will be read by `cursor-rules-service.ts` and compiled into a `.mdc` f
 
 Cursor agents should regularly check the .cursor/rules/ directory for other rulesets that may affect project behaviour.
 
->_Last updated: 2025-05-27 🐹_
+> _Last updated: 2025-06-06_

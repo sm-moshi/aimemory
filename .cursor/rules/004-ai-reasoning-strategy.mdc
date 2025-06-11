@@ -70,7 +70,7 @@ alwaysApply: false
 - Systematic debugging approaches
 
 ### Context7 MCP Server ✅
-**Status**: Upstash (11.3k GitHub stars) - highly popular, production-ready
+**Status**: Production-ready (actively maintained)
 **Purpose**: Solves outdated LLM training data problem with current documentation
 **Usage Pattern**: Add "use context7" to prompts for up-to-date library documentation
 
@@ -86,7 +86,7 @@ alwaysApply: false
 - `get-library-docs`: Fetch current documentation with token limits
 
 ### Codex-Keeper MCP Server ✅
-**Status**: aindreyway (67 GitHub stars) - actively maintained
+**Status**: Actively maintained
 **Purpose**: Guardian of development knowledge with curated best practices
 **Strength**: Maintains comprehensive knowledge base of validated patterns
 
@@ -250,6 +250,6 @@ When using MCP tools, document in memory bank:
 
 *Enhanced with research-validated MCP tools and practical integration patterns. All referenced tools have been verified as production-ready with active maintenance and proven track records.* 🐹
 
-**Research Session**: Previous validation confirmed Context7 (Upstash, 11.3k stars), Codex-Keeper (aindreyway, 67 stars), and Clear-thought (multiple implementations) as actively maintained, production-ready tools suitable for systematic reasoning enhancement.
+**Research Session**: Previous validation confirmed Context7, Codex-Keeper, and Clear-thought as actively maintained, production-ready tools suitable for systematic reasoning enhancement.
 
-**Last Updated**: 2025-06-07 (includes research validation and practical integration patterns)
+**Last Updated**: 2025-06-11 (includes research validation and practical integration patterns)

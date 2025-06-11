@@ -23,7 +23,7 @@ import { isError, MemoryBankError, MemoryBankFileType, tryCatchAsync } from "../
 import { getSchemaForType } from "../lib/types/operations";
 import { formatMarkdownContent } from "../lib/utils";
 import { validateAndConstructKnownFilePath, validateMemoryBankDirectory } from "../lib/validation";
-
+import { getTemplate } from "../templates/memory-bank-templates";
 import type { FileOperationManager } from "./file-operations";
 import type { StreamingManager } from "./streaming";
 
@@ -507,7 +507,8 @@ export class MemoryBankManager implements MemoryBank {
 			const validationResult = schema.safeParse(metadata);
 			if (!validationResult.success) {
 				this.logger.warn(`Metadata validation failed for ${fileType}: ${validationResult.error.message}`);
-				// TODO: Decide how to handle invalid metadata - store with error, or reject?
+				// Attach validation errors to metadata so downstream consumers can surface problems
+				(parsedData.data as Record<string, unknown>).__validationErrors = validationResult.error.issues;
 			}
 
 			return parsedData;
@@ -573,12 +574,7 @@ export class MemoryBankManager implements MemoryBank {
 	}
 }
 
-// TODO: Create a separate templates file
+// Template helper has been moved to src/templates/memory-bank-templates.ts
 function getTemplateForFileType(fileType: MemoryBankFileType): string {
-	switch (fileType) {
-		case MemoryBankFileType.ProjectBrief:
-			return "# Project Brief\n\n- **Project:** AI Memory\n- **Goal:** Create a VS Code extension that acts as a persistent, context-aware memory for AI assistants like Cursor.";
-		default:
-			return `# ${fileType}\n\nThis file is auto-generated.`;
-	}
+	return getTemplate(fileType);
 }

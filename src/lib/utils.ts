@@ -16,7 +16,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionContext } from "vscode";
-import type { z } from "zod";
+import type { z } from "zod/v4";
 
 import type { FileOperationManager } from "../core/file-operations";
 import { formatErrorMessage, getErrorMessage } from "./helpers";
@@ -27,7 +27,7 @@ import type { ProcessEventHandlers, ProcessSpawnConfig } from "./types/system";
 // Section: Async & Error Handling
 // =================================================================
 
-export function formatZodError(issues: z.ZodIssue[]): string {
+export function formatZodError(issues: z.core.$ZodIssueBase[]): string {
 	if (!issues || issues.length === 0) {
 		return "No validation errors.";
 	}

@@ -31,37 +31,11 @@ Call **`read-memory-bank-files()`** first thing.
 
 ## 🛠 Research-Validated Helper Tools
 
+> For reasoning tools, selection strategy, and detailed usage patterns see **@004-ai-reasoning-strategy.mdc**. The sections below keep only development-specific notes not covered elsewhere.
+
 ### Core Reasoning & Documentation Tools ✅
 
-| Tool (server) | Status | Strength | GitHub Stars |
-| ------------- | ------ | -------- | ------------ |
-| **clear-thought** | ✅ Validated | Systematic thinking, planning, hypothesis testing | Multiple implementations |
-| **context7** | ✅ Production-ready | Current documentation, API examples (Upstash) | 11.3k stars |
-| **codex-keeper** | ✅ Active | Curated best practices, development patterns | 67 stars |
-| **docshunter** | 🔍 Optional | Additional documentation access | Various |
-| *any public MIT/Apache server* | 🟡 Case-by-case | Evaluate based on utility | No paywall |
-
-### Tool Selection Strategy ✅
-1. **Start Simple**: Use native reasoning for routine tasks
-2. **Escalate Strategically**: Use clear-thought for complex planning/validation
-3. **Research Current Info**: Use context7 for up-to-date documentation
-4. **Validate Practices**: Use codex-keeper for best practices verification
-5. **Document Usage**: Log all tool usage in `progress/current.md`
-
-### Usage Rules & Patterns
-
-1. Prefer the *smallest* helpful set for the task at hand
-2. Respect each tool's `rateLimit` and API constraints
-3. Ask before writing outside `memory-bank/**` folder
-4. Log detailed usage to `progress/current.md`:
-
-```markdown
-- Used <tool> for <problem> → <outcome>
-- Reasoning: <why specific tool was needed>
-- Research: <current information discovered>
-- Value Added: <insights that wouldn't emerge from native reasoning>
-- Validation: <how findings were verified>
-```
+*(See @004-ai-reasoning-strategy.mdc for full list of validated MCP servers, tool selection criteria, and usage patterns.)*
 
 ---
 
@@ -82,7 +56,7 @@ Call **`read-memory-bank-files()`** first thing.
 | --------- | ------ | ----- |
 | MCP Server Integration | ✅ Production | stdio transport, error boundaries |
 | Webview Communication | ✅ Production | postMessage patterns, CSP compliance |
-| File Operations | ✅ Production | Path validation, streaming support |
+| File Operations | ✅ Production | Path validation (streaming disabled) |
 | Error Handling | ✅ Production | AsyncResult patterns, self-healing |
 | Testing Framework | ⚠️ Partial | Needs end-to-end validation |
 
@@ -120,7 +94,8 @@ Call **`read-memory-bank-files()`** first thing.
 * **Input sanitization**: Zod schemas for all MCP tool parameters
 * **CSP enforcement**: Strict Content Security Policy for webview
 * **Error boundaries**: Proper error handling throughout the stack
-* **Memory limits**: Implement streaming for large files >30KB
+
+*Streaming and heavy caching layers have been **disabled** for this project; typical docs are small, so standard file IO suffices.*
 
 ## Release Checklist
 

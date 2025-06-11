@@ -2,25 +2,25 @@
  * Zod Schemas for Memory Bank File Frontmatter Validation Phase 2: Metadata System
  */
 
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // Base schema that all memory bank files should have
 export const BaseFileSchema = z.object({
-	id: z.string().uuid().optional(),
+	id: z.uuid().optional(),
 	type: z.string().optional(),
 	title: z.string().optional(),
 	description: z.string().optional(),
 	tags: z.array(z.string()).optional(),
-	created: z.string().datetime().optional(),
-	updated: z.string().datetime().optional(),
+	created: z.iso.datetime().optional(),
+	updated: z.iso.datetime().optional(),
 	version: z.string().optional(),
 });
 
 // Project Brief specific schema
 export const ProjectBriefSchema = BaseFileSchema.extend({
 	type: z.literal("projectBrief"),
-	title: z.string().min(1, "Title is required"),
-	description: z.string().min(10, "Description must be at least 10 characters"),
+	title: z.string().min(1, { error: "Title is required" }),
+	description: z.string().min(10, { error: "Description must be at least 10 characters" }),
 	status: z.enum(["draft", "active", "completed", "archived"]).optional(),
 	priority: z.enum(["low", "medium", "high", "critical"]).optional(),
 });
@@ -28,7 +28,7 @@ export const ProjectBriefSchema = BaseFileSchema.extend({
 // Research Note schema
 export const ResearchNoteSchema = BaseFileSchema.extend({
 	type: z.literal("researchNote"),
-	topic: z.string().min(1, "Topic is required"),
+	topic: z.string().min(1, { error: "Topic is required" }),
 	sources: z.array(z.string()).optional(),
 	confidence: z.enum(["low", "medium", "high"]).optional(),
 });
@@ -44,7 +44,7 @@ export const ProgressSchema = BaseFileSchema.extend({
 // System Pattern schema
 export const SystemPatternSchema = BaseFileSchema.extend({
 	type: z.literal("systemPattern"),
-	pattern: z.string().min(1, "Pattern is required"),
+	pattern: z.string().min(1, { error: "Pattern is required" }),
 	category: z.enum(["architecture", "design", "performance", "security"]).optional(),
 });
 
@@ -52,7 +52,7 @@ export const SystemPatternSchema = BaseFileSchema.extend({
 export const DefaultFileSchema = BaseFileSchema;
 
 // Schema registry for lookup
-export const SCHEMA_REGISTRY: Record<string, z.ZodSchema> = {
+export const SCHEMA_REGISTRY: Record<string, z.ZodType> = {
 	projectBrief: ProjectBriefSchema,
 	researchNote: ResearchNoteSchema,
 	progress: ProgressSchema,
@@ -63,7 +63,7 @@ export const SCHEMA_REGISTRY: Record<string, z.ZodSchema> = {
 /**
  * Get the appropriate schema for a given file type
  */
-export function getSchemaForType(type?: string): z.ZodSchema {
+export function getSchemaForType(type?: string): z.ZodType {
 	return SCHEMA_REGISTRY[type ?? "default"] || DefaultFileSchema;
 }
 
@@ -73,7 +73,7 @@ export function getSchemaForType(type?: string): z.ZodSchema {
 export function validateFrontmatter(
 	metadata: unknown,
 	type?: string,
-): { success: true; data: unknown } | { success: false; error: z.ZodError } {
+): { success: true; data: unknown } | { success: false; error: z.core.$ZodError } {
 	const schema = getSchemaForType(type);
 	return schema.safeParse(metadata);
 }

@@ -9,7 +9,7 @@
  * It provides a single source for all system-level type definitions.
  */
 
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { DIContainer } from "../di-container";
 import { MemoryBankFileType } from "./core";
 
@@ -408,12 +408,14 @@ export const PortNumberSchema = z
 /**
  * Validates and parses MCP tool parameters using the appropriate schema
  */
-export function validateMCPToolParams<T>(toolName: string, params: unknown, schema: z.ZodSchema<T>): T {
+export function validateMCPToolParams<T>(toolName: string, params: unknown, schema: z.ZodType<T>): T {
 	try {
 		return schema.parse(params);
 	} catch (error) {
-		if (error instanceof z.ZodError) {
-			const issues = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
+		if (error instanceof z.core.$ZodError) {
+			const issues = error.issues
+				.map((err: z.core.$ZodIssueBase) => `${err.path.join(".")}: ${err.message}`)
+				.join(", ");
 			throw new Error(`Invalid parameters for ${toolName}: ${issues}`);
 		}
 		throw new Error(`Validation failed for ${toolName}: ${error}`);
@@ -427,8 +429,10 @@ export function validateWebviewMessage(message: unknown): z.infer<typeof Webview
 	try {
 		return WebviewFileOperationSchema.parse(message);
 	} catch (error) {
-		if (error instanceof z.ZodError) {
-			const issues = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
+		if (error instanceof z.core.$ZodError) {
+			const issues = error.issues
+				.map((err: z.core.$ZodIssueBase) => `${err.path.join(".")}: ${err.message}`)
+				.join(", ");
 			throw new Error(`Invalid webview message: ${issues}`);
 		}
 		throw new Error(`Webview message validation failed: ${error}`);

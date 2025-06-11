@@ -131,7 +131,7 @@ async function handleUpdateCommand(mcpServer: MCPServerInterface, args: string[]
 		);
 	}
 
-	const fileType = args[0];
+	const fileType = args[0] as string;
 	const content = args.slice(1).join(" ");
 
 	if (!fileType) {
@@ -173,6 +173,37 @@ async function handleWriteCommand(mcpServer: MCPServerInterface, args: string[])
 		return createSuccessResult(`Successfully wrote to ${relativePath}`);
 	} catch (error) {
 		return createErrorResult(formatErrorMessage(`Error writing to ${relativePath}`, error));
+	}
+}
+
+async function handleReadCommand(mcpServer: MCPServerInterface, args: string[]): Promise<CommandResult> {
+	if (!args.length) {
+		return createErrorResult("Error: /memory read requires a file type argument\nUsage: /memory read <fileType>");
+	}
+	const fileType = args[0] as string;
+	try {
+		const result = await mcpServer.handleCommand("read", [fileType]);
+		return createSuccessResult(result);
+	} catch (error) {
+		return createErrorResult(formatErrorMessage(`Error reading ${fileType}`, error));
+	}
+}
+
+async function handleListCommand(mcpServer: MCPServerInterface): Promise<CommandResult> {
+	try {
+		const result = await mcpServer.handleCommand("list", []);
+		return createSuccessResult(result);
+	} catch (error) {
+		return createErrorResult(formatErrorMessage("Error listing files", error));
+	}
+}
+
+async function handleReviewCommand(mcpServer: MCPServerInterface): Promise<CommandResult> {
+	try {
+		const result = await mcpServer.handleCommand("review", []);
+		return createSuccessResult(result);
+	} catch (error) {
+		return createErrorResult(formatErrorMessage("Error reviewing memory bank", error));
 	}
 }
 
@@ -278,6 +309,13 @@ export class CommandHandler {
 				return await handleHealthCommand(this.mcpServer);
 			case "write":
 				return await handleWriteCommand(this.mcpServer, args);
+			case "read":
+				return await handleReadCommand(this.mcpServer, args);
+			case "list":
+			case "list-files":
+				return await handleListCommand(this.mcpServer);
+			case "review":
+				return await handleReviewCommand(this.mcpServer);
 			default:
 				return createErrorResult(`Command "${command}" is not supported.\n\n${this.getHelpText()}`);
 		}
@@ -315,7 +353,10 @@ export class CommandHandler {
 /memory init         - Initialize memory bank
 /memory health       - Check memory bank health
 /memory update <fileType> <content> - Update a memory bank file
-/memory write <path> <content> - Write content to a file by path`;
+/memory write <path> <content> - Write content to a file by path
+/memory read <fileType>         - Read a memory bank file
+/memory list                   - List all memory bank files
+/memory review                 - Review memory bank content`;
 	}
 
 	/**

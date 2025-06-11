@@ -5,7 +5,7 @@
  *   and Zod schemas.
  */
 
-import { z } from "zod";
+import { z } from "zod/v4";
 import { MemoryBankFileType } from "./core";
 
 // --- Generic Validation ---
@@ -54,16 +54,15 @@ export interface CursorRulesSettings {
 // --- Zod Schemas & Validation Functions ---
 
 export const MemoryBankFileTypeSchema = z.enum(Object.values(MemoryBankFileType) as [string, ...string[]]);
-export const NonEmptyStringSchema = z.string().min(1, "String cannot be empty");
+export const NonEmptyStringSchema = z.string().min(1, { error: "String cannot be empty" });
 export const SafePathSchema = z
 	.string()
-	.min(1, "Path cannot be empty")
-	.refine(
-		path => !path.includes("..") && !path.startsWith("/") && !path.includes("\0"),
-		"Path contains unsafe characters or sequences",
-	);
+	.min(1, { error: "Path cannot be empty" })
+	.refine(path => !path.includes("..") && !path.startsWith("/") && !path.includes("\0"), {
+		error: "Path contains unsafe characters or sequences",
+	});
 
-export const ContentSchema = z.string().max(1024 * 1024, "Content exceeds 1MB limit");
+export const ContentSchema = z.string().max(1024 * 1024, { error: "Content exceeds 1MB limit" });
 
 export const WebviewMessageTypeSchema = z.enum([
 	"getFiles",
@@ -94,8 +93,8 @@ export function validateWebviewMessage(message: unknown): z.infer<typeof Webview
 	try {
 		return WebviewFileOperationSchema.parse(message);
 	} catch (error) {
-		if (error instanceof z.ZodError) {
-			const issues = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
+		if (error instanceof z.core.$ZodError) {
+			const issues = error.issues.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
 			throw new Error(`Invalid webview message: ${issues}`);
 		}
 		throw new Error(`Webview message validation failed: ${error}`);
@@ -107,20 +106,22 @@ export function validateWebviewMessage(message: unknown): z.infer<typeof Webview
 export const PortNumberSchema = z
 	.number()
 	.int()
-	.min(1, "Port must be greater than 0")
-	.max(65535, "Port must be less than 65536");
+	.min(1, { error: "Port must be greater than 0" })
+	.max(65535, { error: "Port must be less than 65536" });
 
 export const SafeCommandSchema = z
 	.string()
-	.min(1, "Command cannot be empty")
+	.min(1, { error: "Command cannot be empty" })
+	.refine(cmd => !cmd.includes(";") && !cmd.includes("|") && !cmd.includes("&") && !cmd.includes("`"), {
+		error: "Command contains potentially unsafe characters",
+	})
 	.refine(
-		cmd => !cmd.includes(";") && !cmd.includes("|") && !cmd.includes("&") && !cmd.includes("`"),
-		"Command contains potentially unsafe characters",
-	)
-	.refine(cmd => {
-		const dangerous = ["rm -rf", "del /", "format", "dd if="];
-		return !dangerous.some(danger => cmd.includes(danger));
-	}, "Command contains dangerous operations");
+		cmd => {
+			const dangerous = ["rm -rf", "del /", "format", "dd if="];
+			return !dangerous.some(danger => cmd.includes(danger));
+		},
+		{ error: "Command contains dangerous operations" },
+	);
 
 export interface SafeProcessConfig {
 	command: string;

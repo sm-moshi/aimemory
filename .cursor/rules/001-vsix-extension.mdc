@@ -163,18 +163,25 @@ Defines rules and guidelines for developing the AI Memory VSIX extension and its
 ### Memory Bank Structure
 Memory bank organised as focused files with clear separation of concerns:
 
-- **techContext/index.md** → Quick reference hub for technology stack
-- **techContext/stack.md** → Technology choices and implementation decisions
-- **techContext/environment.md** → Development environment setup guide
-- **techContext/dependencies.md** → Dependency analysis and management
-- **systemPatterns/** → Architecture, patterns, and implementation guidance
-- **core/** → Project brief, context, and active development focus
-- **progress/** → Current progress tracking and development history
+See `003-memory-bank-integration.mdc` for authoritative file layout and access patterns.
 
 ### Build System Integration
 - Extension build targets (CommonJS for main process)
 - Webview build targets (ES modules for browser)
 - Development server integration with VS Code debugging
+
+> **Build System details have been moved to `002-build-system-tooling.mdc`.**
+
+### MCP Server Integration
+- Use stdio transport for Cursor compatibility
+- Implement proper error boundaries
+- Handle server lifecycle properly
+
+Additional capabilities supported in recent VS Code releases:
+• **roots** – workspace folder list automatically provided to servers.
+• **Dynamic tool discovery** – servers may add/remove tools at runtime.
+• **Tool annotations** – `humanReadableName`, `readOnlyHint` improve UX.
+> Note: This project's MCP server is deliberately **stdio-only**. HTTP transport is out of scope for the extension but listed here for reference when consuming external servers.
 
 ---
 
@@ -198,5 +205,5 @@ Memory bank organised as focused files with clear separation of concerns:
 **Summary:**
 Focus on VS Code extension architecture, webview UI patterns, and extension-specific requirements.
 Build system details are managed in `@002-build-system-tooling.mdc` for clean separation of concerns.
-Updated for Phase 4 restructuring: KISS compliance, flattened utils structure, simplified patterns.
-Last updated: 2025-06-07
+Updated after documentation audit; duplicates pruned and new MCP capabilities added.
+Last updated: 2025-06-11

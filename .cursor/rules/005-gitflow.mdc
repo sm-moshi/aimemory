@@ -1,5 +1,5 @@
 ---
-description: Cursor Git & Git Flow Rules
+description: Git & Git Flow Rules
 globs:
 alwaysApply: false
 ---
@@ -69,3 +69,5 @@ Use **Conventional Commits**:
 - Never merge directly into `main`
 - Never squash history when merging releases
 - Never skip changelog or version bumps in `release/*`
+
+_Last updated: 2025-06-11_

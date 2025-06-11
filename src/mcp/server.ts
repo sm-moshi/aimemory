@@ -15,7 +15,7 @@
 import { resolve } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { z } from "zod";
+import { z } from "zod/v4";
 
 // Core dependencies - updated for consolidated structure
 import { FileOperationManager } from "../core/file-operations";
@@ -255,11 +255,30 @@ export abstract class BaseMCPServer {
 		// File update tool
 		this.server.tool(
 			"update-memory-bank-file",
-			UpdateMemoryBankFileSchema.shape,
+			{
+				fileType: z.string(),
+				content: z.string(),
+			},
 			createMemoryBankTool(
 				this.memoryBank,
-				async (params: z.infer<typeof UpdateMemoryBankFileSchema>) => {
-					return MemoryBankOperations.updateFile(this.memoryBank, params.fileType, params.content);
+				// biome-ignore lint/suspicious/noExplicitAny: MCP SDK requires generic object parameters
+				(args: { [key: string]: any }) => {
+					const params = args as { fileType: string; content: string };
+					const validationResult = UpdateMemoryBankFileSchema.safeParse(params);
+					if (!validationResult.success) {
+						const formattedErrors = validationResult.error.issues
+							// biome-ignore lint/suspicious/noExplicitAny: Zod error objects have unknown structure
+							.map((e: any) => `Parameter '${e.path.join(".")}': ${e.message}`)
+							.join(", ");
+						throw new Error(`Invalid parameters for update-memory-bank-file: ${formattedErrors}`);
+					}
+					const validatedArgs = validationResult.data;
+
+					return MemoryBankOperations.updateFile(
+						this.memoryBank,
+						validatedArgs.fileType,
+						validatedArgs.content,
+					);
 				},
 				"Error updating memory bank file",
 			),

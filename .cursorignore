@@ -2,4 +2,4 @@ docs/maybe/
 node_modules/
 src/webview/node_modules/
 .vscode-test/vscode-*
-docs/aimemory
+docs/devs/

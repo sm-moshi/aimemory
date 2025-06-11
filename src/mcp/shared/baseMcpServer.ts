@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { FileOperationManager } from "../../core/file-operations";
 import type { MemoryBankManager } from "../../core/memory-bank";
 import { MemoryBankManager as ConcreteMemoryBankManager } from "../../core/memory-bank";
@@ -215,7 +215,7 @@ export abstract class BaseMCPServer {
 					const params = args as { fileType: string; content: string };
 					const validationResult = UpdateMemoryBankFileSchema.safeParse(params);
 					if (!validationResult.success) {
-						const formattedErrors = validationResult.error.errors
+						const formattedErrors = validationResult.error.issues
 							// biome-ignore lint/suspicious/noExplicitAny: Zod error objects have unknown structure
 							.map((e: any) => `Parameter '${e.path.join(".")}': ${e.message}`)
 							.join(", ");

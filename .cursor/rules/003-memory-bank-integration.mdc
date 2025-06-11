@@ -1,5 +1,5 @@
 ---
-description:
+description: Logic behind implementation of AI Memory's MCP
 globs:
 alwaysApply: false
 ---
@@ -20,8 +20,13 @@ export class MemoryBankServiceCore implements MemoryBank {
   constructor(
     memoryBankPath: string,
     logger: Logger,
-    cacheManager: CacheManager,
-    streamingManager: StreamingManager,
+    /**
+     * Cache/streaming layers are retained in code for future scalability but **disabled by default**
+     * because typical memory-bank files are small (<5 KB). They can be stubbed with no-op
+     * implementations in production builds.
+     */
+    cacheManager: CacheManager | undefined,
+    streamingManager: StreamingManager | undefined,
     fileOperationManager: FileOperationManager,
   ) // Dependency injection pattern works well
 }
@@ -89,8 +94,8 @@ async loadFilesByPriority() {
   // Phase 2: Load warm files on-demand
   await this.loadOnDemand(WARM_FILES);
 
-  // Phase 3: Stream cold files when accessed
-  await this.streamLargeFiles(COLD_FILES);
+  // Phase 3: Read cold files on-demand for each access (no streaming)
+  await this.loadOnDemand(COLD_FILES);
 }
 ```
 
@@ -98,6 +103,8 @@ async loadFilesByPriority() {
 - **Monitoring**: Files >15KB should trigger size warnings
 - **Streaming**: Files >30KB should use StreamingManager (infrastructure ready)
 - **Chunking**: Memory bank files rarely exceed these limits in practice
+
+> **Note**: Heavy **streaming** layers have been removed, but the **hot/warm/cold** priority model is still valid — it now just decides whether files are eagerly loaded (hot), cached lazily (warm), or read fresh each time (cold). No extra buffering or chunking logic is needed for typical file sizes.
 
 ## MCP Tool Implementation Patterns ✅
 
@@ -139,17 +146,19 @@ return createSuccessResponse(`Operation completed: ${details}`);
 return createErrorResponse(error, "Tool operation context");
 ```
 
+For reasoning strategies and decision-logging templates, see `004-ai-reasoning-strategy.mdc`.
+
 ## Memory Bank Service Integration
 
-### Core Service Dependencies ✅
+### Core Service Dependencies ✅ (simplified)
 ```typescript
 // Validated dependency pattern:
 class MemoryBankServiceCore {
   constructor(
     private readonly memoryBankPath: string,
     private readonly logger: Logger,
-    private readonly cacheManager: CacheManager,        // Performance layer
-    private readonly streamingManager: StreamingManager, // Large file handling
+    private readonly cacheManager?: CacheManager,        // Optional performance layer (disabled)
+    private readonly streamingManager?: StreamingManager, // Optional large-file handling
     private readonly fileOperationManager: FileOperationManager // Safe I/O
   ) {}
 }

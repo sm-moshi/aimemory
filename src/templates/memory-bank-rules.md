@@ -16,7 +16,8 @@ Welcome to the AI Memory system. This file acts as the blueprint for how Cursor 
   - `core/*.md`
   - `progress/current.md`, `progress/history.md`
   - `systemPatterns/index.md`
-  - `techContext/index.md`  # Only this tech file is created on init
+  - `techContext/index.md`
+  - `techContext/stack.md`, `techContext/dependencies.md`, `techContext/environment.md`  # Created during documentation bootstrap
 - Other files are loaded lazily or created on demand when contextually required.
 - Failover and retry logic should be applied if a file is missing or corrupted.
 
@@ -26,24 +27,31 @@ Welcome to the AI Memory system. This file acts as the blueprint for how Cursor 
 | ---- | ---------------------------------- | ------------------------- |
 | Hot  | `core/*.md`, `progress/current.md` | Always load immediately   |
 | Warm | `systemPatterns/index.md`          | Load on plan or diagnosis |
-| Cold | >30KB files, old history           | Load chunked or deferred  |
+| Cold | ≥15 KB files, old history           | Read on demand (no streaming) |
 
 ## 📏 File Size Guidelines
 
 - `< 15KB`: Load freely
-- `15–30KB`: Warn, consider chunking
-- `> 30KB`: Chunked access required via `chunkIndex`
-- Limit to 5 parallel loads
-- Warn if more than 8 files are read in parallel
+- `15–30KB`: Warn, consider splitting the content into multiple docs
+- `≥ 15 KB`: Warn about size; consider splitting file or keep as on-demand read
+- Limit parallel reads to 5; warn if more than 8 files are read concurrently
 
 ## 🔐 Safety Rules
 
 - Never overwrite `projectBrief.md` or `productContext.md`
 - NEVER write to any `index.md` file
 - Always prompt before modifying `progress/current.md`
-- CHUNK read required for any file > 30KB
+- For files ≥15 KB read lazily; no streaming or chunking logic needed
 - NEVER DELETE any memory-bank file without explicit user approval
 - Mark all dangerous operations in logs and surface in UI if available
+
+## 📝 Content Quality Rules
+
+- **MD040 Compliance**: All fenced code blocks in memory bank files MUST specify a language identifier
+  - ✅ Correct: ````markdown```typescript``` or````markdown```bash```
+  - ❌ Incorrect: ````markdown``````
+  - Apply this rule when creating, editing, or updating any `@/memory-bank` file
+- Ensure consistent markdown formatting across all memory bank documentation
 
 ## 📂 Memory Bank Structure
 
@@ -78,10 +86,9 @@ flowchart TD
 
 - `plannerMode: true`
 - Use `getPlanSummary()` to scan `activeContext.md` and `current.md`
-- ALWAYS ask 4–6 clarifying questions before proposing a new plan
-- Validate all assumptions against `productContext.md`
-- Present plan clearly and apply using `update-memory-bank-file()`
-- NEVER edit or overwrite without explicit user confirmation
+- Ask clarifying questions when assumptions are unclear (typically 4–6 for new contexts)
+- Validate assumptions against `productContext.md`
+- Present plan clearly and apply using `update-memory-bank-file()` (explicit user confirmation required)
 
 ## 🛠 Core MCP Tools
 
@@ -95,17 +102,9 @@ flowchart TD
 | `read-memory-bank-file()`         | Read single file by type (CLI mode)      |
 | `review-and-update-memory-bank()` | Interactive file review workflow         |
 
-## 🔍 Advanced MCP Tools (Phase 2)
+## 🔍 Advanced MCP Tools (Roadmap – Phase 2)
 
-// TODO: Finish these tools
-
-| Tool                         | Purpose and Invocation               |
-| ---------------------------- | ------------------------------------ |
-| `query-memory-index()`       | Search files by metadata and content |
-| `validate-memory-file()`     | Validate file against schema         |
-| `rebuild-metadata-index()`   | Force rebuild search index           |
-| `get-metadata-for-file()`    | Get detailed file metadata           |
-| `get-metadata-index-stats()` | Get search index statistics          |
+// Future capabilities – not available to end-users yet
 
 ## 📜 Documentation Flow
 
@@ -125,6 +124,8 @@ flowchart TD
 - Cross-check edits against `core/activeContext.md` and `productContext.md` when `plannerMode` is enabled.
 
 ## 🛠️ Thoughtful Use of Available MCP Tools
+
+*(For detailed reasoning strategy, tool selection matrix, and logging patterns see **@004-ai-reasoning-strategy.mdc**.)*
 
 To ensure robust, up-to-date, and best-practice solutions when working with the memory bank or extension, the AI agent should thoughtfully use all available MCP tools in this environment, including but not limited to:
 
@@ -149,4 +150,4 @@ This file will be read by `cursor-rules-service.ts` and compiled into a `.mdc` f
 
 Cursor agents should regularly check the .cursor/rules/ directory for other rulesets that may affect project behaviour.
 
-> _Last updated: 2025-06-06_
+> *Last updated: 2025-06-11*

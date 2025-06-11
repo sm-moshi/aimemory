@@ -320,12 +320,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		// Set the webview's HTML content
 		this.panel.webview.html = this.getWebviewContent(this.panel.webview);
 
-		console.log("Handlig message");
+		this.logger.debug("Setting up webview message handler", { component: "WebviewProvider" });
 
 		// Handle messages from the webview
 		this.panel.webview.onDidReceiveMessage(
 			async (message: WebviewToExtensionMessage) => {
-				console.log("Received message in extension:", message);
+				this.logger.debug("Received message from webview", { message });
 				switch (message.command) {
 					case "getRulesStatus":
 						await this.handleGetRulesStatus();
@@ -334,7 +334,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 						await this.handleResetRules();
 						break;
 					case "requestMemoryBankStatus":
-						console.log("Requesting...");
+						this.logger.debug("Webview requested memory bank status");
 						await this.handleRequestMemoryBankStatus();
 						break;
 					case "serverAlreadyRunning":
@@ -405,7 +405,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 			);
 		}
 
-		console.log("Sending rules status:", initialized);
+		this.logger.debug("Sending rules status to webview", { initialized });
 		// Send status to webview
 		this.panel?.webview.postMessage({
 			type: "rulesStatus",
@@ -414,14 +414,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async handleRequestMemoryBankStatus() {
-		console.log("Here1");
+		this.logger.debug("Handling memory bank status request");
 		if (!this.panel) {
 			return;
 		}
 
 		const isInitialized = await this.memoryBankService.getIsMemoryBankInitialized();
 
-		console.log("Sending memory bank status:", isInitialized);
+		this.logger.debug("Sending memory bank status", { isInitialized });
 
 		this.panel.webview.postMessage({
 			type: "memoryBankStatus",
@@ -455,7 +455,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
 	private async handleServerAlreadyRunning(message: ServerAlreadyRunningMessage) {
 		// Update our internal tracking that a server is already running
-		console.log(`Server already running on port ${message.port}`);
+		this.logger.info("Detected already running MCP server", { port: message.port });
 		this.mcpServer.setExternalServerRunning(message.port);
 		this.panel?.webview.postMessage({
 			type: "MCPServerStatus",
