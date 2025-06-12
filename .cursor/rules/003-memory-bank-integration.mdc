@@ -51,60 +51,17 @@ if (isError(result)) {
 - Implement `ensureMemoryBankReady()` check in all MCP tools
 - Use structured error responses with `createErrorResponse()` helper
 
-## Memory Bank File Organization
+## Memory Bank Integration Architecture
 
-### Validated File Structure ✅
-```mermaid
-memory-bank/
-├── core/
-│   ├── projectBrief.md      # Hot file - load immediately
-│   ├── productContext.md    # Hot file - load immediately
-│   └── activeContext.md     # Hot file - load immediately
-├── progress/
-│   ├── current.md           # Hot file - load immediately
-│   ├── history.md           # Warm file - load on demand
-│   └── index.md             # Warm file - load on demand
-├── systemPatterns/
-│   ├── index.md             # Warm file - load on demand
-│   ├── architecture.md      # Warm file - load on demand
-│   ├── patterns.md          # Cold file - chunk if >30KB
-│   └── scanning.md          # Cold file - chunk if >30KB
-└── techContext/
-    ├── index.md             # Warm file - load on demand
-    ├── stack.md             # Cold file - reference @002-build-system-tooling.mdc
-    ├── dependencies.md      # Cold file - chunk if >30KB
-    └── environment.md       # Cold file - chunk if >30KB
-```
+### Service Integration Pattern ✅
+The memory bank integrates with both VS Code extension and standalone MCP server through a shared core service layer:
 
-### File Access Patterns 🔄 (Roadmap Item)
-**Current State**: All files loaded equally via `loadFiles()`
-**Target Implementation**:
-```typescript
-// Tiered loading strategy (planned):
-const HOT_FILES = [
-  MemoryBankFileType.ProjectBrief,
-  MemoryBankFileType.ActiveContext,
-  MemoryBankFileType.ProgressCurrent
-];
+### Integration Responsibilities
+- **VS Code Extension**: Webview communication, command handling, workspace integration
+- **MCP Server**: Tool registration, parameter validation, stdio transport
+- **Shared Core**: File operations, memory bank logic, error handling, templates
 
-async loadFilesByPriority() {
-  // Phase 1: Load hot files immediately
-  await this.loadFilesSubset(HOT_FILES);
-
-  // Phase 2: Load warm files on-demand
-  await this.loadOnDemand(WARM_FILES);
-
-  // Phase 3: Read cold files on-demand for each access (no streaming)
-  await this.loadOnDemand(COLD_FILES);
-}
-```
-
-### File Size Management ⚠️
-- **Monitoring**: Files >15KB should trigger size warnings
-- **Streaming**: Files >30KB should use StreamingManager (infrastructure ready)
-- **Chunking**: Memory bank files rarely exceed these limits in practice
-
-> **Note**: Heavy **streaming** layers have been removed, but the **hot/warm/cold** priority model is still valid — it now just decides whether files are eagerly loaded (hot), cached lazily (warm), or read fresh each time (cold). No extra buffering or chunking logic is needed for typical file sizes.
+> **Memory Bank file structure and access patterns are documented in `memory-bank.mdc` and `memory-bank.dev.mdc`.**
 
 ## MCP Tool Implementation Patterns ✅
 

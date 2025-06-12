@@ -44,4 +44,4 @@ For information about contributing to the AI Memory extension:
 
 ---
 
-> _Documentation last updated: 2025-05-30_
+> _Documentation last updated: 2025-06-12_

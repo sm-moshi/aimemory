@@ -48,22 +48,32 @@ pnpm install && pnpm build
 - **🔄 Self-Healing**: Automatically repairs missing or corrupted files
 - **💬 Chat Integration**: Use `/memory` commands directly in Cursor chat
 - **🛡️ Secure**: Input validation, path protection, no data sent to external services
+- **⚙️ Set Log Level**: Configurable logging from trace to error levels
 
 ---
 
-## 📖 Example Memory Structure
+## 📖 Memory Bank Structure
 
 ```text
 memory-bank/
-├── core/
-│   ├── projectbrief.md     # What your project does
-│   └── activeContext.md    # Current focus areas
-├── progress/
-│   └── current.md          # Recent work and next steps
-├── systemPatterns/
-│   └── architecture.md     # Technical decisions
-└── techContext/
-    └── stack.md           # Technology choices
+├── core/                    # Essential project information
+│   ├── projectBrief.md     # Project overview and goals
+│   ├── productContext.md   # Product requirements and context
+│   └── activeContext.md    # Current focus and priorities
+├── progress/               # Project tracking and history
+│   ├── index.md           # Progress overview
+│   ├── current.md         # Current tasks and status
+│   └── history.md         # Completed work history
+├── systemPatterns/         # Architecture and design patterns
+│   ├── index.md           # Pattern overview
+│   ├── architecture.md    # System architecture
+│   ├── patterns.md        # Design patterns used
+│   └── scanning.md        # Code analysis patterns
+└── techContext/           # Technical stack and environment
+    ├── index.md          # Tech stack overview
+    ├── stack.md          # Technology choices
+    ├── dependencies.md   # Key dependencies
+    └── environment.md    # Development environment
 ```
 
 ---
@@ -73,7 +83,7 @@ memory-bank/
 - **Zero Configuration** - Works out of the box
 - **STDIO MCP Server** - Optimized for Cursor compatibility
 - **React Dashboard** - Modern webview for memory management
-- **Streaming Support** - Handles large files efficiently
+- **Efficient File Operations** - Optimized for typical memory bank file sizes
 - **British English** - Consistent language throughout
 
 ---

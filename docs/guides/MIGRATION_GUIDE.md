@@ -4,9 +4,12 @@
 
 This guide helps you upgrade to the latest version of AI Memory. The extension has evolved significantly from early experimental versions to the current robust stdio-based MCP implementation.
 
+> **Current Version**: v0.8.0-alpha
+> _Last updated: 2025-06-12_
+
 ---
 
-## 🆕 Key Changes in Current Version (v0.8.0-dev.1)
+## 🆕 Key Changes in Current Version (v0.8.0-alpha)
 
 ### Architecture Improvements
 
@@ -27,7 +30,7 @@ This guide helps you upgrade to the latest version of AI Memory. The extension h
 
 ## 🔄 Migration Scenarios
 
-### From Pre-v0.8.0 Versions
+### From Pre-v0.8.0-alpha Versions
 
 If you're upgrading from any earlier version:
 
@@ -88,19 +91,26 @@ memory-bank/
 ├── tech-stack.md
 └── current-tasks.md
 
-# New modular structure
+# New modular structure (v0.8.0-alpha)
 memory-bank/
 ├── core/
 │   ├── projectBrief.md      # ← project-brief.md
 │   ├── activeContext.md     # ← active-context.md
 │   └── productContext.md    # (new template)
-├── techContext/
-│   ├── stack.md            # ← tech-stack.md
-│   ├── dependencies.md     # (new template)
-│   └── environment.md      # (new template)
-└── progress/
-    ├── current.md          # ← current-tasks.md
-    └── history.md          # (new template)
+├── progress/
+│   ├── index.md            # (new template)
+│   ├── current.md          # ← current-tasks.md
+│   └── history.md          # (new template)
+├── systemPatterns/
+│   ├── index.md            # (new template)
+│   ├── architecture.md     # (new template)
+│   ├── patterns.md         # (new template)
+│   └── scanning.md         # (new template)
+└── techContext/
+    ├── index.md            # (new template)
+    ├── stack.md            # ← tech-stack.md
+    ├── dependencies.md     # (new template)
+    └── environment.md      # (new template)
 ```
 
 ### Migration Process
@@ -160,7 +170,7 @@ The extension now automatically manages this configuration.
 ### 1. Verify Installation
 
 - [ ] Extension appears in Cursor Extensions panel
-- [ ] Version shows v0.8.0-dev.1 or later
+- [ ] Version shows v0.8.0-alpha or later
 - [ ] No error notifications on startup
 
 ### 2. Test MCP Server

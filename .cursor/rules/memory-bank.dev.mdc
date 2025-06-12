@@ -64,38 +64,14 @@ Call **`read-memory-bank-files()`** first thing.
 
 ## 🧠 Implementation Notes & Best Practices
 
-### Development Practices ✅
-* **Self‑healing**: Extension auto‑creates missing folders/files on load
-* **Shared core logic**: src/core modules feed both MCP server and VSIX extension
-* **Architecture**: Organized into app/, core/, cursor/, mcp/, shared/, etc.
-* **Path aliases**: Uses @/ and @utils/ for clean imports
-* **Cursor config**: Extension updates `.cursor/mcp.json` automatically
-* **Code quality**: Check complexity in main source and test code - refactor if high
-* **Date accuracy**: ALWAYS run `date` command before updating any dates
-* **Cross-reference**: Maintain consistency between rules and memory bank content
-* **No auto-update of local memory-bank/**: Changes to rules or service logic (e.g., `@memory-bank-rules.md`, `@memoryBankServiceCore.ts`) must **NOT** trigger automatic updates to the local `memory-bank/` folder. Manual review and explicit action are required to update local memory-bank content after such changes.
+### Development-Specific Practices ✅
+* **Local Memory Bank**: THE memory-bank/ folder in this project is for development, not end-users
+* **No Auto-Update**: Changes to rules or service logic must **NOT** trigger automatic updates to local memory-bank/ folder
+* **Date Accuracy**: ALWAYS run `date` command before updating any dates
+* **Cross-Reference**: Maintain consistency between rules and memory bank content
+* **Research Integration**: Update memory bank with insights from reasoning sessions
 
-### Research & Reasoning Patterns ✅
-* **Enhanced Strategy**: Apply @004-ai-reasoning-strategy.mdc decision matrix
-* **Tool Validation**: All referenced MCP tools verified as production-ready
-* **Pattern Documentation**: Capture effective tool combinations in systemPatterns/
-* **Decision Logging**: Use enhanced logging format for tool usage tracking
-* **Memory Integration**: Update memory bank with insights from reasoning sessions
-
-### Testing & Validation ✅
-* **MCP Testing**: Use mcp-testing-kit dummy transport for isolation
-* **Extension Testing**: @vscode/test-cli for VS Code API mocking
-* **Security Testing**: Validate CSP compliance and input sanitization
-* **Performance**: Monitor activation time and memory usage
-* **Real-world**: Need more end-to-end production testing
-
-### Security & Safety ✅
-* **Path validation**: Prevent traversal attacks in all file operations
-* **Input sanitization**: Zod schemas for all MCP tool parameters
-* **CSP enforcement**: Strict Content Security Policy for webview
-* **Error boundaries**: Proper error handling throughout the stack
-
-*Streaming and heavy caching layers have been **disabled** for this project; typical docs are small, so standard file IO suffices.*
+*For general development practices, see other rule files. This file focuses on development-only concerns.*
 
 ## Release Checklist
 
@@ -119,4 +95,4 @@ Call **`read-memory-bank-files()`** first thing.
 ---
 
 **Integration Status**: Actively validated against production codebase patterns
-**Last Updated**: 2025-06-07 (enhanced with research findings and practical patterns)
+**Last Updated**: 2025-06-12 (streamlined, removed duplicates from other rule files)

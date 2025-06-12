@@ -59,9 +59,9 @@ This folder contains comprehensive user-facing guides for the AI Memory extensio
 
 These guides are maintained to reflect the current implementation:
 
-- **Version**: v0.8.0-dev.1
+- **Version**: v0.8.0-alpha
 - **Architecture**: stdio MCP transport
-- **Last Updated**: 2025-05-30
+- **Last Updated**: 2025-06-12
 - **Status**: Current and accurate
 
 For the latest updates, see the [GitHub repository](https://github.com/sm-moshi/aimemory).

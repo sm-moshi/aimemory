@@ -4,6 +4,9 @@
 
 Welcome to the AI Memory extension for Cursor and VS Code! This guide will help you install, set up, and use the extension for persistent, context-aware AI workflows using the Memory Bank technique.
 
+> **Current Version**: v0.8.0-alpha
+> _Last updated: 2025-06-12_
+
 ---
 
 ## 🚀 Installation
@@ -45,6 +48,7 @@ Access these via Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
 - **`AI Memory: Update Cursor MCP Config`** - Refresh MCP configuration
 - **`AI Memory: Stop MCP Server`** - Stop the running server
 - **`AI Memory: Show Output Channel`** - View extension logs
+- **`AI Memory: Set Log Level`** - Configure logging verbosity
 
 ---
 
@@ -60,20 +64,20 @@ memory-bank/
 │   ├── projectBrief.md     # Project overview and goals
 │   ├── productContext.md   # Product requirements and context
 │   └── activeContext.md    # Current focus and priorities
+├── progress/               # Project tracking and history
+│   ├── index.md           # Progress overview
+│   ├── current.md         # Current tasks and status
+│   └── history.md         # Completed work history
 ├── systemPatterns/         # Architecture and design patterns
 │   ├── index.md           # Pattern overview
 │   ├── architecture.md    # System architecture
 │   ├── patterns.md        # Design patterns used
 │   └── scanning.md        # Code analysis patterns
-├── techContext/           # Technical stack and environment
-│   ├── index.md          # Tech stack overview
-│   ├── stack.md          # Technology choices
-│   ├── dependencies.md   # Key dependencies
-│   └── environment.md    # Development environment
-└── progress/             # Project tracking and history
-    ├── index.md         # Progress overview
-    ├── current.md       # Current tasks and status
-    └── history.md       # Completed work history
+└── techContext/           # Technical stack and environment
+    ├── index.md          # Tech stack overview
+    ├── stack.md          # Technology choices
+    ├── dependencies.md   # Key dependencies
+    └── environment.md    # Development environment
 ```
 
 ### Webview Dashboard

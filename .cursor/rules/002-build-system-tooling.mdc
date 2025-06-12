@@ -76,11 +76,31 @@ alwaysApply: false
 - Use overrides for security patches in pnpm
 - Commit pnpm-lock.yaml for reproducible builds
 
+## Extension Build Integration
+
+### VS Code Extension Targets
+- **Extension Main**: CommonJS for main process (Node.js compatibility)
+- **Webview**: ES modules for browser environment
+- **MCP CLI**: CommonJS for Node.js standalone execution
+
+### Build System Performance
+- **SWC Compilation**: 20x faster TypeScript processing than tsc
+- **Tree-shaking**: ES2022 imports with Rollup optimization
+- **Bundle Analysis**: Monitor extension activation time <2 seconds
+- **Source Maps**: Development only (excluded from production builds)
+- **HMR**: Sub-100ms updates for webview development
+
+### Node.js Compatibility (VS Code 1.96.2)
+- **Electron 34.5.1** with **Node.js 20.19.0**
+- **Breaking Change**: `.bat`/`.cmd` file spawning requires explicit `shell` option
+- **Security**: Never use `shell: true` - use explicit arguments with `child_process.spawn`
+- **Path Handling**: Validate all file paths to prevent injection attacks
+
 ---
 
 **Cross-References:**
-#rollup #swc #vite #biome #vitest #tsgo #performance #bundle-optimization #testing-framework #ci-cd #unified-testing #kiss-compliance
+#rollup #swc #vite #biome #vitest #tsgo #performance #bundle-optimization #testing-framework #ci-cd #unified-testing #kiss-compliance #electron #nodejs #vscode-api
 
 **See Also:** `001-vsix-extension.mdc` (extension UX/security), `techContext/stack.md` for dependency rationale
 
-Last updated: 2025-06-11
+Last updated: 2025-06-12

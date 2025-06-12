@@ -4,6 +4,9 @@
 
 This guide helps you diagnose and resolve common issues with the AI Memory extension for Cursor and VS Code. The extension uses stdio transport for MCP communication and provides a modular memory bank system.
 
+> **Current Version**: v0.8.0-alpha
+> _Last updated: 2025-06-12_
+
 _For setup instructions, see [QUICKSTART.md](./QUICKSTART.md). For upgrade information, see [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)._
 
 ---
@@ -131,7 +134,7 @@ Cmd/Ctrl+Shift+P → "AI Memory: Start MCP Server"
 
 ## ⚠️ Known Limitations
 
-### Current Version (v0.8.0-dev.1)
+### Current Version (v0.8.0-alpha)
 
 - **Development version**: Some features may be unstable
 - **Large files**: Files >50KB may impact performance
