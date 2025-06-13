@@ -55,7 +55,31 @@ export interface CursorRulesSettings {
 
 export const MemoryBankFileTypeSchema = z.enum(Object.values(MemoryBankFileType) as [string, ...string[]]);
 export const NonEmptyStringSchema = z.string().min(1, { error: "String cannot be empty" });
+
+// Safe path schema for memory bank files - allows both relative paths and absolute paths within workspace
 export const SafePathSchema = z
+	.string()
+	.min(1, { error: "Path cannot be empty" })
+	.refine(path => !path.includes("..") && !path.includes("\0"), {
+		error: "Path contains unsafe characters or sequences",
+	})
+	.refine(
+		path => {
+			// Allow relative paths (don't start with /)
+			if (!path.startsWith("/")) {
+				return true;
+			}
+			// For absolute paths, ensure they don't contain dangerous patterns
+			const dangerousPaths = ["/etc/", "/usr/bin/", "/bin/", "/sbin/", "/root/", "/var/"];
+			return !dangerousPaths.some(dangerous => path.startsWith(dangerous));
+		},
+		{
+			error: "Absolute path points to restricted system directory",
+		},
+	);
+
+// Strict relative-only path schema for webview operations
+export const RelativePathSchema = z
 	.string()
 	.min(1, { error: "Path cannot be empty" })
 	.refine(path => !path.includes("..") && !path.startsWith("/") && !path.includes("\0"), {
@@ -84,7 +108,7 @@ export const WebviewFileOperationSchema = WebviewMessageBaseSchema.extend({
 		.object({
 			fileType: MemoryBankFileTypeSchema.optional(),
 			content: ContentSchema.optional(),
-			path: SafePathSchema.optional(),
+			path: RelativePathSchema.optional(),
 		})
 		.optional(),
 });

@@ -5,7 +5,7 @@
  * Depends on VS Code API and should only be used in extension context.
  */
 
-import { formatErrorMessage } from "../utils/helpers"; // Adjusted import path
+import { formatErrorMessage } from "../lib/helpers";
 
 /**
  * VS Code-specific error display utility

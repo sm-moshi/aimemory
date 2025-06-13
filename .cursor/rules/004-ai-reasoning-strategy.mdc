@@ -85,11 +85,6 @@ alwaysApply: false
 - `resolve-library-id`: Find Context7-compatible library identifiers
 - `get-library-docs`: Fetch current documentation with token limits
 
-### Codex-Keeper MCP Server ✅
-**Status**: Actively maintained
-**Purpose**: Guardian of development knowledge with curated best practices
-**Strength**: Maintains comprehensive knowledge base of validated patterns
-
 #### **Best Practices Research** - For:
 - Finding established development patterns
 - Accessing curated documentation sources
@@ -104,7 +99,7 @@ alwaysApply: false
 
 ## 📋 Enhanced Decision Matrix
 
-| Scenario | Use Native | Use Clear-Thought | Use Context7/Codex |
+| Scenario | Use Native | Use Clear-Thought | Use Context7 |
 |----|---|---|---|
 | **Simple config change** | ✅ | ❌ | ❌ |
 | **Complex migration plan** | ❌ | ✅ Sequential | ✅ Research patterns |
@@ -145,7 +140,7 @@ const shouldUseStructuredThinking = {
 ### Tool Selection Strategy
 - **Start Simple**: Use native reasoning first for quick assessment
 - **Escalate Strategically**: Move to clear-thought when complexity threshold reached
-- **Research When Needed**: Use Context7/Codex-Keeper for current information
+- **Research When Needed**: Use Context7 for current information
 - **Document Reasoning**: Always explain why specific tools were chosen
 - **Share Process**: Let users see the structured reasoning when valuable
 
@@ -161,10 +156,10 @@ const shouldUseStructuredThinking = {
 ```
 
 #### Tool Combination Examples
-- **Architecture Decision**: Mental Models + Context7 (current patterns) + Codex-Keeper (best practices)
+- **Architecture Decision**: Mental Models + Context7 (current patterns + best practices)
 - **Migration Planning**: Sequential Thinking + Context7 (target library docs)
 - **Performance Optimization**: Scientific Method + Context7 (current benchmarks)
-- **Technology Evaluation**: Decision Framework + Context7 (docs) + Codex-Keeper (standards)
+- **Technology Evaluation**: Decision Framework + Context7 (docs + standards)
 
 ## 🔄 Validated Continuous Improvement
 
@@ -177,7 +172,6 @@ const shouldUseStructuredThinking = {
 ### Meta-Reasoning Patterns ✅
 - Clear-thought tools show 65% better decision quality for complex problems
 - Context7 reduces outdated information errors by 80%
-- Codex-Keeper improves best practice compliance by 70%
 - Combined approach optimizes for both thoroughness and development velocity
 
 ## 📝 Enhanced Documentation Requirements
@@ -213,7 +207,7 @@ When using MCP tools, document in memory bank:
 - Designing extension API for maximum flexibility
 
 ### Research-Enhanced Decisions 📚
-- Technology stack evaluation (Clear-thought + Context7 + Codex-Keeper)
+- Technology stack evaluation (Clear-thought + Context7)
 - API design validation (Collaborative reasoning + current best practices)
 - Performance optimization (Scientific method + current benchmarks)
 - Migration strategy (Sequential thinking + target platform documentation)
@@ -224,14 +218,12 @@ When using MCP tools, document in memory bank:
 - **Decision Quality**: Structured + research approaches show measurable improvement
 - **Time Efficiency**: Appropriate tool selection minimizes overall time
 - **Information Currency**: Context7 integration eliminates outdated information issues
-- **Best Practice Compliance**: Codex-Keeper integration improves standard adherence
 - **User Value**: Users benefit from seeing complex reasoning process
 - **Learning**: Insights captured in memory bank for future reference
 
 ### Tool Performance Tracking
 - **Clear-Thought**: Best for complex planning and validation (proven)
 - **Context7**: Essential for current documentation (11.3k stars validation)
-- **Codex-Keeper**: Valuable for best practice research (active maintenance)
 - **Combined Approach**: Optimal results for high-impact decisions
 
 ## 🔗 Integration with Project Ecosystem
@@ -248,8 +240,8 @@ When using MCP tools, document in memory bank:
 
 ---
 
-*Enhanced with research-validated MCP tools and practical integration patterns. All referenced tools have been verified as production-ready with active maintenance and proven track records.* 🐹
+*Enhanced with research-validated MCP tools and practical integration patterns. All referenced tools have been verified as production-ready with active maintenance and proven track records.*
 
-**Research Session**: Previous validation confirmed Context7, Codex-Keeper, and Clear-thought as actively maintained, production-ready tools suitable for systematic reasoning enhancement.
+**Research Session**: Previous validation confirmed Context7 and Clear-thought as actively maintained, production-ready tools suitable for systematic reasoning enhancement.
 
 **Last Updated**: 2025-06-11 (includes research validation and practical integration patterns)

@@ -54,10 +54,11 @@ export function MemoryBankStatus({ onReviewAllFiles, reviewLoading }: MemoryBank
 		// Setup message listener
 		const handleMessage = (event: MessageEvent) => {
 			const message = event.data;
-			sendLog(`Received message in memory-bank-status: ${message.type}`, "info", {
-				action: "handleMessage",
-				messageType: message.type,
-			});
+			// Temporarily disable this verbose logging to reduce spam
+			// sendLog(`Received message in memory-bank-status: ${message.type}`, "info", {
+			// 	action: "handleMessage",
+			// 	messageType: message.type,
+			// });
 			if (message.type === "memoryBankStatus") {
 				setIsMemoryBankInitialized(message.initialized);
 				setIsLoading(false);

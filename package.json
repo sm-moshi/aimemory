@@ -1,12 +1,12 @@
 {
 	"name": "aimemory",
-	"displayName": "Cursor AI Memory",
+	"displayName": "AI Memory for Cursor 1.0+",
 	"publisher": "sm-moshi",
 	"repository": {
 		"url": "https://github.com/sm-moshi/aimemory"
 	},
-	"description": "Easily manage AI context for your projects using memory bank technique",
-	"version": "0.8.0-alpha",
+	"description": "Easily manage AI context for your projects using memory bank technique!",
+	"version": "0.8.0-alpha.0",
 	"type": "module",
 	"engines": {
 		"vscode": "^1.96.2",
@@ -31,6 +31,15 @@
 	],
 	"main": "./dist/extension.cjs",
 	"extensionTestsPath": "./out/test/suite/index.cjs",
+	"activationEvents": [
+		"onCommand:aimemory.openWebview",
+		"onCommand:aimemory.startMCP",
+		"onCommand:aimemory.stopServer",
+		"onCommand:aimemory.updateMCPConfig",
+		"onCommand:aimemory.showOutput",
+		"onCommand:aimemory.setLogLevel",
+		"onStartupFinished"
+	],
 	"contributes": {
 		"commands": [
 			{
@@ -72,6 +81,36 @@
 					],
 					"default": "info",
 					"description": "Controls the verbosity of the AI Memory Output Channel."
+				},
+				"aimemory.healthCheck.interval": {
+					"type": "number",
+					"enum": [
+						2500,
+						5000,
+						10000
+					],
+					"default": 5000,
+					"description": "Interval in milliseconds between health checks of the MCP server and memory bank."
+				},
+				"aimemory.healthCheck.timeout": {
+					"type": "number",
+					"enum": [
+						5000,
+						10000,
+						15000
+					],
+					"default": 10000,
+					"description": "Timeout in milliseconds for health check operations."
+				},
+				"aimemory.notifications.level": {
+					"type": "string",
+					"enum": [
+						"minimal",
+						"normal",
+						"detailed"
+					],
+					"default": "normal",
+					"description": "Controls the verbosity of health check notifications and error reporting."
 				}
 			}
 		}
@@ -100,26 +139,26 @@
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@rollup/plugin-swc": "^0.4.0",
-		"@swc/core": "^1.12.0",
+		"@swc/core": "^1.12.1",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@types/glob": "^8.1.0",
 		"@types/node": "^20.19.0",
 		"@types/react": "^19.1.8",
 		"@types/react-dom": "^19.1.6",
 		"@types/vscode": "1.96.0",
-		"@typescript/native-preview": "7.0.0-dev.20250611.1",
+		"@typescript/native-preview": "^7.0.0-dev.20250612.1",
 		"@vitejs/plugin-react": "^4.5.2",
 		"@vitest/coverage-v8": "^3.2.3",
 		"@vscode/test-cli": "^0.0.11",
-		"@vscode/vsce": "^3.5.0",
-		"glob": "^11.0.2",
+		"@vscode/vsce": "^3.5.1-0",
+		"glob": "^11.0.3",
 		"happy-dom": "^18.0.1",
 		"npm-run-all": "^4.1.5",
 		"rollup": "^4.43.0",
 		"rollup-plugin-analyzer": "^4.0.0",
 		"rollup-plugin-copy": "^3.5.0",
-		"tsx": "^4.20.1",
-		"typescript": "5.9.0-dev.20250611",
+		"tsx": "^4.20.2",
+		"typescript": "^5.9.0-dev.20250612",
 		"vite-tsconfig-paths": "^6.0.0-beta.3",
 		"vitest": "^3.2.3",
 		"vscode-uri": "^3.1.0"
@@ -130,6 +169,6 @@
 		"gray-matter": "^4.0.3",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
-		"zod": "^3.25.62"
+		"zod": "^3.25.63"
 	}
 }

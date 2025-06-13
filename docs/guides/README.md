@@ -49,7 +49,7 @@ This folder contains comprehensive user-facing guides for the AI Memory extensio
 
 ### For Developers
 
-- See [../devs/](../devs/) for technical implementation guides
+- See [../devs/](../devs) for technical implementation guides
 - Review [architecture-overview.md](../devs/architecture-overview.md) for system design
 - Check [mcp-implementation.md](../devs/mcp-implementation.md) for MCP server details
 

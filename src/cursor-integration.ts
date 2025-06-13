@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import * as path from "node:path";
 import { join } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { type ExtensionContext, FileType, Uri, window, workspace } from "vscode";
 
 // Core imports - updated for consolidated structure
 import type { FileOperationManager } from "./core/file-operations";
@@ -19,6 +20,7 @@ import { createLogger } from "./lib/logging";
 import type { Logger } from "./lib/types/core";
 // Type imports for configuration
 import type { ConfigComparisonResult, CursorMCPConfig, CursorMCPServerConfig } from "./lib/types/system";
+import { getWorkspaceRoot } from "./vscode/workspace";
 
 // === Constants ===
 
@@ -177,34 +179,271 @@ export function compareServerConfigs(
 	};
 }
 
+/**
+ * Updates the Cursor MCP config using VS Code workspace APIs
+ */
+export async function updateCursorMCPServerConfig(fileOperationManager: FileOperationManager): Promise<void> {
+	const logger = createLogger({ component: "CursorMCPConfig" });
+
+	try {
+		// Get workspace using VS Code APIs
+		const workspaceFolders = workspace.workspaceFolders;
+		if (!workspaceFolders || workspaceFolders.length === 0) {
+			throw new Error("No workspace folder found");
+		}
+		const workspacePath = workspaceFolders[0]?.uri.fsPath;
+		if (!workspacePath) {
+			throw new Error("No workspace folder found");
+		}
+
+		// Import standalone functions from cursor-integration module
+		const {
+			ensureCursorDirectory,
+			readCursorMCPConfig,
+			writeCursorMCPConfig,
+			createAIMemoryServerConfig,
+			compareServerConfigs,
+		} = await import("./cursor-integration");
+
+		// Ensure .cursor directory exists
+		await ensureCursorDirectory(fileOperationManager);
+
+		// Read existing configuration
+		const existingConfig = await readCursorMCPConfig(fileOperationManager);
+		existingConfig.mcpServers ??= {};
+
+		// Create our server configuration
+		const ourServerConfig = createAIMemoryServerConfig(workspacePath);
+
+		// Compare configurations
+		const existingServerConfig = existingConfig.mcpServers["AI Memory"];
+		const comparison = existingServerConfig
+			? compareServerConfigs(existingServerConfig, ourServerConfig)
+			: { matches: false, differences: ["Config does not exist"] };
+
+		// Update configuration if needed
+		if (!comparison.matches) {
+			existingConfig.mcpServers["AI Memory"] = ourServerConfig;
+			await writeCursorMCPConfig(existingConfig, fileOperationManager);
+			window.showInformationMessage("Cursor MCP config updated for AI Memory (STDIO).");
+
+			if (comparison.differences) {
+				logger.info(`Config updated with changes: ${comparison.differences.join(", ")}`);
+			}
+		} else {
+			logger.info("AI Memory server already configured in Cursor MCP config (STDIO).");
+		}
+	} catch (error) {
+		const errorMessage = `Failed to update Cursor MCP config: ${error instanceof Error ? error.message : String(error)}`;
+		logger.error(errorMessage);
+		window.showErrorMessage(errorMessage);
+		throw error;
+	}
+}
+
+/**
+ * Updates the Cursor MCP config to point to our MCP server (STDIO mode)
+ * Main entry point for configuration updates
+ */
+export async function updateCursorMCPConfig(
+	_extensionPath: string,
+	fileOperationManager: FileOperationManager,
+): Promise<void> {
+	await updateCursorMCPServerConfig(fileOperationManager);
+}
+
+// === Rules Service ===
+
+export class CursorRulesService {
+	private readonly cursorRulesPath = ".cursor/rules/";
+	private readonly logger: Logger;
+
+	constructor(private readonly context: ExtensionContext) {
+		this.logger = createLogger({ component: "CursorRulesService" });
+	}
+
+	async createRulesFile(filename: string, ruleContent: string): Promise<void> {
+		const workspaceRoot = getWorkspaceRoot();
+		if (!workspaceRoot) {
+			window.showErrorMessage("No workspace folder found, please open a workspace first");
+			return;
+		}
+
+		const rulesDir = join(workspaceRoot, this.cursorRulesPath);
+		await this.ensureDirectoryExists(rulesDir);
+
+		const ruleFileUri = Uri.file(join(rulesDir, filename));
+
+		const shouldProceed = await this.checkFileOverwrite(ruleFileUri, filename);
+		if (!shouldProceed) return;
+
+		await this.writeRuleFile(ruleFileUri, ruleContent);
+	}
+
+	async readRulesFile(
+		filename: string,
+	): Promise<{ success: true; data: string } | { success: false; error: string }> {
+		try {
+			const workspaceRoot = getWorkspaceRoot();
+			if (!workspaceRoot) {
+				return { success: false, error: "No workspace folder found" };
+			}
+
+			const ruleFileUri = Uri.file(join(workspaceRoot, this.cursorRulesPath, filename));
+			const fileContent = await workspace.fs.readFile(ruleFileUri);
+			const content = new TextDecoder().decode(fileContent);
+
+			return { success: true, data: content };
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			return {
+				success: false,
+				error: `Failed to read rules file: ${errorMessage}`,
+			};
+		}
+	}
+
+	async deleteRulesFile(filename: string): Promise<void> {
+		try {
+			const workspaceRoot = getWorkspaceRoot();
+			if (!workspaceRoot) {
+				window.showErrorMessage("No workspace folder found, please open a workspace first");
+				return;
+			}
+
+			const ruleFileUri = Uri.file(join(workspaceRoot, this.cursorRulesPath, filename));
+			await workspace.fs.delete(ruleFileUri);
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			throw new Error(`Failed to delete rules file: ${errorMessage}`);
+		}
+	}
+
+	async listAllRulesFilesInfo(): Promise<Array<{ name: string; lastUpdated?: Date }>> {
+		try {
+			const workspaceRoot = getWorkspaceRoot();
+			if (!workspaceRoot) return [];
+
+			const rulesDir = Uri.file(join(workspaceRoot, this.cursorRulesPath));
+
+			try {
+				const files = await workspace.fs.readDirectory(rulesDir);
+				const mdcFiles = files
+					.filter(([name, type]) => type === FileType.File && name.endsWith(".mdc"))
+					.map(([name]) => ({ name })); // Could add stat info later if needed
+
+				return mdcFiles;
+			} catch {
+				// Directory doesn't exist
+				return [];
+			}
+		} catch (error) {
+			this.logger.error("Error listing rules files", {
+				error: error instanceof Error ? error.message : String(error),
+				operation: "listAllRulesFilesInfo",
+			});
+			return [];
+		}
+	}
+
+	private async checkFileOverwrite(fileUri: Uri, filename: string): Promise<boolean> {
+		try {
+			await workspace.fs.stat(fileUri);
+			// File exists, ask for confirmation
+			const result = await window.showWarningMessage(
+				`The file ${filename} already exists in .cursor/rules/. Overwrite?`,
+				{ modal: true },
+				"Yes",
+				"No",
+			);
+
+			if (result !== "Yes") {
+				window.showInformationMessage(`Skipped creating ${filename}.`);
+				return false;
+			}
+			return true;
+		} catch {
+			// File doesn't exist, proceed without confirmation
+			return true;
+		}
+	}
+
+	private async writeRuleFile(fileUri: Uri, content: string): Promise<void> {
+		try {
+			this.logger.debug("Creating cursor rules file", {
+				filePath: fileUri.fsPath,
+				operation: "writeRuleFile",
+			});
+			const encodedContent = new TextEncoder().encode(content);
+			await workspace.fs.writeFile(fileUri, encodedContent);
+		} catch (error) {
+			this.logger.error("Error writing cursor rules file", {
+				filePath: fileUri.fsPath,
+				error: error instanceof Error ? error.message : String(error),
+				operation: "writeRuleFile",
+			});
+			throw new Error(`Failed to write rules file: ${error}`);
+		}
+	}
+
+	private async ensureDirectoryExists(dirPath: string): Promise<void> {
+		try {
+			await workspace.fs.createDirectory(Uri.file(dirPath));
+			this.logger.debug("Ensured directory exists", {
+				dirPath,
+				operation: "ensureDirectoryExists",
+			});
+		} catch (error) {
+			if (error instanceof Error && (error as { message: string }).message.includes("File exists")) {
+				// Directory already exists, this is fine
+				return;
+			}
+			throw error;
+		}
+	}
+}
+
+export function createCursorIntegration(context: ExtensionContext, fileOperationManager: FileOperationManager) {
+	const cursorRulesService = new CursorRulesService(context);
+
+	const updateConfig = () => updateCursorMCPConfig("", fileOperationManager);
+
+	return {
+		cursorRulesService,
+		updateCursorMCPConfig: updateConfig,
+	};
+}
+
 // Cache for the markdown file content
 let memoryBankRulesContent: string;
 
-async function loadMemoryBankRulesContent(fileOperationManager: FileOperationManager): Promise<string> {
+async function loadMemoryBankRulesContent(_fileOperationManager: FileOperationManager): Promise<string> {
 	if (!memoryBankRulesContent) {
-		// Try multiple paths to find the template file
+		// Try the two logical locations for the template file
 		const possiblePaths = [
-			// 1. Try relative to current file (works in bundled scenarios)
-			path.join(path.dirname(new URL(import.meta.url).pathname), "..", "templates", "memory-bank-rules.md"),
-			// 2. Try in dist directory relative to process.cwd() (VS Code extension path)
-			path.join(process.cwd(), "dist", "templates", "memory-bank-rules.md"),
-			// 3. Try in src directory relative to process.cwd() (development)
-			path.join(process.cwd(), "src", "templates", "memory-bank-rules.md"),
+			// 1. Installed extension (built and packaged)
+			"dist/templates/memory-bank-rules.md",
+			// 2. Development mode
+			"src/templates/memory-bank-rules.md",
 		];
 
 		let lastErrorMessage = "No paths attempted";
 
+		// Use direct filesystem operations to read template files from extension directory
+		// This bypasses memory bank path validation which is not appropriate for extension assets
+		const fs = await import("node:fs/promises");
+
 		for (const rulesPath of possiblePaths) {
-			const readResult = await fileOperationManager.readFileWithRetry(rulesPath);
-			if (readResult.success) {
-				memoryBankRulesContent = readResult.data;
+			try {
+				memoryBankRulesContent = await fs.readFile(rulesPath, "utf-8");
 				return memoryBankRulesContent;
+			} catch (error) {
+				lastErrorMessage = error instanceof Error ? error.message : String(error);
 			}
-			lastErrorMessage = readResult.error.message;
 		}
 
 		throw new Error(
-			`Failed to load memory bank rules from any of the attempted paths: ${possiblePaths.join(", ")}. Last error: ${lastErrorMessage}`,
+			`Failed to load memory bank rules from expected paths: ${possiblePaths.join(", ")}. Last error: ${lastErrorMessage}`,
 		);
 	}
 	return memoryBankRulesContent;

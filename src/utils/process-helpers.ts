@@ -33,7 +33,7 @@ export function validateWorkspace(logger: Logger): string {
  * Creates process spawn configuration Centralizes path resolution and environment setup
  */
 export function createProcessConfig(context: ExtensionContext, workspacePath: string): ProcessSpawnConfig {
-	const serverPath = join(context.extensionPath, "dist", "index.");
+	const serverPath = join(context.extensionPath, "dist", "index.cjs");
 	const nodeExecutable = process.execPath ?? "node";
 
 	return {

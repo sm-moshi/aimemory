@@ -24,10 +24,11 @@ export function RulesStatus(): ReactNode {
 		// Setup message listener
 		const handleMessage = (event: MessageEvent) => {
 			const message = event.data;
-			sendLog(`Received message in rules-status: ${message.type}`, "info", {
-				action: "handleMessage",
-				messageType: message.type,
-			});
+			// Temporarily disable this verbose logging to reduce spam
+			// sendLog(`Received message in rules-status: ${message.type}`, "info", {
+			// 	action: "handleMessage",
+			// 	messageType: message.type,
+			// });
 			switch (message.type) {
 				case "rulesStatus":
 					setRulesInitialized(message.initialized);

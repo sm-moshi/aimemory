@@ -3,12 +3,12 @@ import { FileOperationManager } from "./core/file-operations";
 import { MemoryBankManager } from "./core/memory-bank";
 import { StreamingManager } from "./core/streaming";
 import { updateCursorMCPConfig } from "./cursor/config";
+import { CursorRulesService } from "./cursor-integration";
 import { createLogger } from "./lib/logging";
 import type { Logger } from "./lib/types/core";
 import type { MCPServerInterface } from "./lib/types/operations";
 import { showVSCodeError } from "./lib/utils";
 import { CommandHandler } from "./vscode/commands";
-import { CursorRulesService } from "./vscode/cursor-integration";
 import { MemoryBankMCPAdapter } from "./vscode/mcp-adapter";
 import { WebviewProvider } from "./vscode/webview-provider";
 import {
@@ -106,12 +106,15 @@ function registerCommands(
 		vscode.commands.registerCommand("aimemory.showOutput", async () => {
 			// Show output for VS Code logger
 			try {
-				if ("showOutput" in logger && typeof logger.showOutput === "function") {
-					logger.showOutput();
+				// Force create a VS Code logger to ensure output channel functionality
+				const { createVSCodeLogger } = await import("./lib/logging");
+				const vsCodeLogger = createVSCodeLogger({ component: "OutputChannel" });
+
+				if ("showOutput" in vsCodeLogger && typeof vsCodeLogger.showOutput === "function") {
+					await vsCodeLogger.showOutput();
 					logger.info("Output channel displayed successfully");
 				} else {
-					const loggerType = logger.constructor.name || "Unknown";
-					logger.error(`Logger type ${loggerType} doesn't support showOutput method`);
+					logger.error("VS Code logger doesn't support showOutput method");
 					vscode.window.showInformationMessage("AI Memory: Output channel functionality not available");
 				}
 			} catch (error) {

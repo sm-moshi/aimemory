@@ -16,9 +16,14 @@ import { LogLevel } from "../types/logging.js";
  */
 const isVSCodeExtension = () => {
 	try {
-		// Check if we're running in VS Code extension context
-		return typeof globalThis !== "undefined" && "vscode" in globalThis;
+		// Only test if VS Code module can be resolved, don't actually require it
+		// This avoids loading VS Code in child processes or standalone contexts
+		require.resolve("vscode");
+
+		// Additional check: VS Code extensions have specific environment markers
+		return typeof process !== "undefined" && process.env.VSCODE_PID !== undefined && typeof global !== "undefined";
 	} catch {
+		// VS Code module not available - we're in a child process or standalone context
 		return false;
 	}
 };

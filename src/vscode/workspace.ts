@@ -1,12 +1,11 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { FileOperationManager } from "../core/file-operations";
-import { getCursorMemoryBankRulesFile } from "../cursor-integration";
+// Dependencies - correct imports for current structure
+import { CursorRulesService, getCursorMemoryBankRulesFile } from "../cursor-integration";
 // Core types - updated for consolidated structure
 import type { Logger } from "../lib/types/core";
 import { LogLevel } from "../lib/types/core";
-// Dependencies - correct imports for current structure
-import { CursorRulesService } from "./cursor-integration";
 
 // === Constants ===
 

@@ -18,9 +18,9 @@ import * as vscode from "vscode";
 
 // Core dependencies - updated for consolidated structure
 import type { MemoryBankManager } from "../core/memory-bank";
+import type { CursorRulesService } from "../cursor-integration";
 import { getCursorMemoryBankRulesFile } from "../cursor-integration";
 import type { Logger, MemoryBankFile } from "../lib/types/core";
-
 // MCP server integration - updated for consolidated structure
 import type { MCPServerInterface } from "../lib/types/operations";
 // Type imports - updated for consolidated structure
@@ -30,7 +30,6 @@ import type {
 	WebviewLogMessage,
 	WebviewToExtensionMessage,
 } from "../webview/src/types/messages";
-import type { CursorRulesService } from "./cursor-integration";
 import type { MemoryBankMCPAdapter } from "./mcp-adapter";
 
 import { getWorkspaceRoot } from "./workspace";
@@ -325,8 +324,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		// Handle messages from the webview
 		this.panel.webview.onDidReceiveMessage(
 			async (message: WebviewToExtensionMessage) => {
-				this.logger.debug("Received message from webview", { message });
+				// Only log non-routine messages to avoid spam
+				if (message.command !== "healthCheck" && message.command !== "logMessage") {
+					this.logger.debug("Received message from webview", { message });
+				}
 				switch (message.command) {
+					case "healthCheck":
+						await this.handleHealthCheck();
+						break;
 					case "getRulesStatus":
 						await this.handleGetRulesStatus();
 						break;
@@ -429,6 +434,66 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		});
 	}
 
+	private async handleHealthCheck() {
+		// Only log the start of health check if there were previous failures
+		// this.logger.debug("Handling health check request");  // Remove this noisy log
+		if (!this.panel) {
+			return;
+		}
+
+		try {
+			// Check MCP server health
+			const isServerRunning = this.mcpServer.isServerRunning();
+			const serverPort = this.mcpServer.getPort();
+
+			let healthyStatus = false;
+
+			if (isServerRunning) {
+				if (serverPort && serverPort > 0) {
+					// HTTP mode - check if port is responding
+					healthyStatus = await this.checkServerHealth(serverPort);
+				} else {
+					// STDIO mode - just check if process is running
+					healthyStatus = true; // If isRunning() is true, STDIO is healthy
+				}
+			}
+
+			// Check memory bank health
+			const memoryBankHealthy = await this.memoryBankService.getIsMemoryBankInitialized();
+
+			// Overall health is healthy if both MCP and memory bank are functional
+			const overallHealthy = healthyStatus && memoryBankHealthy;
+
+			// Only log if there's a problem or a status change
+			if (!overallHealthy) {
+				this.logger.debug("Health check completed - issues detected", {
+					serverRunning: isServerRunning,
+					serverPort,
+					healthyStatus,
+					memoryBankHealthy,
+					overallHealthy,
+				});
+			}
+
+			this.panel.webview.postMessage({
+				type: "healthCheckResponse",
+				healthy: overallHealthy,
+				timestamp: Date.now(),
+				error: overallHealthy ? undefined : "One or more components are not healthy",
+			});
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			this.logger.error("Health check failed", { error: errorMessage });
+
+			this.panel.webview.postMessage({
+				type: "healthCheckResponse",
+				healthy: false,
+				timestamp: Date.now(),
+				error: errorMessage,
+			});
+		}
+	}
+
 	private async handleResetRules() {
 		if (!this.validateWorkspaceForReset()) {
 			return;
@@ -468,19 +533,18 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		try {
 			await this.mcpServer.start();
 			const serverPort = this.mcpServer.getPort();
-			const isStdioMode = !serverPort || serverPort === 0;
+			const _isStdioMode = !serverPort || serverPort === 0;
 
 			// Send status message with proper port info for different transport modes
 			this.panel?.webview.postMessage({
 				type: "MCPServerStatus",
 				status: "started",
-				port: isStdioMode ? null : serverPort, // null indicates STDIO mode
-				transport: isStdioMode ? "stdio" : "http",
+				port: null, // Always null for STDIO mode
+				transport: "STDIO",
 			});
 
-			this.logger.info(`MCP Server started successfully in ${isStdioMode ? "STDIO" : "HTTP"} mode`, {
-				port: serverPort,
-				transport: isStdioMode ? "stdio" : "http",
+			this.logger.info("MCP Server started successfully in STDIO mode", {
+				transport: "STDIO",
 			});
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
@@ -632,11 +696,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 	/**
 	 * Determine transport type based on server state
 	 */
-	private determineTransportType(isRunning: boolean, isStdioMode: boolean): string | undefined {
+	private determineTransportType(isRunning: boolean, _isStdioMode: boolean): string | undefined {
 		if (!isRunning) {
 			return undefined;
 		}
-		return isStdioMode ? "stdio" : "http";
+		// This project is STDIO-only, so always return "STDIO" when running
+		return "STDIO";
 	}
 
 	// ============================================================================

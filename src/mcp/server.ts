@@ -15,28 +15,27 @@
 import { resolve } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod/v4";
 
 // Core dependencies - updated for consolidated structure
 import { FileOperationManager } from "../core/file-operations";
 import type { MemoryBankManager } from "../core/memory-bank";
 import { MemoryBankManager as ConcreteMemoryBankManager } from "../core/memory-bank";
 import { StreamingManager } from "../core/streaming";
-// Cursor integration imports
-import {
-	INITIALIZE_MEMORY_BANK_PROMPT,
-	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
-	registerMemoryBankPrompts,
-} from "../cursor-integration";
 import { createLogger } from "../lib/logging";
 // Type imports - updated for consolidated structure
 import type { AsyncResult, MemoryBankFileType } from "../lib/types/core";
 import { isError, MemoryBankError } from "../lib/types/core";
 import type { BaseMCPServerConfig, MCPServerCLIOptions } from "../lib/types/operations";
-import { UpdateMemoryBankFileSchema } from "../lib/types/system";
+
 // Utility imports - updated for consolidated structure
 import { getExtensionVersion, isValidMemoryBankFileType as validateFileType } from "../lib/utils";
 import { LogLevel } from "../types/logging";
+// MCP prompts import - VS Code independent
+import {
+	INITIALIZE_MEMORY_BANK_PROMPT,
+	MEMORY_BANK_ALREADY_INITIALIZED_PROMPT,
+	registerMemoryBankPrompts,
+} from "./prompts";
 // MCP tools import - from our consolidated tools
 import {
 	createErrorResponse,
@@ -256,29 +255,32 @@ export abstract class BaseMCPServer {
 		this.server.tool(
 			"update-memory-bank-file",
 			{
-				fileType: z.string(),
-				content: z.string(),
+				fileType: {
+					type: "string",
+					description: "Type of memory bank file to update",
+				},
+				content: {
+					type: "string",
+					description: "Content to write to the file",
+				},
 			},
 			createMemoryBankTool(
 				this.memoryBank,
 				// biome-ignore lint/suspicious/noExplicitAny: MCP SDK requires generic object parameters
 				(args: { [key: string]: any }) => {
 					const params = args as { fileType: string; content: string };
-					const validationResult = UpdateMemoryBankFileSchema.safeParse(params);
-					if (!validationResult.success) {
-						const formattedErrors = validationResult.error.issues
-							// biome-ignore lint/suspicious/noExplicitAny: Zod error objects have unknown structure
-							.map((e: any) => `Parameter '${e.path.join(".")}': ${e.message}`)
-							.join(", ");
-						throw new Error(`Invalid parameters for update-memory-bank-file: ${formattedErrors}`);
-					}
-					const validatedArgs = validationResult.data;
 
-					return MemoryBankOperations.updateFile(
-						this.memoryBank,
-						validatedArgs.fileType,
-						validatedArgs.content,
-					);
+					// Basic validation without Zod
+					if (!params.fileType || typeof params.fileType !== "string") {
+						throw new Error(
+							"Invalid parameters for update-memory-bank-file: fileType must be a non-empty string",
+						);
+					}
+					if (typeof params.content !== "string") {
+						throw new Error("Invalid parameters for update-memory-bank-file: content must be a string");
+					}
+
+					return MemoryBankOperations.updateFile(this.memoryBank, params.fileType, params.content);
 				},
 				"Error updating memory bank file",
 			),
@@ -479,9 +481,9 @@ export class MCPServerCLI extends BaseMCPServer {
 	 */
 	protected override registerCustomTools(): void {
 		this.logger.info("[MCPServerCLI] Registering CLI-specific tools...");
-		this._registerInitMemoryBankTool();
+		// Note: Base class already registers init-memory-bank and review-and-update-memory-bank
 		this._registerReadMemoryBankFileTool();
-		this._registerReviewAndUpdateTool();
+		// Skip _registerReviewAndUpdateTool() - already registered by base class
 	}
 
 	/**

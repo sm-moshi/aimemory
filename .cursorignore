@@ -1,4 +1,6 @@
 docs/maybe
-node_modules/
+node_modules
 src/webview/node_modules/
 .vscode-test/vscode-*
+docs/logs
+.cursor/rules.backup

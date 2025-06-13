@@ -112,27 +112,56 @@ export async function writeJsonFile(
 	}
 }
 
+let packageInfo: { version: string; name: string } | null = null;
+
 function getPackageInfo() {
-	const __filename = fileURLToPath(import.meta.url);
-	const __dirname = dirname(__filename);
-	const packageJsonPath = resolve(__dirname, "../../../package.json");
+	if (packageInfo !== null) {
+		return packageInfo;
+	}
+
 	try {
-		const packageJsonContent = readFileSync(packageJsonPath, "utf8");
-		return JSON.parse(packageJsonContent);
+		// Try multiple potential paths for package.json
+		const possiblePaths = [
+			// 1. Standard project structure (src/lib/utils.ts -> package.json)
+			resolve(dirname(fileURLToPath(import.meta.url)), "../../../package.json"),
+			// 2. Bundled extension (dist/index.cjs -> package.json in extension root)
+			resolve(process.cwd(), "package.json"),
+			// 3. Development workspace
+			resolve(__dirname, "../../../package.json"),
+			// 4. Extension directory (when running from installed extension)
+			resolve(__dirname, "../../package.json"),
+			// 5. Current directory fallback
+			resolve(".", "package.json"),
+		];
+
+		for (const packageJsonPath of possiblePaths) {
+			try {
+				const packageJsonContent = readFileSync(packageJsonPath, "utf8");
+				const parsed = JSON.parse(packageJsonContent);
+				packageInfo = { version: parsed.version ?? "0.8.0-alpha.0", name: parsed.name ?? "aimemory" };
+				return packageInfo;
+			} catch {}
+		}
+
+		// If no package.json found, use hardcoded fallback values
+		console.warn("package.json not found in any expected location, using fallback values");
+		packageInfo = { version: "0.8.0-alpha.0", name: "aimemory" };
+		return packageInfo;
 	} catch (error) {
-		console.error(`Failed to read or parse package.json at ${packageJsonPath}`, error);
-		return { version: "0.0.0", name: "unknown" };
+		console.error("Failed to read or parse package.json", error);
+		packageInfo = { version: "0.8.0-alpha.0", name: "aimemory" };
+		return packageInfo;
 	}
 }
 
-const packageInfo = getPackageInfo();
-
 export function getExtensionVersion(): string {
-	return packageInfo.version;
+	const info = getPackageInfo();
+	return info?.version ?? "0.0.0";
 }
 
 export function getExtensionName(): string {
-	return packageInfo.name;
+	const info = getPackageInfo();
+	return info?.name ?? "unknown";
 }
 
 // =================================================================

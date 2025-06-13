@@ -16,7 +16,6 @@ import { type FileOperationContext, MemoryBankFileType, ValidationError } from "
 import {
 	PortNumberSchema,
 	SafeCommandSchema,
-	SafePathSchema,
 	type SafeProcessConfig,
 	type SchemaValidationResult,
 	type SecurityAuditResult,
@@ -121,11 +120,40 @@ export function validateAndConstructArbitraryFilePath(memoryBankFolder: string, 
 
 /**
  * Validates memory bank paths using Zod schemas and enhanced sanitization.
+ * Handles both relative and absolute paths correctly.
  */
-export function validateMemoryBankPath(relativePath: string, memoryBankRoot: string): string {
+export function validateMemoryBankPath(inputPath: string, memoryBankRoot: string): string {
 	try {
-		const validatedPath = SafePathSchema.parse(relativePath);
-		const sanitizedPath = sanitizePath(validatedPath, memoryBankRoot);
+		// Handle absolute paths by converting them to relative paths for validation
+		let pathToValidate = inputPath;
+		if (isAbsolute(inputPath)) {
+			const resolvedRoot = resolve(memoryBankRoot);
+			if (inputPath.startsWith(resolvedRoot)) {
+				// Path is within the memory bank root, convert to relative
+				pathToValidate = relative(resolvedRoot, inputPath);
+				if (!pathToValidate) {
+					// If relative path is empty, use "." for current directory
+					pathToValidate = ".";
+				}
+			} else {
+				// Absolute path outside memory bank root is invalid
+				throw new ValidationError(`Absolute path outside memory bank root: ${inputPath}`, "PATH_OUTSIDE_ROOT", {
+					path: inputPath,
+					root: memoryBankRoot,
+				});
+			}
+		}
+
+		// Manual validation instead of SafePathSchema to avoid absolute path rejection
+		if (!pathToValidate || typeof pathToValidate !== "string") {
+			throw new ValidationError("Path must be a non-empty string", "PATH_VALIDATION");
+		}
+
+		if (pathToValidate.includes("..") || pathToValidate.includes("\0")) {
+			throw new ValidationError("Path contains unsafe characters or sequences", "PATH_VALIDATION");
+		}
+
+		const sanitizedPath = sanitizePath(pathToValidate, memoryBankRoot);
 		return join(resolve(memoryBankRoot), sanitizedPath);
 	} catch (error) {
 		if (error instanceof ValidationError) {
@@ -134,7 +162,7 @@ export function validateMemoryBankPath(relativePath: string, memoryBankRoot: str
 		throw new ValidationError(
 			`Invalid memory bank path: ${error instanceof Error ? error.message : String(error)}`,
 			"MEMORY_BANK_PATH_VALIDATION",
-			{ path: relativePath },
+			{ path: inputPath },
 		);
 	}
 }

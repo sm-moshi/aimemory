@@ -464,12 +464,15 @@ export function registerExtensionCommands(
 		vscode.commands.registerCommand("aimemory.showOutput", async () => {
 			logger.debug("Showing output channel", { operation: "showOutput" });
 			try {
-				if ("showOutput" in logger && typeof logger.showOutput === "function") {
-					await logger.showOutput();
+				// Force create a VS Code logger to ensure output channel functionality
+				const { createVSCodeLogger } = await import("../lib/logging");
+				const vsCodeLogger = createVSCodeLogger({ component: "OutputChannel" });
+
+				if ("showOutput" in vsCodeLogger && typeof vsCodeLogger.showOutput === "function") {
+					await vsCodeLogger.showOutput();
 					logger.info("Output channel displayed successfully");
 				} else {
-					const loggerType = logger.constructor.name || "Unknown";
-					logger.error(`Logger type ${loggerType} doesn't support showOutput method`);
+					logger.error("VS Code logger doesn't support showOutput method");
 					vscode.window.showInformationMessage("AI Memory: Output channel functionality not available");
 				}
 			} catch (error) {

@@ -30,6 +30,16 @@ export interface MCPServerStatusMessage {
 }
 
 /**
+ * Health check response message structure
+ */
+export interface HealthCheckResponseMessage {
+	type: "healthCheckResponse";
+	healthy: boolean;
+	error?: string;
+	timestamp: number;
+}
+
+/**
  * Rules status message structure
  */
 export interface RulesStatusMessage {
@@ -68,12 +78,20 @@ export interface ReviewUpdateMemoryBankMessage {
  */
 export type ExtensionToWebviewMessage =
 	| MCPServerStatusMessage
+	| HealthCheckResponseMessage
 	| RulesStatusMessage
 	| MemoryBankStatusMessage
 	| ResetRulesResultMessage
 	| ReviewUpdateMemoryBankMessage;
 
 // --- Specific command message interfaces (Webview to Extension) ---
+
+/**
+ * Health check command message
+ */
+export interface HealthCheckMessage {
+	command: "healthCheck";
+}
 
 /**
  * Start MCP server command message
@@ -134,6 +152,7 @@ export interface ServerAlreadyRunningMessage {
  */
 export type WebviewToExtensionMessage =
 	| WebviewLogMessage
+	| HealthCheckMessage
 	| StartMCPServerMessage
 	| StopMCPServerMessage
 	| GetRulesStatusMessage

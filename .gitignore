@@ -35,8 +35,4 @@ test-file.txt
 test-results.json
 docs/phase-4-restructuring-plan.md
 docs/maybe/
-
-docs/project-structure.md
-
-docs/guides/path-aliases.md
-aimemory_OG
+docs/logs

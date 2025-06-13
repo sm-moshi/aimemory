@@ -17,7 +17,7 @@ import { createLogger } from "../lib/logging";
 import { StdioClient } from "../lib/stdio-client";
 import type { MemoryBankFileType } from "../lib/types/core";
 import type { MCPServerInterface } from "../lib/types/operations";
-import { launchMCPServerProcess } from "../lib/utils";
+import { launchMCPServerProcess } from "../utils/process-helpers";
 
 // Type alias for compatibility
 type MemoryBankServiceCore = MemoryBankManager;
