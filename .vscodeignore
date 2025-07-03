@@ -1,7 +1,6 @@
 # Source code (only dist/ is needed)
 src/
 src/webview/src/
-!dist/**
 
 # Tests and coverage
 **/*.test.*
@@ -12,9 +11,7 @@ src/webview/src/
 vitest.config.*
 vitest.setup.*
 tsconfig.test.json
-**/*.cjs.map
-**/extension.cjs.map
-**/index.cjs.map
+dist/**/*.map
 
 # Build scripts and configs
 esbuild.js
@@ -44,8 +41,6 @@ archive/
 
 # Exclude local files and docs as they are not needed for VSIX
 out/
-!out/mcp-server/index.cjs
-!out/mcp-server/index.cjs.map
 *.vsix
 .git/
 .github/
@@ -54,3 +49,4 @@ docs/
 **/.DS_Store
 *.env
 Thumbs.db
+scripts/

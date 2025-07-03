@@ -6,12 +6,8 @@
 		"types": ["vite/client", "node"],
 		"noEmit": true,
 		"composite": true,
-		"isolatedModules": true
+		"isolatedModules": true,
+		"strict": true
 	},
-	"include": ["src", "vitest.config.ts"],
-	"references": [
-		{
-			"path": "./tsconfig.node.json"
-		}
-	]
+	"include": ["src"]
 }
